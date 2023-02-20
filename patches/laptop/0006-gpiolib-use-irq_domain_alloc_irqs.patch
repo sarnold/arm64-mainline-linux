@@ -1,0 +1,38 @@
+From 7436be9cb4b9c6b1a4dabd97ac4dfc9c84b784c7 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 13 Dec 2022 13:59:50 +0100
+Subject: [PATCH 006/230] gpiolib: use irq_domain_alloc_irqs()
+
+Use the irq_domain_alloc_irqs() wrapper instead of the full
+__irq_domain_alloc_irqs() interface, which was only intended for some
+legacy (x86) use cases.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/gpio/gpiolib.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
+index 939c776b948..54baf074a83 100644
+--- a/drivers/gpio/gpiolib.c
++++ b/drivers/gpio/gpiolib.c
+@@ -1126,14 +1126,8 @@ static void gpiochip_set_hierarchical_irqchip(struct gpio_chip *gc,
+ 			/* Just pick something */
+ 			fwspec.param[1] = IRQ_TYPE_EDGE_RISING;
+ 			fwspec.param_count = 2;
+-			ret = __irq_domain_alloc_irqs(gc->irq.domain,
+-						      /* just pick something */
+-						      -1,
+-						      1,
+-						      NUMA_NO_NODE,
+-						      &fwspec,
+-						      false,
+-						      NULL);
++			ret = irq_domain_alloc_irqs(gc->irq.domain, 1,
++						    NUMA_NO_NODE, &fwspec);
+ 			if (ret < 0) {
+ 				chip_err(gc,
+ 					 "can not allocate irq for GPIO line %d parent hwirq %d in hierarchy domain: %d\n",
+-- 
+2.39.0
+

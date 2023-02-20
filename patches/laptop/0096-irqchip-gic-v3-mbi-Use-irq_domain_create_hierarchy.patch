@@ -1,0 +1,43 @@
+From e59729fa06e9f2f3bc2136c7e8054c93b841b303 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 8 Dec 2022 14:35:14 +0100
+Subject: [PATCH 096/230] irqchip/gic-v3-mbi: Use irq_domain_create_hierarchy()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Use the irq_domain_create_hierarchy() helper to create the hierarchical
+domain, which both serves as documentation and avoids poking at
+irqdomain internals.
+
+Reviewed-by: Philippe Mathieu-Daudé <philmd@linaro.org>
+Tested-by: Hsin-Yi Wang <hsinyi@chromium.org>
+Tested-by: Mark-PK Tsai <mark-pk.tsai@mediatek.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/irqchip/irq-gic-v3-mbi.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/irqchip/irq-gic-v3-mbi.c b/drivers/irqchip/irq-gic-v3-mbi.c
+index e1efdec9e9a..dbb8b1efda4 100644
+--- a/drivers/irqchip/irq-gic-v3-mbi.c
++++ b/drivers/irqchip/irq-gic-v3-mbi.c
+@@ -233,13 +233,12 @@ static int mbi_allocate_domains(struct irq_domain *parent)
+ 	struct irq_domain *nexus_domain, *pci_domain, *plat_domain;
+ 	int err;
+ 
+-	nexus_domain = irq_domain_create_tree(parent->fwnode,
+-					      &mbi_domain_ops, NULL);
++	nexus_domain = irq_domain_create_hierarchy(parent, 0, 0, parent->fwnode,
++						   &mbi_domain_ops, NULL);
+ 	if (!nexus_domain)
+ 		return -ENOMEM;
+ 
+ 	irq_domain_update_bus_token(nexus_domain, DOMAIN_BUS_NEXUS);
+-	nexus_domain->parent = parent;
+ 
+ 	err = mbi_allocate_pci_domain(nexus_domain, &pci_domain);
+ 
+-- 
+2.39.0
+

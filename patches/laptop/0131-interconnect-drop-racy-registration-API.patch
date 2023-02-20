@@ -1,0 +1,73 @@
+From 98341788afbf057c0a00dff971fabf7570e044c4 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 31 Jan 2023 17:03:54 +0100
+Subject: [PATCH 131/230] interconnect: drop racy registration API
+
+Now that all interconnect drivers have been converted to the new
+provider registration API, the old racy interface can be removed.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/interconnect/core.c           | 16 ----------------
+ include/linux/interconnect-provider.h | 11 -----------
+ 2 files changed, 27 deletions(-)
+
+diff --git a/drivers/interconnect/core.c b/drivers/interconnect/core.c
+index acfa483141f..49dae1b99f5 100644
+--- a/drivers/interconnect/core.c
++++ b/drivers/interconnect/core.c
+@@ -1078,22 +1078,6 @@ void icc_provider_deregister(struct icc_provider *provider)
+ }
+ EXPORT_SYMBOL_GPL(icc_provider_deregister);
+ 
+-int icc_provider_add(struct icc_provider *provider)
+-{
+-	icc_provider_init(provider);
+-
+-	return icc_provider_register(provider);
+-}
+-EXPORT_SYMBOL_GPL(icc_provider_add);
+-
+-void icc_provider_del(struct icc_provider *provider)
+-{
+-	WARN_ON(!list_empty(&provider->nodes));
+-
+-	icc_provider_deregister(provider);
+-}
+-EXPORT_SYMBOL_GPL(icc_provider_del);
+-
+ static int of_count_icc_providers(struct device_node *np)
+ {
+ 	struct device_node *child;
+diff --git a/include/linux/interconnect-provider.h b/include/linux/interconnect-provider.h
+index d12cd18aab3..b9af9016a95 100644
+--- a/include/linux/interconnect-provider.h
++++ b/include/linux/interconnect-provider.h
+@@ -125,8 +125,6 @@ int icc_nodes_remove(struct icc_provider *provider);
+ void icc_provider_init(struct icc_provider *provider);
+ int icc_provider_register(struct icc_provider *provider);
+ void icc_provider_deregister(struct icc_provider *provider);
+-int icc_provider_add(struct icc_provider *provider);
+-void icc_provider_del(struct icc_provider *provider);
+ struct icc_node_data *of_icc_get_from_provider(struct of_phandle_args *spec);
+ void icc_sync_state(struct device *dev);
+ 
+@@ -179,15 +177,6 @@ static inline int icc_provider_register(struct icc_provider *provider)
+ 
+ static inline void icc_provider_deregister(struct icc_provider *provider) { }
+ 
+-static inline int icc_provider_add(struct icc_provider *provider)
+-{
+-	return -ENOTSUPP;
+-}
+-
+-static inline void icc_provider_del(struct icc_provider *provider)
+-{
+-}
+-
+ static inline struct icc_node_data *of_icc_get_from_provider(struct of_phandle_args *spec)
+ {
+ 	return ERR_PTR(-ENOTSUPP);
+-- 
+2.39.0
+

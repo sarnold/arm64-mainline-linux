@@ -1,0 +1,45 @@
+From 7d5f540d0b7c9b94550f6f57c0b3fe2cadf545fc Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 2 Feb 2023 15:13:23 +0100
+Subject: [PATCH 079/230] rtc: pm8xxx: drop error messages
+
+For consistency with the rest of the driver, drop the last two error
+messages for conditions that should only occur during development, if
+ever.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/rtc/rtc-pm8xxx.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/rtc/rtc-pm8xxx.c b/drivers/rtc/rtc-pm8xxx.c
+index 922aef0f024..eff2782beee 100644
+--- a/drivers/rtc/rtc-pm8xxx.c
++++ b/drivers/rtc/rtc-pm8xxx.c
+@@ -368,10 +368,8 @@ static int pm8xxx_rtc_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 
+ 	rtc_dd->regmap = dev_get_regmap(pdev->dev.parent, NULL);
+-	if (!rtc_dd->regmap) {
+-		dev_err(&pdev->dev, "Parent regmap unavailable.\n");
++	if (!rtc_dd->regmap)
+ 		return -ENXIO;
+-	}
+ 
+ 	rtc_dd->alarm_irq = platform_get_irq(pdev, 0);
+ 	if (rtc_dd->alarm_irq < 0)
+@@ -402,10 +400,8 @@ static int pm8xxx_rtc_probe(struct platform_device *pdev)
+ 					  pm8xxx_alarm_trigger,
+ 					  IRQF_TRIGGER_RISING,
+ 					  "pm8xxx_rtc_alarm", rtc_dd);
+-	if (rc < 0) {
+-		dev_err(&pdev->dev, "Request IRQ failed (%d)\n", rc);
++	if (rc < 0)
+ 		return rc;
+-	}
+ 
+ 	rc = devm_rtc_register_device(rtc_dd->rtc);
+ 	if (rc)
+-- 
+2.39.0
+

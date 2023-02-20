@@ -1,0 +1,42 @@
+From 509462ba8212bfcef87c78c7221477f85eca920e Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 24 Mar 2022 11:10:00 +0100
+Subject: [PATCH 034/230] PCI: qcom: Fix host-init error handling
+
+Implement the new host_deinit() callback so that the PHY is powered off
+and regulators and clocks are disabled also on late host-init errors.
+
+Fixes: 82a823833f4e ("PCI: qcom: Add Qualcomm PCIe controller driver")
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 77e5dc7b88a..7e23c74fb42 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1534,8 +1534,19 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
+ 	return ret;
+ }
+ 
++static void qcom_pcie_host_deinit(struct dw_pcie_rp *pp)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct qcom_pcie *pcie = to_qcom_pcie(pci);
++
++	qcom_ep_reset_assert(pcie);
++	phy_power_off(pcie->phy);
++	pcie->cfg->ops->deinit(pcie);
++}
++
+ static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
+-	.host_init = qcom_pcie_host_init,
++	.host_init	= qcom_pcie_host_init,
++	.host_deinit	= qcom_pcie_host_deinit,
+ };
+ 
+ /* Qcom IP rev.: 2.1.0	Synopsys IP rev.: 4.01a */
+-- 
+2.39.0
+

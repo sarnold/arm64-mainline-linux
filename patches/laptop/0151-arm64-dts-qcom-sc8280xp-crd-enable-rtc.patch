@@ -1,0 +1,68 @@
+From 4b469b1f6aa42fecf3b1b383cb6781bee35a5f27 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Mon, 9 May 2022 08:23:51 +0200
+Subject: [PATCH 151/230] arm64: dts: qcom: sc8280xp-crd: enable rtc
+
+The SC8280XP CRD firmware does not implement the UEFI time runtime
+services so the RTC in the PM8280K PMIC needs to be accessed directly.
+
+To complicate things further, the RTC control and time registers are
+read-only on this platform so an offset must be stored in some other
+machine-specific non-volatile memory which an RTC driver can take into
+account when reading or updating the time.
+
+The UEFI firmware (and Windows) use a UEFI variable for this:
+
+	882f8c2b-9646-435f-8de5-f208ff80c1bd-RTCInfo
+
+but the offset can only be accessed via the Qualcomm UEFI Secure
+Application residing in the TEE as the firmware does not implement the
+variable runtime services either.
+
+While it is possible to access this UEFI variable from Linux on the CRD,
+this requires using a fairly complex and reverse-engineered firmware
+interface. As the only benefit of doing so is to make sure that the UEFI
+(Windows) and Linux time never gets out of sync, it seems preferable to
+use the PMIC scratch registers for storing an offset instead. This also
+avoids flash wear in case of RTC drift, etc.
+
+Also note that setting variables using this interface does not work on
+at least one CRD for reasons not yet known.
+
+So instead of using the UEFI RTC offset, reserve four bytes in one of
+the PMIC SDAM scratch-register blocks to hold the RTC offset.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-crd.dts | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+index 61d6853c9f0..c95b601e34c 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+@@ -508,6 +508,21 @@ &pmk8280_pon_pwrkey {
+ 	status = "okay";
+ };
+ 
++&pmk8280_rtc {
++	nvmem-cells = <&rtc_offset>;
++	nvmem-cell-names = "offset";
++
++	status = "okay";
++};
++
++&pmk8280_sdam_6 {
++	status = "okay";
++
++	rtc_offset: rtc-offset@bc {
++		reg = <0xbc 0x4>;
++	};
++};
++
+ &qup0 {
+ 	status = "okay";
+ };
+-- 
+2.39.0
+

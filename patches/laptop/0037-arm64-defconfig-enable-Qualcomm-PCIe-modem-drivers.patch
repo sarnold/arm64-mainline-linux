@@ -1,0 +1,48 @@
+From bbad6bc556d8e599a5d40a7acf45b7a4c745d6fd Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Sat, 14 Jan 2023 16:54:47 +0100
+Subject: [PATCH 037/230] arm64: defconfig: enable Qualcomm PCIe modem drivers
+
+Enable the MHI PCI controller driver and the MHI NET and WWAN drivers
+for Qualcomm based PCIe modems such as the ones found on the SC8280XP
+Compute Reference Design (CRD) and Lenovo Thinkpad X13s.
+
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/configs/defconfig | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 6a862f3658a..02cd913008e 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -250,6 +250,7 @@ CONFIG_DEVTMPFS_MOUNT=y
+ CONFIG_FW_LOADER_USER_HELPER=y
+ CONFIG_HISILICON_LPC=y
+ CONFIG_TEGRA_ACONNECT=m
++CONFIG_MHI_BUS_PCI_GENERIC=m
+ CONFIG_ARM_SCMI_PROTOCOL=y
+ CONFIG_ARM_SCPI_PROTOCOL=y
+ CONFIG_RASPBERRYPI_FIRMWARE=y
+@@ -319,6 +320,7 @@ CONFIG_MACVTAP=m
+ CONFIG_TUN=y
+ CONFIG_VETH=m
+ CONFIG_VIRTIO_NET=y
++CONFIG_MHI_NET=m
+ CONFIG_NET_DSA_BCM_SF2=m
+ CONFIG_NET_DSA_MSCC_FELIX=m
+ CONFIG_AMD_XGBE=y
+@@ -405,6 +407,9 @@ CONFIG_MWIFIEX_SDIO=m
+ CONFIG_MWIFIEX_PCIE=m
+ CONFIG_WL18XX=m
+ CONFIG_WLCORE_SDIO=m
++CONFIG_WWAN=m
++CONFIG_MHI_WWAN_CTRL=m
++CONFIG_MHI_WWAN_MBIM=m
+ CONFIG_INPUT_EVDEV=y
+ CONFIG_KEYBOARD_ADC=m
+ CONFIG_KEYBOARD_GPIO=y
+-- 
+2.39.0
+

@@ -1,0 +1,48 @@
+From bad88ac1d5800f18f2e8b6c1d6bc30495e76459b Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Mon, 9 Jan 2023 16:10:34 +0100
+Subject: [PATCH 073/230] rtc: pm8xxx: rename struct device pointer
+
+Rename the driver-data struct device pointer by dropping the "rtc"
+prefix which is both redundant and misleading (as this is a pointer to
+the platform device and not the rtc class device).
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/rtc/rtc-pm8xxx.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/rtc/rtc-pm8xxx.c b/drivers/rtc/rtc-pm8xxx.c
+index 8c364e5d3b5..0fdbd233b10 100644
+--- a/drivers/rtc/rtc-pm8xxx.c
++++ b/drivers/rtc/rtc-pm8xxx.c
+@@ -48,7 +48,7 @@ struct pm8xxx_rtc_regs {
+  * @allow_set_time:	indicates whether writing to the RTC is allowed
+  * @rtc_alarm_irq:	rtc alarm irq number.
+  * @regs:		rtc registers description.
+- * @rtc_dev:		device structure.
++ * @dev:		device structure
+  */
+ struct pm8xxx_rtc {
+ 	struct rtc_device *rtc;
+@@ -56,7 +56,7 @@ struct pm8xxx_rtc {
+ 	bool allow_set_time;
+ 	int rtc_alarm_irq;
+ 	const struct pm8xxx_rtc_regs *regs;
+-	struct device *rtc_dev;
++	struct device *dev;
+ };
+ 
+ /*
+@@ -372,7 +372,7 @@ static int pm8xxx_rtc_probe(struct platform_device *pdev)
+ 						      "allow-set-time");
+ 
+ 	rtc_dd->regs = match->data;
+-	rtc_dd->rtc_dev = &pdev->dev;
++	rtc_dd->dev = &pdev->dev;
+ 
+ 	rc = pm8xxx_rtc_enable(rtc_dd);
+ 	if (rc)
+-- 
+2.39.0
+

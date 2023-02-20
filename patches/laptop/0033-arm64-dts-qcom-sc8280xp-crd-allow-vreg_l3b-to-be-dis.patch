@@ -1,0 +1,30 @@
+From e20836f4cf9bdd83324ce9164eabd3d9f077c814 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 22 Nov 2022 10:15:34 +0100
+Subject: [PATCH 033/230] arm64: dts: qcom: sc8280xp-crd: allow vreg_l3b to be
+ disabled
+
+The vreg_l3b supply is used by the eDP, UFS and USB1 PHYs which are now
+described by the devicetree so that the regulator no longer needs to be
+marked always-on.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-crd.dts | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+index db12d867886..e5e75cc2c67 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+@@ -150,7 +150,6 @@ vreg_l3b: ldo3 {
+ 			regulator-max-microvolt = <1200000>;
+ 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+ 			regulator-boot-on;
+-			regulator-always-on;
+ 		};
+ 
+ 		vreg_l4b: ldo4 {
+-- 
+2.39.0
+

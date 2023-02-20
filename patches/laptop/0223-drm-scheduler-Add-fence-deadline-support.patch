@@ -1,0 +1,136 @@
+From b1e2525d095afc801929a9a9f58747a1d3f96209 Mon Sep 17 00:00:00 2001
+From: Rob Clark <robdclark@gmail.com>
+Date: Sat, 18 Feb 2023 13:15:51 -0800
+Subject: [PATCH 223/230] drm/scheduler: Add fence deadline support
+
+As the finished fence is the one that is exposed to userspace, and
+therefore the one that other operations, like atomic update, would
+block on, we need to propagate the deadline from from the finished
+fence to the actual hw fence.
+
+v2: Split into drm_sched_fence_set_parent() (ckoenig)
+v3: Ensure a thread calling drm_sched_fence_set_deadline_finished() sees
+    fence->parent set before drm_sched_fence_set_parent() does this
+    test_bit(DMA_FENCE_FLAG_HAS_DEADLINE_BIT).
+
+Signed-off-by: Rob Clark <robdclark@chromium.org>
+Link: https://lore.kernel.org/r/20230218211608.1630586-9-robdclark@gmail.com
+---
+ drivers/gpu/drm/scheduler/sched_fence.c | 46 +++++++++++++++++++++++++
+ drivers/gpu/drm/scheduler/sched_main.c  |  2 +-
+ include/drm/gpu_scheduler.h             |  8 +++++
+ 3 files changed, 55 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/scheduler/sched_fence.c b/drivers/gpu/drm/scheduler/sched_fence.c
+index 7fd869520ef..43e2d4f5fe3 100644
+--- a/drivers/gpu/drm/scheduler/sched_fence.c
++++ b/drivers/gpu/drm/scheduler/sched_fence.c
+@@ -123,6 +123,37 @@ static void drm_sched_fence_release_finished(struct dma_fence *f)
+ 	dma_fence_put(&fence->scheduled);
+ }
+ 
++static void drm_sched_fence_set_deadline_finished(struct dma_fence *f,
++						  ktime_t deadline)
++{
++	struct drm_sched_fence *fence = to_drm_sched_fence(f);
++	struct dma_fence *parent;
++	unsigned long flags;
++
++	spin_lock_irqsave(&fence->lock, flags);
++
++	/* If we already have an earlier deadline, keep it: */
++	if (test_bit(DMA_FENCE_FLAG_HAS_DEADLINE_BIT, &f->flags) &&
++	    ktime_before(fence->deadline, deadline)) {
++		spin_unlock_irqrestore(&fence->lock, flags);
++		return;
++	}
++
++	fence->deadline = deadline;
++	set_bit(DMA_FENCE_FLAG_HAS_DEADLINE_BIT, &f->flags);
++
++	spin_unlock_irqrestore(&fence->lock, flags);
++
++	/*
++	 * smp_load_aquire() to ensure that if we are racing another
++	 * thread calling drm_sched_fence_set_parent(), that we see
++	 * the parent set before it calls test_bit(HAS_DEADLINE_BIT)
++	 */
++	parent = smp_load_acquire(&fence->parent);
++	if (parent)
++		dma_fence_set_deadline(parent, deadline);
++}
++
+ static const struct dma_fence_ops drm_sched_fence_ops_scheduled = {
+ 	.get_driver_name = drm_sched_fence_get_driver_name,
+ 	.get_timeline_name = drm_sched_fence_get_timeline_name,
+@@ -133,6 +164,7 @@ static const struct dma_fence_ops drm_sched_fence_ops_finished = {
+ 	.get_driver_name = drm_sched_fence_get_driver_name,
+ 	.get_timeline_name = drm_sched_fence_get_timeline_name,
+ 	.release = drm_sched_fence_release_finished,
++	.set_deadline = drm_sched_fence_set_deadline_finished,
+ };
+ 
+ struct drm_sched_fence *to_drm_sched_fence(struct dma_fence *f)
+@@ -147,6 +179,20 @@ struct drm_sched_fence *to_drm_sched_fence(struct dma_fence *f)
+ }
+ EXPORT_SYMBOL(to_drm_sched_fence);
+ 
++void drm_sched_fence_set_parent(struct drm_sched_fence *s_fence,
++				struct dma_fence *fence)
++{
++	/*
++	 * smp_store_release() to ensure another thread racing us
++	 * in drm_sched_fence_set_deadline_finished() sees the
++	 * fence's parent set before test_bit()
++	 */
++	smp_store_release(&s_fence->parent, dma_fence_get(fence));
++	if (test_bit(DMA_FENCE_FLAG_HAS_DEADLINE_BIT,
++		     &s_fence->finished.flags))
++		dma_fence_set_deadline(fence, s_fence->deadline);
++}
++
+ struct drm_sched_fence *drm_sched_fence_alloc(struct drm_sched_entity *entity,
+ 					      void *owner)
+ {
+diff --git a/drivers/gpu/drm/scheduler/sched_main.c b/drivers/gpu/drm/scheduler/sched_main.c
+index fd22d753b4e..455623ad803 100644
+--- a/drivers/gpu/drm/scheduler/sched_main.c
++++ b/drivers/gpu/drm/scheduler/sched_main.c
+@@ -1002,7 +1002,7 @@ static int drm_sched_main(void *param)
+ 		drm_sched_fence_scheduled(s_fence);
+ 
+ 		if (!IS_ERR_OR_NULL(fence)) {
+-			s_fence->parent = dma_fence_get(fence);
++			drm_sched_fence_set_parent(s_fence, fence);
+ 			/* Drop for original kref_init of the fence */
+ 			dma_fence_put(fence);
+ 
+diff --git a/include/drm/gpu_scheduler.h b/include/drm/gpu_scheduler.h
+index ca857ec9e7e..8fd3179133e 100644
+--- a/include/drm/gpu_scheduler.h
++++ b/include/drm/gpu_scheduler.h
+@@ -273,6 +273,12 @@ struct drm_sched_fence {
+          */
+ 	struct dma_fence		finished;
+ 
++	/**
++	 * @deadline: deadline set on &drm_sched_fence.finished which
++	 * potentially needs to be propagated to &drm_sched_fence.parent
++	 */
++	ktime_t				deadline;
++
+         /**
+          * @parent: the fence returned by &drm_sched_backend_ops.run_job
+          * when scheduling the job on hardware. We signal the
+@@ -562,6 +568,8 @@ void drm_sched_entity_set_priority(struct drm_sched_entity *entity,
+ 				   enum drm_sched_priority priority);
+ bool drm_sched_entity_is_ready(struct drm_sched_entity *entity);
+ 
++void drm_sched_fence_set_parent(struct drm_sched_fence *s_fence,
++				struct dma_fence *fence);
+ struct drm_sched_fence *drm_sched_fence_alloc(
+ 	struct drm_sched_entity *s_entity, void *owner);
+ void drm_sched_fence_init(struct drm_sched_fence *fence,
+-- 
+2.39.0
+

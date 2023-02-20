@@ -1,0 +1,37 @@
+From b734bf7fb5958ce55c431aa3122cd5e6f4aac5c9 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 3 Jan 2023 09:50:13 +0100
+Subject: [PATCH 150/230] arm64: dts: qcom: sc8280xp-pmics: add pmk8280 sdam
+ nvram
+
+Add one of the PMK8280 SDAM blocks which can be used to store an RTC
+offset.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-pmics.dtsi | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-pmics.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp-pmics.dtsi
+index c62262b8881..7220d5b5ab7 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-pmics.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-pmics.dtsi
+@@ -104,6 +104,15 @@ pmk8280_rtc: rtc@6100 {
+ 			wakeup-source;
+ 			status = "disabled";
+ 		};
++
++		pmk8280_sdam_6: nvram@8500 {
++			compatible = "qcom,spmi-sdam";
++			reg = <0x8500 0x100>;
++			#address-cells = <1>;
++			#size-cells = <1>;
++			ranges = <0 0x8500 0x100>;
++			status = "disabled";
++		};
+ 	};
+ 
+ 	pmc8280_1: pmic@1 {
+-- 
+2.39.0
+

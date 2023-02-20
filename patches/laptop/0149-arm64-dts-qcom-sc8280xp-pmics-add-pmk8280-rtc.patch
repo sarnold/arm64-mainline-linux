@@ -1,0 +1,39 @@
+From 7a4502319e0bcb87ebc3b751ea9d34cd8b81222a Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Mon, 9 May 2022 08:23:51 +0200
+Subject: [PATCH 149/230] arm64: dts: qcom: sc8280xp-pmics: add pmk8280 rtc
+
+The PMK8280 has an RTC which can also be used as a wakeup source.
+
+Note that the RTC can not be disabled and updating the time is not
+permitted either. Instead an offset can be stored in some other machine-
+specific non-volatile memory which a driver can take into account.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-pmics.dtsi | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-pmics.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp-pmics.dtsi
+index f2c0b71b5d8..c62262b8881 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-pmics.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-pmics.dtsi
+@@ -95,6 +95,15 @@ pmk8280_adc_tm: adc-tm@3400 {
+ 			#thermal-sensor-cells = <1>;
+ 			status = "disabled";
+ 		};
++
++		pmk8280_rtc: rtc@6100 {
++			compatible = "qcom,pmk8350-rtc";
++			reg = <0x6100>, <0x6200>;
++			reg-names = "rtc", "alarm";
++			interrupts = <0x0 0x62 0x1 IRQ_TYPE_EDGE_RISING>;
++			wakeup-source;
++			status = "disabled";
++		};
+ 	};
+ 
+ 	pmc8280_1: pmic@1 {
+-- 
+2.39.0
+

@@ -1,0 +1,65 @@
+From 1c54a46e0a6d440ce50dda3dd95b55b3c27ce529 Mon Sep 17 00:00:00 2001
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+Date: Wed, 7 Dec 2022 14:00:06 -0800
+Subject: [PATCH 013/230] drm/msm/dp: Add DP and EDP compatibles for SC8280XP
+
+The SC8280XP platform has four DisplayPort controllers, per MDSS
+instance, all with widebus support.
+
+The first two are defined to be DisplayPort only, while the latter pair
+(of each instance) can be either DisplayPort or Embedded DisplayPort.
+The two sets are tied to the possible compatibels.
+
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Reviewed-by: Kuogee Hsieh <quic_khsieh@quicinc.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+Link: https://lore.kernel.org/r/20221207220012.16529-7-quic_bjorande@quicinc.com
+---
+ drivers/gpu/drm/msm/dp/dp_display.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/drivers/gpu/drm/msm/dp/dp_display.c b/drivers/gpu/drm/msm/dp/dp_display.c
+index eeb292f1ad1..5b7f1f885b2 100644
+--- a/drivers/gpu/drm/msm/dp/dp_display.c
++++ b/drivers/gpu/drm/msm/dp/dp_display.c
+@@ -145,6 +145,26 @@ static const struct msm_dp_desc sc8180x_dp_descs[] = {
+ 	{}
+ };
+ 
++static const struct msm_dp_desc sc8280xp_dp_descs[] = {
++	{ .io_start = 0x0ae90000, .id = MSM_DP_CONTROLLER_0, .connector_type = DRM_MODE_CONNECTOR_DisplayPort, .wide_bus_en = true },
++	{ .io_start = 0x0ae98000, .id = MSM_DP_CONTROLLER_1, .connector_type = DRM_MODE_CONNECTOR_DisplayPort, .wide_bus_en = true },
++	{ .io_start = 0x0ae9a000, .id = MSM_DP_CONTROLLER_2, .connector_type = DRM_MODE_CONNECTOR_DisplayPort, .wide_bus_en = true },
++	{ .io_start = 0x0aea0000, .id = MSM_DP_CONTROLLER_3, .connector_type = DRM_MODE_CONNECTOR_DisplayPort, .wide_bus_en = true },
++	{ .io_start = 0x22090000, .id = MSM_DP_CONTROLLER_0, .connector_type = DRM_MODE_CONNECTOR_DisplayPort, .wide_bus_en = true },
++	{ .io_start = 0x22098000, .id = MSM_DP_CONTROLLER_1, .connector_type = DRM_MODE_CONNECTOR_DisplayPort, .wide_bus_en = true },
++	{ .io_start = 0x2209a000, .id = MSM_DP_CONTROLLER_2, .connector_type = DRM_MODE_CONNECTOR_DisplayPort, .wide_bus_en = true },
++	{ .io_start = 0x220a0000, .id = MSM_DP_CONTROLLER_3, .connector_type = DRM_MODE_CONNECTOR_DisplayPort, .wide_bus_en = true },
++	{}
++};
++
++static const struct msm_dp_desc sc8280xp_edp_descs[] = {
++	{ .io_start = 0x0ae9a000, .id = MSM_DP_CONTROLLER_2, .connector_type = DRM_MODE_CONNECTOR_eDP, .wide_bus_en = true },
++	{ .io_start = 0x0aea0000, .id = MSM_DP_CONTROLLER_3, .connector_type = DRM_MODE_CONNECTOR_eDP, .wide_bus_en = true },
++	{ .io_start = 0x2209a000, .id = MSM_DP_CONTROLLER_2, .connector_type = DRM_MODE_CONNECTOR_eDP, .wide_bus_en = true },
++	{ .io_start = 0x220a0000, .id = MSM_DP_CONTROLLER_3, .connector_type = DRM_MODE_CONNECTOR_eDP, .wide_bus_en = true },
++	{}
++};
++
+ static const struct msm_dp_desc sm8350_dp_descs[] = {
+ 	{ .io_start = 0x0ae90000, .id = MSM_DP_CONTROLLER_0, .connector_type = DRM_MODE_CONNECTOR_DisplayPort },
+ 	{}
+@@ -156,6 +176,8 @@ static const struct of_device_id dp_dt_match[] = {
+ 	{ .compatible = "qcom,sc7280-edp", .data = &sc7280_dp_descs },
+ 	{ .compatible = "qcom,sc8180x-dp", .data = &sc8180x_dp_descs },
+ 	{ .compatible = "qcom,sc8180x-edp", .data = &sc8180x_dp_descs },
++	{ .compatible = "qcom,sc8280xp-dp", .data = &sc8280xp_dp_descs },
++	{ .compatible = "qcom,sc8280xp-edp", .data = &sc8280xp_edp_descs },
+ 	{ .compatible = "qcom,sm8350-dp", .data = &sm8350_dp_descs },
+ 	{}
+ };
+-- 
+2.39.0
+

@@ -1,0 +1,140 @@
+From 22c58e717db1231f81ce0e891f07acb8b85b61b5 Mon Sep 17 00:00:00 2001
+From: Bjorn Andersson <quic_bjorande@quicinc.com>
+Date: Tue, 14 Feb 2023 14:47:46 -0800
+Subject: [PATCH 180/230] rpmsg: glink: Fix spelling of peek
+
+The code is peeking into the buffers, not peaking. Fix this throughout
+the glink drivers.
+
+Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Reviewed-by: Chris Lew <quic_clew@quicinc.com>
+Link: https://lore.kernel.org/r/20230214224746.1996130-1-quic_bjorande@quicinc.com
+---
+ drivers/rpmsg/qcom_glink_native.c | 14 +++++++-------
+ drivers/rpmsg/qcom_glink_native.h |  2 +-
+ drivers/rpmsg/qcom_glink_rpm.c    |  4 ++--
+ drivers/rpmsg/qcom_glink_smem.c   |  4 ++--
+ 4 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/rpmsg/qcom_glink_native.c b/drivers/rpmsg/qcom_glink_native.c
+index 324c75d59a6..7a3cac62ecf 100644
+--- a/drivers/rpmsg/qcom_glink_native.c
++++ b/drivers/rpmsg/qcom_glink_native.c
+@@ -274,10 +274,10 @@ static size_t qcom_glink_rx_avail(struct qcom_glink *glink)
+ 	return glink->rx_pipe->avail(glink->rx_pipe);
+ }
+ 
+-static void qcom_glink_rx_peak(struct qcom_glink *glink,
++static void qcom_glink_rx_peek(struct qcom_glink *glink,
+ 			       void *data, unsigned int offset, size_t count)
+ {
+-	glink->rx_pipe->peak(glink->rx_pipe, data, offset, count);
++	glink->rx_pipe->peek(glink->rx_pipe, data, offset, count);
+ }
+ 
+ static void qcom_glink_rx_advance(struct qcom_glink *glink, size_t count)
+@@ -808,7 +808,7 @@ static int qcom_glink_rx_defer(struct qcom_glink *glink, size_t extra)
+ 
+ 	INIT_LIST_HEAD(&dcmd->node);
+ 
+-	qcom_glink_rx_peak(glink, &dcmd->msg, 0, sizeof(dcmd->msg) + extra);
++	qcom_glink_rx_peek(glink, &dcmd->msg, 0, sizeof(dcmd->msg) + extra);
+ 
+ 	spin_lock(&glink->rx_lock);
+ 	list_add_tail(&dcmd->node, &glink->rx_queue);
+@@ -841,7 +841,7 @@ static int qcom_glink_rx_data(struct qcom_glink *glink, size_t avail)
+ 		return -EAGAIN;
+ 	}
+ 
+-	qcom_glink_rx_peak(glink, &hdr, 0, sizeof(hdr));
++	qcom_glink_rx_peek(glink, &hdr, 0, sizeof(hdr));
+ 	chunk_size = le32_to_cpu(hdr.chunk_size);
+ 	left_size = le32_to_cpu(hdr.left_size);
+ 
+@@ -906,7 +906,7 @@ static int qcom_glink_rx_data(struct qcom_glink *glink, size_t avail)
+ 		goto advance_rx;
+ 	}
+ 
+-	qcom_glink_rx_peak(glink, intent->data + intent->offset,
++	qcom_glink_rx_peek(glink, intent->data + intent->offset,
+ 			   sizeof(hdr), chunk_size);
+ 	intent->offset += chunk_size;
+ 
+@@ -973,7 +973,7 @@ static void qcom_glink_handle_intent(struct qcom_glink *glink,
+ 	if (!msg)
+ 		return;
+ 
+-	qcom_glink_rx_peak(glink, msg, 0, msglen);
++	qcom_glink_rx_peek(glink, msg, 0, msglen);
+ 
+ 	for (i = 0; i < count; ++i) {
+ 		intent = kzalloc(sizeof(*intent), GFP_ATOMIC);
+@@ -1030,7 +1030,7 @@ void qcom_glink_native_rx(struct qcom_glink *glink)
+ 		if (avail < sizeof(msg))
+ 			break;
+ 
+-		qcom_glink_rx_peak(glink, &msg, 0, sizeof(msg));
++		qcom_glink_rx_peek(glink, &msg, 0, sizeof(msg));
+ 
+ 		cmd = le16_to_cpu(msg.cmd);
+ 		param1 = le16_to_cpu(msg.param1);
+diff --git a/drivers/rpmsg/qcom_glink_native.h b/drivers/rpmsg/qcom_glink_native.h
+index ab7fca041d6..6aa13db8056 100644
+--- a/drivers/rpmsg/qcom_glink_native.h
++++ b/drivers/rpmsg/qcom_glink_native.h
+@@ -15,7 +15,7 @@ struct qcom_glink_pipe {
+ 
+ 	size_t (*avail)(struct qcom_glink_pipe *glink_pipe);
+ 
+-	void (*peak)(struct qcom_glink_pipe *glink_pipe, void *data,
++	void (*peek)(struct qcom_glink_pipe *glink_pipe, void *data,
+ 		     unsigned int offset, size_t count);
+ 	void (*advance)(struct qcom_glink_pipe *glink_pipe, size_t count);
+ 
+diff --git a/drivers/rpmsg/qcom_glink_rpm.c b/drivers/rpmsg/qcom_glink_rpm.c
+index 5179f834a10..f94bb7d4f1e 100644
+--- a/drivers/rpmsg/qcom_glink_rpm.c
++++ b/drivers/rpmsg/qcom_glink_rpm.c
+@@ -81,7 +81,7 @@ static size_t glink_rpm_rx_avail(struct qcom_glink_pipe *glink_pipe)
+ 		return head - tail;
+ }
+ 
+-static void glink_rpm_rx_peak(struct qcom_glink_pipe *glink_pipe,
++static void glink_rpm_rx_peek(struct qcom_glink_pipe *glink_pipe,
+ 			      void *data, unsigned int offset, size_t count)
+ {
+ 	struct glink_rpm_pipe *pipe = to_rpm_pipe(glink_pipe);
+@@ -333,7 +333,7 @@ static int glink_rpm_probe(struct platform_device *pdev)
+ 
+ 	/* Pipe specific accessors */
+ 	rpm->rx_pipe.native.avail = glink_rpm_rx_avail;
+-	rpm->rx_pipe.native.peak = glink_rpm_rx_peak;
++	rpm->rx_pipe.native.peek = glink_rpm_rx_peek;
+ 	rpm->rx_pipe.native.advance = glink_rpm_rx_advance;
+ 	rpm->tx_pipe.native.avail = glink_rpm_tx_avail;
+ 	rpm->tx_pipe.native.write = glink_rpm_tx_write;
+diff --git a/drivers/rpmsg/qcom_glink_smem.c b/drivers/rpmsg/qcom_glink_smem.c
+index 05b4fe0a738..7a982c60a8d 100644
+--- a/drivers/rpmsg/qcom_glink_smem.c
++++ b/drivers/rpmsg/qcom_glink_smem.c
+@@ -91,7 +91,7 @@ static size_t glink_smem_rx_avail(struct qcom_glink_pipe *np)
+ 		return head - tail;
+ }
+ 
+-static void glink_smem_rx_peak(struct qcom_glink_pipe *np,
++static void glink_smem_rx_peek(struct qcom_glink_pipe *np,
+ 			       void *data, unsigned int offset, size_t count)
+ {
+ 	struct glink_smem_pipe *pipe = to_smem_pipe(np);
+@@ -324,7 +324,7 @@ struct qcom_glink_smem *qcom_glink_smem_register(struct device *parent,
+ 
+ 	rx_pipe->smem = smem;
+ 	rx_pipe->native.avail = glink_smem_rx_avail;
+-	rx_pipe->native.peak = glink_smem_rx_peak;
++	rx_pipe->native.peek = glink_smem_rx_peek;
+ 	rx_pipe->native.advance = glink_smem_rx_advance;
+ 
+ 	tx_pipe->smem = smem;
+-- 
+2.39.0
+

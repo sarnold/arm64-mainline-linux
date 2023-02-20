@@ -1,0 +1,43 @@
+From 80138b583b1f8b8af0556d8a5e0eb3c73d7e4f66 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Mon, 18 Apr 2022 16:30:07 +0200
+Subject: [PATCH 157/230] hack: ath11k: override qmi board id
+
+Force the ath11k driver to load a board file for a different machine
+that is already in linux-firmware.
+
+For proper WiFi support we need a board file from the vendor for the
+actual hardware in question.
+
+WARNING: This should only be used for basic internal testing. Use at
+your own risk.
+
+Not-signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/net/wireless/ath/ath11k/qmi.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+index ab923e24b0a..b8b72c9bc60 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.c
++++ b/drivers/net/wireless/ath/ath11k/qmi.c
+@@ -2229,10 +2229,16 @@ static int ath11k_qmi_request_target_cap(struct ath11k_base *ab)
+ 		ab->qmi.target.chip_family = resp.chip_info.chip_family;
+ 	}
+ 
++#if 0
+ 	if (resp.board_info_valid)
+ 		ab->qmi.target.board_id = resp.board_info.board_id;
+ 	else
+ 		ab->qmi.target.board_id = 0xFF;
++#else
++	ath11k_warn(ab, "WARNING: overriding board_id (%02x) -- only intended for basic internal testing\n",
++			resp.board_info.board_id);
++	ab->qmi.target.board_id = 0xFF;
++#endif
+ 
+ 	if (resp.soc_info_valid)
+ 		ab->qmi.target.soc_id = resp.soc_info.soc_id;
+-- 
+2.39.0
+

@@ -1,0 +1,51 @@
+From c2c4c9a9944910971ed85607006fa1f9085c646c Mon Sep 17 00:00:00 2001
+From: Rob Clark <robdclark@chromium.org>
+Date: Sat, 18 Feb 2023 13:15:46 -0800
+Subject: [PATCH 218/230] dma-buf/fence-chain: Add fence deadline support
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Propagate the deadline to all the fences in the chain.
+
+Signed-off-by: Rob Clark <robdclark@chromium.org>
+Reviewed-by: Christian König <christian.koenig@amd.com> for this one.
+Link: https://lore.kernel.org/r/20230218211608.1630586-4-robdclark@gmail.com
+---
+ drivers/dma-buf/dma-fence-chain.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/dma-buf/dma-fence-chain.c b/drivers/dma-buf/dma-fence-chain.c
+index a0d920576ba..4684874af61 100644
+--- a/drivers/dma-buf/dma-fence-chain.c
++++ b/drivers/dma-buf/dma-fence-chain.c
+@@ -206,6 +206,18 @@ static void dma_fence_chain_release(struct dma_fence *fence)
+ 	dma_fence_free(fence);
+ }
+ 
++
++static void dma_fence_chain_set_deadline(struct dma_fence *fence,
++					 ktime_t deadline)
++{
++	dma_fence_chain_for_each(fence, fence) {
++		struct dma_fence_chain *chain = to_dma_fence_chain(fence);
++		struct dma_fence *f = chain ? chain->fence : fence;
++
++		dma_fence_set_deadline(f, deadline);
++	}
++}
++
+ const struct dma_fence_ops dma_fence_chain_ops = {
+ 	.use_64bit_seqno = true,
+ 	.get_driver_name = dma_fence_chain_get_driver_name,
+@@ -213,6 +225,7 @@ const struct dma_fence_ops dma_fence_chain_ops = {
+ 	.enable_signaling = dma_fence_chain_enable_signaling,
+ 	.signaled = dma_fence_chain_signaled,
+ 	.release = dma_fence_chain_release,
++	.set_deadline = dma_fence_chain_set_deadline,
+ };
+ EXPORT_SYMBOL(dma_fence_chain_ops);
+ 
+-- 
+2.39.0
+

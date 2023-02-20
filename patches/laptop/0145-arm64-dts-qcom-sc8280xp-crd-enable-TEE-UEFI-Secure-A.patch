@@ -1,0 +1,35 @@
+From 0b9716f1301a87e9991e98a8ebbef3855e7add9f Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Wed, 30 Nov 2022 09:46:16 +0100
+Subject: [PATCH 145/230] arm64: dts: qcom: sc8280xp-crd: enable TEE UEFI
+ Secure Application
+
+Enable the Qualcomm UEFI Secure Application in the Trusted Execution
+Environment, which is needed to access the UEFI variables on the
+SC8280XP CRD.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-crd.dts | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+index 0c3bdd3cdb9..61d6853c9f0 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+@@ -34,6 +34,12 @@ chosen {
+ 		stdout-path = "serial0:115200n8";
+ 	};
+ 
++	firmware {
++		tee-uefisecapp {
++			compatible = "qcom,tee-uefisecapp";
++		};
++	};
++
+ 	pmic-glink {
+ 		compatible = "qcom,sc8280xp-pmic-glink", "qcom,pmic-glink";
+ 
+-- 
+2.39.0
+

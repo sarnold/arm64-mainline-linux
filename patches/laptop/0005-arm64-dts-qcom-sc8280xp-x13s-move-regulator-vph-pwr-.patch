@@ -1,0 +1,56 @@
+From 8496a17f30d28a2d901195c9d25432f4aceea0c0 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Wed, 28 Dec 2022 09:45:40 +0100
+Subject: [PATCH 005/230] arm64: dts: qcom: sc8280xp-x13s: move
+ 'regulator-vph-pwr' node
+
+Move the new 'regulator-vph-pwr' node before the wlan regulator node to
+restore the root-node sort order (alphabetically by node name).
+
+While at it, add a couple of newlines to separate the properties for
+consistency with the other regulator nodes.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ .../dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index aeb9e1800f7..0201c677674 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -95,6 +95,16 @@ vreg_nvme: regulator-nvme {
+ 		regulator-boot-on;
+ 	};
+ 
++	vreg_vph_pwr: regulator-vph-pwr {
++		compatible = "regulator-fixed";
++
++		regulator-name = "VPH_VCC3R9";
++		regulator-min-microvolt = <3900000>;
++		regulator-max-microvolt = <3900000>;
++
++		regulator-always-on;
++	};
++
+ 	vreg_wlan: regulator-wlan {
+ 		compatible = "regulator-fixed";
+ 
+@@ -127,14 +137,6 @@ vreg_wwan: regulator-wwan {
+ 		regulator-boot-on;
+ 	};
+ 
+-	vreg_vph_pwr: regulator-vph-pwr {
+-		compatible = "regulator-fixed";
+-		regulator-name = "VPH_VCC3R9";
+-		regulator-min-microvolt = <3900000>;
+-		regulator-max-microvolt = <3900000>;
+-		regulator-always-on;
+-	};
+-
+ 	thermal-zones {
+ 		skin-temp-thermal {
+ 			polling-delay-passive = <250>;
+-- 
+2.39.0
+

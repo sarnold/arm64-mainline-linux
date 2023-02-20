@@ -1,0 +1,52 @@
+From d937cd21916cd3010b937170d11623156042572d Mon Sep 17 00:00:00 2001
+From: Steev Klimaszewski <steev@kali.org>
+Date: Mon, 6 Feb 2023 23:28:26 -0600
+Subject: [PATCH 163/230] dt-bindings: net: Add WCN6855 Bluetooth
+
+Add bindings for the QTI WCN6855 chipset.
+
+Signed-off-by: Steev Klimaszewski <steev@kali.org>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Link: https://lore.kernel.org/r/20230207052829.3996-2-steev@kali.org
+---
+ .../net/bluetooth/qualcomm-bluetooth.yaml       | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/net/bluetooth/qualcomm-bluetooth.yaml b/Documentation/devicetree/bindings/net/bluetooth/qualcomm-bluetooth.yaml
+index a6a6b0e4df7..68f78b90d23 100644
+--- a/Documentation/devicetree/bindings/net/bluetooth/qualcomm-bluetooth.yaml
++++ b/Documentation/devicetree/bindings/net/bluetooth/qualcomm-bluetooth.yaml
+@@ -23,6 +23,7 @@ properties:
+       - qcom,wcn3998-bt
+       - qcom,qca6390-bt
+       - qcom,wcn6750-bt
++      - qcom,wcn6855-bt
+ 
+   enable-gpios:
+     maxItems: 1
+@@ -133,6 +134,22 @@ allOf:
+         - vddrfa1p7-supply
+         - vddrfa1p2-supply
+         - vddasd-supply
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,wcn6855-bt
++    then:
++      required:
++        - enable-gpios
++        - swctrl-gpios
++        - vddio-supply
++        - vddbtcxmx-supply
++        - vddrfacmn-supply
++        - vddrfa0p8-supply
++        - vddrfa1p2-supply
++        - vddrfa1p7-supply
+ 
+ examples:
+   - |
+-- 
+2.39.0
+

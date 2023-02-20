@@ -1,0 +1,44 @@
+From 1a6af1fca5e7026922897e040613bb86e4bff70a Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 26 Jan 2023 11:26:43 +0100
+Subject: [PATCH 051/230] nvmem: qcom-spmi-sdam: register at device init time
+
+There are currently no in-tree users of the Qualcomm SDAM nvmem driver
+and there is generally no point in registering a driver that can be
+built as a module at subsys init time.
+
+Register the driver at the normal device init time instead and let
+driver core sort out the probe order.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/nvmem/qcom-spmi-sdam.c | 13 +------------
+ 1 file changed, 1 insertion(+), 12 deletions(-)
+
+diff --git a/drivers/nvmem/qcom-spmi-sdam.c b/drivers/nvmem/qcom-spmi-sdam.c
+index 8499892044b..f822790db49 100644
+--- a/drivers/nvmem/qcom-spmi-sdam.c
++++ b/drivers/nvmem/qcom-spmi-sdam.c
+@@ -175,18 +175,7 @@ static struct platform_driver sdam_driver = {
+ 	},
+ 	.probe		= sdam_probe,
+ };
+-
+-static int __init sdam_init(void)
+-{
+-	return platform_driver_register(&sdam_driver);
+-}
+-subsys_initcall(sdam_init);
+-
+-static void __exit sdam_exit(void)
+-{
+-	return platform_driver_unregister(&sdam_driver);
+-}
+-module_exit(sdam_exit);
++module_platform_driver(sdam_driver);
+ 
+ MODULE_DESCRIPTION("QCOM SPMI SDAM driver");
+ MODULE_LICENSE("GPL v2");
+-- 
+2.39.0
+

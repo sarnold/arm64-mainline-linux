@@ -1,0 +1,79 @@
+From 99d5916979ef909fad08dceb20912c1ae17a5af9 Mon Sep 17 00:00:00 2001
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Date: Tue, 31 Jan 2023 23:33:45 +0530
+Subject: [PATCH 205/230] iommu/arm-smmu-qcom: Rework the logic finding the
+ bypass quirk
+
+The logic used to find the quirky firmware that intercepts the writes to
+S2CR register to replace bypass type streams with a fault, and ignore the
+fault type, is not working with the firmware on newer SoCs like SC8280XP.
+
+The current logic uses the last stream mapping group (num_mapping_groups
+- 1) as an index for finding quirky firmware. But on SC8280XP, this
+logic is not working as the number of stream mapping groups reported by
+the SMMU (163 as on the SC8280XP-CRD device) is not valid for some reason.
+So the current logic that checks the (163-1) S2CR entry fails to detect
+the quirky firmware on these devices and triggers invalid context fault
+for bypass streams.
+
+To fix this issue, rework the logic to find the first non-valid (free)
+stream mapping register group (SMR) and use that index to access S2CR
+for detecting the bypass quirk.
+
+This also warrants a change in variable name from last_s2cr to free_s2cr.
+
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c | 24 +++++++++++++++++-----
+ 1 file changed, 19 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c b/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
+index 78fc0e1bf21..4104f81b8d8 100644
+--- a/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
++++ b/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
+@@ -267,23 +267,37 @@ static int qcom_smmu_init_context(struct arm_smmu_domain *smmu_domain,
+ 
+ static int qcom_smmu_cfg_probe(struct arm_smmu_device *smmu)
+ {
+-	unsigned int last_s2cr = ARM_SMMU_GR0_S2CR(smmu->num_mapping_groups - 1);
+ 	struct qcom_smmu *qsmmu = to_qcom_smmu(smmu);
++	u32 free_s2cr;
+ 	u32 reg;
+ 	u32 smr;
+ 	int i;
+ 
++	/*
++	 * Find the first non-valid (free) stream mapping register group and
++	 * use that index to access S2CR for detecting the bypass quirk.
++	 */
++	for (i = 0; i < smmu->num_mapping_groups; i++) {
++		smr = arm_smmu_gr0_read(smmu, ARM_SMMU_GR0_SMR(i));
++
++		if (!FIELD_GET(ARM_SMMU_SMR_VALID, smr))
++			break;
++	}
++
++	free_s2cr = ARM_SMMU_GR0_S2CR(i);
++
+ 	/*
+ 	 * With some firmware versions writes to S2CR of type FAULT are
+ 	 * ignored, and writing BYPASS will end up written as FAULT in the
+-	 * register. Perform a write to S2CR to detect if this is the case and
+-	 * if so reserve a context bank to emulate bypass streams.
++	 * register. Perform a write to the first free S2CR to detect if
++	 * this is the case and if so reserve a context bank to emulate
++	 * bypass streams.
+ 	 */
+ 	reg = FIELD_PREP(ARM_SMMU_S2CR_TYPE, S2CR_TYPE_BYPASS) |
+ 	      FIELD_PREP(ARM_SMMU_S2CR_CBNDX, 0xff) |
+ 	      FIELD_PREP(ARM_SMMU_S2CR_PRIVCFG, S2CR_PRIVCFG_DEFAULT);
+-	arm_smmu_gr0_write(smmu, last_s2cr, reg);
+-	reg = arm_smmu_gr0_read(smmu, last_s2cr);
++	arm_smmu_gr0_write(smmu, free_s2cr, reg);
++	reg = arm_smmu_gr0_read(smmu, free_s2cr);
+ 	if (FIELD_GET(ARM_SMMU_S2CR_TYPE, reg) != S2CR_TYPE_BYPASS) {
+ 		qsmmu->bypass_quirk = true;
+ 		qsmmu->bypass_cbndx = smmu->num_context_banks - 1;
+-- 
+2.39.0
+

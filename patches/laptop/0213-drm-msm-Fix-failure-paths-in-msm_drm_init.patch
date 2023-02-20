@@ -1,0 +1,79 @@
+From d49775d58dc181f7a9d1aaff234c8d63f44d9c29 Mon Sep 17 00:00:00 2001
+From: Akhil P Oommen <quic_akhilpo@quicinc.com>
+Date: Wed, 21 Dec 2022 20:39:57 +0530
+Subject: [PATCH 213/230] drm/msm: Fix failure paths in msm_drm_init()
+
+Ensure that we do drm_dev_put() when there is an early return in
+msm_drm_init().
+
+Signed-off-by: Akhil P Oommen <quic_akhilpo@quicinc.com>
+Link: https://lore.kernel.org/r/20221221203925.v2.2.I49dfc3654040be61702e491f1aa63d3a5f308852@changeid
+---
+ drivers/gpu/drm/msm/disp/msm_disp_snapshot.c |  3 +++
+ drivers/gpu/drm/msm/msm_drv.c                | 11 +++++++----
+ 2 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/disp/msm_disp_snapshot.c b/drivers/gpu/drm/msm/disp/msm_disp_snapshot.c
+index e75b97127c0..b73031cd48e 100644
+--- a/drivers/gpu/drm/msm/disp/msm_disp_snapshot.c
++++ b/drivers/gpu/drm/msm/disp/msm_disp_snapshot.c
+@@ -129,6 +129,9 @@ void msm_disp_snapshot_destroy(struct drm_device *drm_dev)
+ 	}
+ 
+ 	priv = drm_dev->dev_private;
++	if (!priv->kms)
++		return;
++
+ 	kms = priv->kms;
+ 
+ 	if (kms->dump_worker)
+diff --git a/drivers/gpu/drm/msm/msm_drv.c b/drivers/gpu/drm/msm/msm_drv.c
+index 9d0454e696c..a655434a6f2 100644
+--- a/drivers/gpu/drm/msm/msm_drv.c
++++ b/drivers/gpu/drm/msm/msm_drv.c
+@@ -150,6 +150,9 @@ static void msm_irq_uninstall(struct drm_device *dev)
+ 	struct msm_drm_private *priv = dev->dev_private;
+ 	struct msm_kms *kms = priv->kms;
+ 
++	if (!priv->kms)
++		return;
++
+ 	kms->funcs->irq_uninstall(kms);
+ 	if (kms->irq_requested)
+ 		free_irq(kms->irq, dev);
+@@ -267,8 +270,6 @@ static int msm_drm_uninit(struct device *dev)
+ 	component_unbind_all(dev, ddev);
+ 
+ 	ddev->dev_private = NULL;
+-	drm_dev_put(ddev);
+-
+ 	destroy_workqueue(priv->wq);
+ 
+ 	return 0;
+@@ -442,12 +443,12 @@ static int msm_drm_init(struct device *dev, const struct drm_driver *drv)
+ 
+ 	ret = msm_init_vram(ddev);
+ 	if (ret)
+-		return ret;
++		goto err_drm_dev_put;
+ 
+ 	/* Bind all our sub-components: */
+ 	ret = component_bind_all(dev, ddev);
+ 	if (ret)
+-		return ret;
++		goto err_drm_dev_put;
+ 
+ 	dma_set_max_seg_size(dev, UINT_MAX);
+ 
+@@ -545,6 +546,8 @@ static int msm_drm_init(struct device *dev, const struct drm_driver *drv)
+ 
+ err_msm_uninit:
+ 	msm_drm_uninit(dev);
++err_drm_dev_put:
++	drm_dev_put(ddev);
+ 	return ret;
+ }
+ 
+-- 
+2.39.0
+

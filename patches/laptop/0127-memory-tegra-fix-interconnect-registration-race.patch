@@ -1,0 +1,64 @@
+From b97cba1c438293d91a578095ddd80cb3d89833c3 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 31 Jan 2023 15:44:41 +0100
+Subject: [PATCH 127/230] memory: tegra: fix interconnect registration race
+
+The current interconnect provider registration interface is inherently
+racy as nodes are not added until the after adding the provider. This
+can specifically cause racing DT lookups to fail.
+
+Switch to using the new API where the provider is not registered until
+after it has been fully initialised.
+
+Fixes: 06f079816d4c ("memory: tegra-mc: Add interconnect framework")
+Cc: stable@vger.kernel.org      # 5.11
+Cc: Dmitry Osipenko <digetx@gmail.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/memory/tegra/mc.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/memory/tegra/mc.c b/drivers/memory/tegra/mc.c
+index 592907546ee..5cd28619ea9 100644
+--- a/drivers/memory/tegra/mc.c
++++ b/drivers/memory/tegra/mc.c
+@@ -794,16 +794,12 @@ static int tegra_mc_interconnect_setup(struct tegra_mc *mc)
+ 	mc->provider.aggregate = mc->soc->icc_ops->aggregate;
+ 	mc->provider.xlate_extended = mc->soc->icc_ops->xlate_extended;
+ 
+-	err = icc_provider_add(&mc->provider);
+-	if (err)
+-		return err;
++	icc_provider_init(&mc->provider);
+ 
+ 	/* create Memory Controller node */
+ 	node = icc_node_create(TEGRA_ICC_MC);
+-	if (IS_ERR(node)) {
+-		err = PTR_ERR(node);
+-		goto del_provider;
+-	}
++	if (IS_ERR(node))
++		return PTR_ERR(node);
+ 
+ 	node->name = "Memory Controller";
+ 	icc_node_add(node, &mc->provider);
+@@ -830,12 +826,14 @@ static int tegra_mc_interconnect_setup(struct tegra_mc *mc)
+ 			goto remove_nodes;
+ 	}
+ 
++	err = icc_provider_register(&mc->provider);
++	if (err)
++		goto remove_nodes;
++
+ 	return 0;
+ 
+ remove_nodes:
+ 	icc_nodes_remove(&mc->provider);
+-del_provider:
+-	icc_provider_del(&mc->provider);
+ 
+ 	return err;
+ }
+-- 
+2.39.0
+

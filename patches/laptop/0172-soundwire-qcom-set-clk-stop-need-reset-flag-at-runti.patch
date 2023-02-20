@@ -1,0 +1,56 @@
+From b56d249950ac766f6fc1abab8a3c322d401d9766 Mon Sep 17 00:00:00 2001
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Date: Thu, 9 Feb 2023 13:13:36 +0000
+Subject: [PATCH 172/230] soundwire: qcom: set clk stop need reset flag at
+ runtime
+
+WSA Soundwire controller needs an full reset if clock stop support
+is not available in slave devices. WSA881x does not support clock stop
+however WSA883x supports clock stop.
+
+Make setting this flag at runtime to address above issue.
+
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Link: https://lore.kernel.org/r/20230209131336.18252-6-srinivas.kandagatla@linaro.org
+---
+ drivers/soundwire/qcom.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/soundwire/qcom.c b/drivers/soundwire/qcom.c
+index 74e38c0d651..0224a5a866d 100644
+--- a/drivers/soundwire/qcom.c
++++ b/drivers/soundwire/qcom.c
+@@ -536,10 +536,14 @@ static int qcom_swrm_enumerate(struct sdw_bus *bus)
+ 
+ 		sdw_extract_slave_id(bus, addr, &id);
+ 		found = false;
++		ctrl->clock_stop_not_supported = false;
+ 		/* Now compare with entries */
+ 		list_for_each_entry_safe(slave, _s, &bus->slaves, node) {
+ 			if (sdw_compare_devid(slave, id) == 0) {
+ 				qcom_swrm_set_slave_dev_num(bus, slave, i);
++				if (!slave->prop.simple_clk_stop_capable)
++					ctrl->clock_stop_not_supported = true;
++
+ 				found = true;
+ 				break;
+ 			}
+@@ -1500,15 +1504,6 @@ static int qcom_swrm_probe(struct platform_device *pdev)
+ 		 (ctrl->version >> 24) & 0xff, (ctrl->version >> 16) & 0xff,
+ 		 ctrl->version & 0xffff);
+ 
+-	/* Clk stop is not supported on WSA Soundwire masters */
+-	if (ctrl->version <= 0x01030000) {
+-		ctrl->clock_stop_not_supported = true;
+-	} else {
+-		ctrl->reg_read(ctrl, SWRM_COMP_MASTER_ID, &val);
+-		if (val == MASTER_ID_WSA)
+-			ctrl->clock_stop_not_supported = true;
+-	}
+-
+ #ifdef CONFIG_DEBUG_FS
+ 	ctrl->debugfs = debugfs_create_dir("qualcomm-sdw", ctrl->bus.debugfs);
+ 	debugfs_create_file("qualcomm-registers", 0400, ctrl->debugfs, ctrl,
+-- 
+2.39.0
+

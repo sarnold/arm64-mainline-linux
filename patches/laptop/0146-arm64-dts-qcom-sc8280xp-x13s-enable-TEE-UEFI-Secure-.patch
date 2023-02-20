@@ -1,0 +1,35 @@
+From eefafc096ee43b5bf83ade74e573917aa4c3bed0 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Wed, 30 Nov 2022 09:46:16 +0100
+Subject: [PATCH 146/230] arm64: dts: qcom: sc8280xp-x13s: enable TEE UEFI
+ Secure Application
+
+Enable the Qualcomm UEFI Secure Application in the Trusted Execution
+Environment, which is needed to access the UEFI variables on the
+Lenovo X13s.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index 581704b4809..f90f04b616a 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -57,6 +57,12 @@ backlight: backlight {
+ 		pinctrl-0 = <&edp_bl_en>, <&edp_bl_pwm>;
+ 	};
+ 
++	firmware {
++		tee-uefisecapp {
++			compatible = "qcom,tee-uefisecapp";
++		};
++	};
++
+ 	gpio-keys {
+ 		compatible = "gpio-keys";
+ 
+-- 
+2.39.0
+

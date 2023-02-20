@@ -1,0 +1,48 @@
+From 716d5e53596a98f57384373ed99321d90c6b03bc Mon Sep 17 00:00:00 2001
+From: Rob Clark <robdclark@chromium.org>
+Date: Sat, 18 Feb 2023 13:15:45 -0800
+Subject: [PATCH 217/230] dma-buf/fence-array: Add fence deadline support
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Propagate the deadline to all the fences in the array.
+
+Signed-off-by: Rob Clark <robdclark@chromium.org>
+Reviewed-by: Christian König <christian.koenig@amd.com>
+Link: https://lore.kernel.org/r/20230218211608.1630586-3-robdclark@gmail.com
+---
+ drivers/dma-buf/dma-fence-array.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/dma-buf/dma-fence-array.c b/drivers/dma-buf/dma-fence-array.c
+index 5c8a7084577..9b3ce894835 100644
+--- a/drivers/dma-buf/dma-fence-array.c
++++ b/drivers/dma-buf/dma-fence-array.c
+@@ -123,12 +123,23 @@ static void dma_fence_array_release(struct dma_fence *fence)
+ 	dma_fence_free(fence);
+ }
+ 
++static void dma_fence_array_set_deadline(struct dma_fence *fence,
++					 ktime_t deadline)
++{
++	struct dma_fence_array *array = to_dma_fence_array(fence);
++	unsigned i;
++
++	for (i = 0; i < array->num_fences; ++i)
++		dma_fence_set_deadline(array->fences[i], deadline);
++}
++
+ const struct dma_fence_ops dma_fence_array_ops = {
+ 	.get_driver_name = dma_fence_array_get_driver_name,
+ 	.get_timeline_name = dma_fence_array_get_timeline_name,
+ 	.enable_signaling = dma_fence_array_enable_signaling,
+ 	.signaled = dma_fence_array_signaled,
+ 	.release = dma_fence_array_release,
++	.set_deadline = dma_fence_array_set_deadline,
+ };
+ EXPORT_SYMBOL(dma_fence_array_ops);
+ 
+-- 
+2.39.0
+

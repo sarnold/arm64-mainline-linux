@@ -1,0 +1,57 @@
+From 4d747c1c7128573e2cd6ec28db04ee3a21d59e2b Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 19 Jan 2023 16:23:42 +0100
+Subject: [PATCH 048/230] efivarfs: always register filesystem
+
+The efivar ops are typically registered at subsys init time so that
+they are available when efivarfs is registered at module init time.
+
+Other efivars implementations, such as Google SMI, exists and can
+currently be build as modules which means that efivar may not be
+available when efivarfs is initialised.
+
+Move the efivar availability check from module init to when the
+filesystem is mounted to allow late registration of efivars.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ fs/efivarfs/super.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/fs/efivarfs/super.c b/fs/efivarfs/super.c
+index f72c529c8ec..482d612b716 100644
+--- a/fs/efivarfs/super.c
++++ b/fs/efivarfs/super.c
+@@ -194,6 +194,9 @@ static int efivarfs_fill_super(struct super_block *sb, struct fs_context *fc)
+ 	struct dentry *root;
+ 	int err;
+ 
++	if (!efivar_is_available())
++		return -EOPNOTSUPP;
++
+ 	sb->s_maxbytes          = MAX_LFS_FILESIZE;
+ 	sb->s_blocksize         = PAGE_SIZE;
+ 	sb->s_blocksize_bits    = PAGE_SHIFT;
+@@ -243,6 +246,9 @@ static void efivarfs_kill_sb(struct super_block *sb)
+ {
+ 	kill_litter_super(sb);
+ 
++	if (!efivar_is_available())
++		return;
++
+ 	/* Remove all entries and destroy */
+ 	efivar_entry_iter(efivarfs_destroy, &efivarfs_list, NULL);
+ }
+@@ -256,9 +262,6 @@ static struct file_system_type efivarfs_type = {
+ 
+ static __init int efivarfs_init(void)
+ {
+-	if (!efivar_is_available())
+-		return -ENODEV;
+-
+ 	return register_filesystem(&efivarfs_type);
+ }
+ 
+-- 
+2.39.0
+

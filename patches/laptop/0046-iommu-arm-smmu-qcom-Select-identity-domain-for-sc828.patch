@@ -1,0 +1,34 @@
+From 11072002a038aa5c3f110f178aba3ad686e3e6a2 Mon Sep 17 00:00:00 2001
+From: Bjorn Andersson <quic_bjorande@quicinc.com>
+Date: Thu, 12 Jan 2023 20:11:04 -0800
+Subject: [PATCH 046/230] iommu/arm-smmu-qcom: Select identity domain for
+ sc8280xp MDSS
+
+The Qualcomm display driver installs a translation domain once it has
+mapped a framebuffer. Use the identity domain for this device on
+SC8280XP as well, to avoid faults from EFI FB accessing the framebuffer
+while this is being set up.
+
+Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+Link: https://lore.kernel.org/r/20230113041104.4189152-1-quic_bjorande@quicinc.com
+---
+ drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c b/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
+index 91d404deb11..78fc0e1bf21 100644
+--- a/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
++++ b/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
+@@ -250,6 +250,7 @@ static const struct of_device_id qcom_smmu_client_of_match[] __maybe_unused = {
+ 	{ .compatible = "qcom,sc7280-mdss" },
+ 	{ .compatible = "qcom,sc7280-mss-pil" },
+ 	{ .compatible = "qcom,sc8180x-mdss" },
++	{ .compatible = "qcom,sc8280xp-mdss" },
+ 	{ .compatible = "qcom,sm8250-mdss" },
+ 	{ .compatible = "qcom,sdm845-mdss" },
+ 	{ .compatible = "qcom,sdm845-mss-pil" },
+-- 
+2.39.0
+

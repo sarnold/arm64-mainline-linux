@@ -1,0 +1,94 @@
+From f85087c8e42876872e75ee84ff159e35ce421e39 Mon Sep 17 00:00:00 2001
+From: Srinivasa Rao Mandadapu <quic_srivasam@quicinc.com>
+Date: Thu, 12 Jan 2023 13:00:17 +0530
+Subject: [PATCH 056/230] ASoC: qdsp6: audioreach: Add ADSP ready check
+
+Check for SPF readiness in prm driver probe to avoid race conditions
+during ADSP pil loading.
+This patch is to avoid, sending requests to ADSP before it's
+power domains are up and ready.
+
+Signed-off-by: Srinivasa Rao Mandadapu <quic_srivasam@quicinc.com>
+Tested-by: Ratna Deepthi Kudaravalli <rkudarav@qti.qualcomm.com>
+Link: https://lore.kernel.org/r/1673508617-27410-1-git-send-email-quic_srivasam@quicinc.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+---
+ sound/soc/qcom/qdsp6/q6apm.c | 13 +++++++++++++
+ sound/soc/qcom/qdsp6/q6apm.h |  2 ++
+ sound/soc/qcom/qdsp6/q6prm.c |  4 ++++
+ 3 files changed, 19 insertions(+)
+
+diff --git a/sound/soc/qcom/qdsp6/q6apm.c b/sound/soc/qcom/qdsp6/q6apm.c
+index 5beb898f28f..8a7dfd27d3c 100644
+--- a/sound/soc/qcom/qdsp6/q6apm.c
++++ b/sound/soc/qcom/qdsp6/q6apm.c
+@@ -27,6 +27,8 @@ struct apm_graph_mgmt_cmd {
+ 
+ #define APM_GRAPH_MGMT_PSIZE(p, n) ALIGN(struct_size(p, sub_graph_id_list, n), 8)
+ 
++struct q6apm *g_apm;
++
+ int q6apm_send_cmd_sync(struct q6apm *apm, struct gpr_pkt *pkt, uint32_t rsp_opcode)
+ {
+ 	gpr_device_t *gdev = apm->gdev;
+@@ -143,6 +145,15 @@ static void q6apm_put_audioreach_graph(struct kref *ref)
+ 	kfree(graph);
+ }
+ 
++bool q6apm_is_adsp_ready(void)
++{
++	if (g_apm && g_apm->state)
++		return true;
++
++	return false;
++}
++EXPORT_SYMBOL_GPL(q6apm_is_adsp_ready);
++
+ static int q6apm_get_apm_state(struct q6apm *apm)
+ {
+ 	struct gpr_pkt *pkt;
+@@ -658,6 +669,8 @@ static int apm_probe(gpr_device_t *gdev)
+ 
+ 	idr_init(&apm->modules_idr);
+ 
++	g_apm = apm;
++
+ 	q6apm_get_apm_state(apm);
+ 
+ 	ret = devm_snd_soc_register_component(dev, &q6apm_audio_component, NULL, 0);
+diff --git a/sound/soc/qcom/qdsp6/q6apm.h b/sound/soc/qcom/qdsp6/q6apm.h
+index 273f9781274..7005be9b63e 100644
+--- a/sound/soc/qcom/qdsp6/q6apm.h
++++ b/sound/soc/qcom/qdsp6/q6apm.h
+@@ -145,4 +145,6 @@ struct audioreach_module *q6apm_find_module_by_mid(struct q6apm_graph *graph,
+ void q6apm_set_fe_dai_ops(struct snd_soc_dai_driver *dai_drv);
+ int q6apm_graph_get_rx_shmem_module_iid(struct q6apm_graph *graph);
+ 
++bool q6apm_is_adsp_ready(void);
++
+ #endif /* __APM_GRAPH_ */
+diff --git a/sound/soc/qcom/qdsp6/q6prm.c b/sound/soc/qcom/qdsp6/q6prm.c
+index 8aa1a213bfb..3aa63aac4a6 100644
+--- a/sound/soc/qcom/qdsp6/q6prm.c
++++ b/sound/soc/qcom/qdsp6/q6prm.c
+@@ -12,6 +12,7 @@
+ #include <linux/soc/qcom/apr.h>
+ #include <dt-bindings/soc/qcom,gpr.h>
+ #include <dt-bindings/sound/qcom,q6dsp-lpass-ports.h>
++#include "q6apm.h"
+ #include "q6prm.h"
+ #include "audioreach.h"
+ 
+@@ -226,6 +227,9 @@ static int prm_probe(gpr_device_t *gdev)
+ 	init_waitqueue_head(&cc->wait);
+ 	dev_set_drvdata(dev, cc);
+ 
++	if (!q6apm_is_adsp_ready())
++		return -EPROBE_DEFER;
++
+ 	return devm_of_platform_populate(dev);
+ }
+ 
+-- 
+2.39.0
+

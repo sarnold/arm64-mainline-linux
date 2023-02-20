@@ -1,0 +1,122 @@
+From 3db1e6a7d092bbac296e5dc8a3cfb115fd42414b Mon Sep 17 00:00:00 2001
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+Date: Tue, 7 Feb 2023 19:40:52 -0800
+Subject: [PATCH 162/230] arm64: dts: qcom: sc8280xp: Enable GPU related nodes
+
+Add memory reservation for the zap-shader and enable the Adreno SMMU,
+GPU clock controller, GMU and the GPU nodes for the SC8280XP CRD and the
+Lenovo ThinkPad X13s.
+
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Link: https://lore.kernel.org/r/20230208034052.2047681-4-quic_bjorande@quicinc.com
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-crd.dts     | 26 +++++++++++++++++++
+ .../qcom/sc8280xp-lenovo-thinkpad-x13s.dts    | 26 +++++++++++++++++++
+ 2 files changed, 52 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+index c95b601e34c..8f1661e39a3 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+@@ -214,6 +214,11 @@ vreg_wwan: regulator-wwan {
+ 	};
+ 
+ 	reserved-memory {
++		gpu_mem: gpu-mem@8bf00000 {
++			reg = <0 0x8bf00000 0 0x2000>;
++			no-map;
++		};
++
+ 		linux,cma {
+ 			compatible = "shared-dma-pool";
+ 			size = <0x0 0x8000000>;
+@@ -263,6 +268,10 @@ usb1_sbu_mux: endpoint {
+ 	};
+ };
+ 
++&adreno_smmu {
++	status = "okay";
++};
++
+ &apps_rsc {
+ 	pmc8280-1-rpmh-regulators {
+ 		compatible = "qcom,pm8350-rpmh-regulators";
+@@ -380,6 +389,23 @@ &dispcc0 {
+ 	status = "okay";
+ };
+ 
++&gmu {
++	status = "okay";
++};
++
++&gpu {
++	status = "okay";
++
++	zap-shader {
++		memory-region = <&gpu_mem>;
++		firmware-name = "qcom/sc8280xp/qcdxkmsuc8280.mbn";
++	};
++};
++
++&gpucc {
++	status = "okay";
++};
++
+ &mdss0 {
+ 	status = "okay";
+ };
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index a4897efbf59..76135396cbf 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -264,6 +264,11 @@ vreg_wwan: regulator-wwan {
+ 	};
+ 
+ 	reserved-memory {
++		gpu_mem: gpu-mem@8bf00000 {
++			reg = <0 0x8bf00000 0 0x2000>;
++			no-map;
++		};
++
+ 		linux,cma {
+ 			compatible = "shared-dma-pool";
+ 			size = <0x0 0x8000000>;
+@@ -359,6 +364,10 @@ usb1_sbu_mux: endpoint {
+ 	};
+ };
+ 
++&adreno_smmu {
++	status = "okay";
++};
++
+ &apps_rsc {
+ 	pmc8280-1-rpmh-regulators {
+ 		compatible = "qcom,pm8350-rpmh-regulators";
+@@ -492,6 +501,23 @@ &dispcc0 {
+ 	status = "okay";
+ };
+ 
++&gmu {
++	status = "okay";
++};
++
++&gpu {
++	status = "okay";
++
++	zap-shader {
++		memory-region = <&gpu_mem>;
++		firmware-name = "qcom/sc8280xp/LENOVO/21BX/qcdxkmsuc8280.mbn";
++	};
++};
++
++&gpucc {
++	status = "okay";
++};
++
+ &mdss0 {
+ 	status = "okay";
+ };
+-- 
+2.39.0
+

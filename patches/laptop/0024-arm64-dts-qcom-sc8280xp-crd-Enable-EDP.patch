@@ -1,0 +1,124 @@
+From c545e64d5cd1aad47d4c7a36aec7114925d4d7c4 Mon Sep 17 00:00:00 2001
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+Date: Tue, 10 Jan 2023 19:59:04 -0800
+Subject: [PATCH 024/230] arm64: dts: qcom: sc8280xp-crd: Enable EDP
+
+The SC8280XP CRD has a EDP display on MDSS0 DP3, enable relevant nodes
+and link it together with the backlight control.
+
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+Link: https://lore.kernel.org/r/20230111035906.2975494-3-quic_bjorande@quicinc.com
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-crd.dts | 73 ++++++++++++++++++++++-
+ 1 file changed, 72 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+index 551768f9772..db12d867886 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+@@ -20,7 +20,7 @@ aliases {
+ 		serial0 = &qup2_uart17;
+ 	};
+ 
+-	backlight {
++	backlight: backlight {
+ 		compatible = "pwm-backlight";
+ 		pwms = <&pmc8280c_lpg 3 1000000>;
+ 		enable-gpios = <&pmc8280_1_gpios 8 GPIO_ACTIVE_HIGH>;
+@@ -34,6 +34,22 @@ chosen {
+ 		stdout-path = "serial0:115200n8";
+ 	};
+ 
++	vreg_edp_3p3: regulator-edp-3p3 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "VREG_EDP_3P3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpio = <&tlmm 25 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++
++		pinctrl-names = "default";
++		pinctrl-0 = <&edp_reg_en>;
++
++		regulator-boot-on;
++	};
++
+ 	vreg_edp_bl: regulator-edp-bl {
+ 		compatible = "regulator-fixed";
+ 
+@@ -228,6 +244,55 @@ vreg_l9d: ldo9 {
+ 	};
+ };
+ 
++&dispcc0 {
++	status = "okay";
++};
++
++&mdss0 {
++	status = "okay";
++};
++
++&mdss0_dp3 {
++	compatible = "qcom,sc8280xp-edp";
++
++	data-lanes = <0 1 2 3>;
++
++	status = "okay";
++
++	aux-bus {
++		panel {
++			compatible = "edp-panel";
++			power-supply = <&vreg_edp_3p3>;
++
++			backlight = <&backlight>;
++
++			ports {
++				port {
++					edp_panel_in: endpoint {
++						remote-endpoint = <&mdss0_dp3_out>;
++					};
++				};
++			};
++		};
++	};
++
++	ports {
++		port@1 {
++			reg = <1>;
++			mdss0_dp3_out: endpoint {
++				remote-endpoint = <&edp_panel_in>;
++			};
++		};
++	};
++};
++
++&mdss0_dp3_phy {
++	vdda-phy-supply = <&vreg_l6b>;
++	vdda-pll-supply = <&vreg_l3b>;
++
++	status = "okay";
++};
++
+ &pcie2a {
+ 	perst-gpios = <&tlmm 143 GPIO_ACTIVE_LOW>;
+ 	wake-gpios = <&tlmm 145 GPIO_ACTIVE_LOW>;
+@@ -494,6 +559,12 @@ hastings_reg_en: hastings-reg-en-state {
+ &tlmm {
+ 	gpio-reserved-ranges = <74 6>, <83 4>, <125 2>, <128 2>, <154 7>;
+ 
++	edp_reg_en: edp-reg-en-state {
++		pins = "gpio25";
++		function = "gpio";
++		drive-strength = <16>;
++	};
++
+ 	kybd_default: kybd-default-state {
+ 		disable-pins {
+ 			pins = "gpio102";
+-- 
+2.39.0
+

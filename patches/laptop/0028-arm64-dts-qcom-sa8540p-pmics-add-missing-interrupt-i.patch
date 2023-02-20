@@ -1,0 +1,31 @@
+From c1d0209d783faba89e6dc76e68ab47d03d3d91ae Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Wed, 11 Jan 2023 09:01:43 +0100
+Subject: [PATCH 028/230] arm64: dts: qcom: sa8540p-pmics: add missing
+ interrupt include
+
+Add the missing interrupt-controller include which is needed by the RTC
+node.
+
+Reviewed-by: Brian Masney <bmasney@redhat.com>
+Reviewed-by: Eric Chanudet <echanude@redhat.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sa8540p-pmics.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sa8540p-pmics.dtsi b/arch/arm64/boot/dts/qcom/sa8540p-pmics.dtsi
+index c9b8da43b23..8c393f0bd6a 100644
+--- a/arch/arm64/boot/dts/qcom/sa8540p-pmics.dtsi
++++ b/arch/arm64/boot/dts/qcom/sa8540p-pmics.dtsi
+@@ -4,6 +4,7 @@
+  * Copyright (c) 2022, Linaro Limited
+  */
+ 
++#include <dt-bindings/interrupt-controller/irq.h>
+ #include <dt-bindings/spmi/spmi.h>
+ 
+ &spmi_bus {
+-- 
+2.39.0
+

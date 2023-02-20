@@ -1,0 +1,30 @@
+From 69f46f9ab03f0e4fe5ef3ab9ecd8e241b4392c81 Mon Sep 17 00:00:00 2001
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Date: Thu, 26 Jan 2023 21:00:41 +0530
+Subject: [PATCH 203/230] arm64: dts: qcom: sc8280xp: Fix the node name of MSI
+ controller
+
+The node name of MSI controller should be "msi-controller" as per the
+binding instead of "gic-its". Fix it.
+
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index 40f13c38c3f..505e4d53d82 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -3323,7 +3323,7 @@ intc: interrupt-controller@17a00000 {
+ 			#size-cells = <2>;
+ 			ranges;
+ 
+-			gic-its@17a40000 {
++			msi-controller@17a40000 {
+ 				compatible = "arm,gic-v3-its";
+ 				reg = <0 0x17a40000 0 0x20000>;
+ 				msi-controller;
+-- 
+2.39.0
+

@@ -1,0 +1,33 @@
+From e541d5aa91ea51e6d702f2a7735a1ee12f03a195 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Fri, 30 Dec 2022 12:02:08 +0100
+Subject: [PATCH 070/230] rtc: pm8xxx: drop unused register defines
+
+Drop the original register defines which have been used since commit
+c8d523a4b053 ("drivers/rtc/rtc-pm8xxx.c: rework to support pm8941 rtc").
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/rtc/rtc-pm8xxx.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/drivers/rtc/rtc-pm8xxx.c b/drivers/rtc/rtc-pm8xxx.c
+index dc7e659cbb2..90027a7cfb1 100644
+--- a/drivers/rtc/rtc-pm8xxx.c
++++ b/drivers/rtc/rtc-pm8xxx.c
+@@ -12,12 +12,6 @@
+ #include <linux/slab.h>
+ #include <linux/spinlock.h>
+ 
+-/* RTC Register offsets from RTC CTRL REG */
+-#define PM8XXX_ALARM_CTRL_OFFSET	0x01
+-#define PM8XXX_RTC_WRITE_OFFSET		0x02
+-#define PM8XXX_RTC_READ_OFFSET		0x06
+-#define PM8XXX_ALARM_RW_OFFSET		0x0A
+-
+ /* RTC_CTRL register bit fields */
+ #define PM8xxx_RTC_ENABLE		BIT(7)
+ #define PM8xxx_RTC_ALARM_CLEAR		BIT(0)
+-- 
+2.39.0
+

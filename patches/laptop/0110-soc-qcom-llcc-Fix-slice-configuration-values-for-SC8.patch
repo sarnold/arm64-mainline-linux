@@ -1,0 +1,41 @@
+From f1939c7d39edc69a07af2d5c9e0f70a9994cc91c Mon Sep 17 00:00:00 2001
+From: Abel Vesa <abel.vesa@linaro.org>
+Date: Sun, 19 Feb 2023 18:57:01 +0200
+Subject: [PATCH 110/230] soc: qcom: llcc: Fix slice configuration values for
+ SC8280XP
+
+The slice IDs for CVPFW, CPUSS1 and CPUWHT currently overflow the 32bit
+LLCC config registers. Fix that by using the slice ID values taken from
+the latest LLCC SC table.
+
+Fixes: ec69dfbdc426 ("soc: qcom: llcc: Add sc8180x and sc8280xp configurations")
+Cc: stable@vger.kernel.org	# 5.19+
+Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+Tested-by: Juerg Haefliger <juerg.haefliger@canonical.com>
+Reviewed-by: Sai Prakash Ranjan <quic_saipraka@quicinc.com>
+Acked-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20230219165701.2557446-1-abel.vesa@linaro.org
+---
+ drivers/soc/qcom/llcc-qcom.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/soc/qcom/llcc-qcom.c b/drivers/soc/qcom/llcc-qcom.c
+index 23ce2f78c4e..26efe12012a 100644
+--- a/drivers/soc/qcom/llcc-qcom.c
++++ b/drivers/soc/qcom/llcc-qcom.c
+@@ -191,9 +191,9 @@ static const struct llcc_slice_config sc8280xp_data[] = {
+ 	{ LLCC_CVP,      28, 512,  3, 1, 0xfff, 0x0, 0, 0, 0, 1, 0, 0 },
+ 	{ LLCC_APTCM,    30, 1024, 3, 1, 0x0,   0x1, 1, 0, 0, 1, 0, 0 },
+ 	{ LLCC_WRCACHE,  31, 1024, 1, 1, 0xfff, 0x0, 0, 0, 0, 0, 1, 0 },
+-	{ LLCC_CVPFW,    32, 512,  1, 0, 0xfff, 0x0, 0, 0, 0, 1, 0, 0 },
+-	{ LLCC_CPUSS1,   33, 2048, 1, 1, 0xfff, 0x0, 0, 0, 0, 1, 0, 0 },
+-	{ LLCC_CPUHWT,   36, 512,  1, 1, 0xfff, 0x0, 0, 0, 0, 0, 1, 0 },
++	{ LLCC_CVPFW,    17, 512,  1, 0, 0xfff, 0x0, 0, 0, 0, 1, 0, 0 },
++	{ LLCC_CPUSS1,   3, 2048, 1, 1, 0xfff, 0x0, 0, 0, 0, 1, 0, 0 },
++	{ LLCC_CPUHWT,   5, 512,  1, 1, 0xfff, 0x0, 0, 0, 0, 0, 1, 0 },
+ };
+ 
+ static const struct llcc_slice_config sdm845_data[] =  {
+-- 
+2.39.0
+

@@ -1,0 +1,127 @@
+From b19594e1260a3011ab1ae58e36aa529db246a1ee Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 27 Dec 2022 17:42:57 +0100
+Subject: [PATCH 004/230] arm64: dts: qcom: sc8280xp-x13s: move 'thermal-zones'
+ node
+
+Move the 'thermal-zones' node after the regulator nodes to restore the
+root-node sort order (alphabetically by node name).
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ .../qcom/sc8280xp-lenovo-thinkpad-x13s.dts    | 92 +++++++++----------
+ 1 file changed, 46 insertions(+), 46 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index eefa22ea1ed..aeb9e1800f7 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -31,52 +31,6 @@ backlight {
+ 		pinctrl-0 = <&edp_bl_en>, <&edp_bl_pwm>;
+ 	};
+ 
+-	thermal-zones {
+-		skin-temp-thermal {
+-			polling-delay-passive = <250>;
+-			polling-delay = <0>;
+-			thermal-sensors = <&pmk8280_adc_tm 5>;
+-
+-			trips {
+-				skin_temp_alert0: trip-point0 {
+-					temperature = <55000>;
+-					hysteresis = <1000>;
+-					type = "passive";
+-				};
+-
+-				skin_temp_alert1: trip-point1 {
+-					temperature = <58000>;
+-					hysteresis = <1000>;
+-					type = "passive";
+-				};
+-
+-				skin-temp-crit {
+-					temperature = <73000>;
+-					hysteresis = <1000>;
+-					type = "critical";
+-				};
+-			};
+-
+-			cooling-maps {
+-				map0 {
+-					trip = <&skin_temp_alert0>;
+-					cooling-device = <&CPU4 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+-							 <&CPU5 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+-							 <&CPU6 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+-							 <&CPU7 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+-				};
+-
+-				map1 {
+-					trip = <&skin_temp_alert1>;
+-					cooling-device = <&CPU4 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+-							 <&CPU5 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+-							 <&CPU6 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+-							 <&CPU7 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+-				};
+-			};
+-		};
+-	};
+-
+ 	gpio-keys {
+ 		compatible = "gpio-keys";
+ 
+@@ -180,6 +134,52 @@ vreg_vph_pwr: regulator-vph-pwr {
+ 		regulator-max-microvolt = <3900000>;
+ 		regulator-always-on;
+ 	};
++
++	thermal-zones {
++		skin-temp-thermal {
++			polling-delay-passive = <250>;
++			polling-delay = <0>;
++			thermal-sensors = <&pmk8280_adc_tm 5>;
++
++			trips {
++				skin_temp_alert0: trip-point0 {
++					temperature = <55000>;
++					hysteresis = <1000>;
++					type = "passive";
++				};
++
++				skin_temp_alert1: trip-point1 {
++					temperature = <58000>;
++					hysteresis = <1000>;
++					type = "passive";
++				};
++
++				skin-temp-crit {
++					temperature = <73000>;
++					hysteresis = <1000>;
++					type = "critical";
++				};
++			};
++
++			cooling-maps {
++				map0 {
++					trip = <&skin_temp_alert0>;
++					cooling-device = <&CPU4 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
++							 <&CPU5 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
++							 <&CPU6 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
++							 <&CPU7 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
++				};
++
++				map1 {
++					trip = <&skin_temp_alert1>;
++					cooling-device = <&CPU4 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
++							 <&CPU5 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
++							 <&CPU6 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
++							 <&CPU7 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
++				};
++			};
++		};
++	};
+ };
+ 
+ &apps_rsc {
+-- 
+2.39.0
+

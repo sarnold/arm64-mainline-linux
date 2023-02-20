@@ -1,0 +1,31 @@
+From f1b5095f8dfc44b1aa346d509b6ed7ade7ce59a2 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Mon, 5 Dec 2022 10:47:36 +0100
+Subject: [PATCH 044/230] dt-bindings: ufs: qcom: allow 'dma-coherent' property
+
+UFS controllers may be cache coherent and must be marked as such in the
+devicetree to avoid data corruption.
+
+This is specifically needed on recent Qualcomm platforms like SC8280XP.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+index f2d6298d926..1f1d286749c 100644
+--- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+@@ -44,6 +44,8 @@ properties:
+     minItems: 8
+     maxItems: 11
+ 
++  dma-coherent: true
++
+   interconnects:
+     minItems: 2
+     maxItems: 2
+-- 
+2.39.0
+

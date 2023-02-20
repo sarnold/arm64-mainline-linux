@@ -1,0 +1,93 @@
+From 0c62ceeaf94ccc14ffabed7c95752715d2a11f89 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 24 Mar 2022 11:10:00 +0100
+Subject: [PATCH 135/230] PCI: qcom: Add support for modular builds
+
+Allow the Qualcomm PCIe controller driver to be built as a module, which
+is useful for multi-platform kernels as well as during development.
+
+Reviewed-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/pci/controller/dwc/Kconfig     |  2 +-
+ drivers/pci/controller/dwc/pcie-qcom.c | 26 +++++++++++++++++++++++---
+ 2 files changed, 24 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+index 99ec91e2a5c..f613bcddca3 100644
+--- a/drivers/pci/controller/dwc/Kconfig
++++ b/drivers/pci/controller/dwc/Kconfig
+@@ -168,7 +168,7 @@ config PCI_HISI
+ 	  Hip05 and Hip06 SoCs
+ 
+ config PCIE_QCOM
+-	bool "Qualcomm PCIe controller"
++	tristate "Qualcomm PCIe controller"
+ 	depends on OF && (ARCH_QCOM || COMPILE_TEST)
+ 	depends on PCI_MSI
+ 	select PCIE_DW_HOST
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 7e23c74fb42..5696e327795 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -17,7 +17,7 @@
+ #include <linux/io.h>
+ #include <linux/iopoll.h>
+ #include <linux/kernel.h>
+-#include <linux/init.h>
++#include <linux/module.h>
+ #include <linux/of_device.h>
+ #include <linux/of_gpio.h>
+ #include <linux/pci.h>
+@@ -1820,6 +1820,21 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 	return ret;
+ }
+ 
++static int qcom_pcie_remove(struct platform_device *pdev)
++{
++	struct qcom_pcie *pcie = platform_get_drvdata(pdev);
++	struct device *dev = &pdev->dev;
++
++	dw_pcie_host_deinit(&pcie->pci->pp);
++
++	phy_exit(pcie->phy);
++
++	pm_runtime_put_sync(dev);
++	pm_runtime_disable(dev);
++
++	return 0;
++}
++
+ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-apq8064", .data = &cfg_2_1_0 },
+ 	{ .compatible = "qcom,pcie-apq8084", .data = &cfg_1_0_0 },
+@@ -1841,6 +1856,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-sm8450-pcie1", .data = &cfg_1_9_0 },
+ 	{ }
+ };
++MODULE_DEVICE_TABLE(of, qcom_pcie_match);
+ 
+ static void qcom_fixup_class(struct pci_dev *dev)
+ {
+@@ -1856,10 +1872,14 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x1001, qcom_fixup_class);
+ 
+ static struct platform_driver qcom_pcie_driver = {
+ 	.probe = qcom_pcie_probe,
++	.remove = qcom_pcie_remove,
+ 	.driver = {
+ 		.name = "qcom-pcie",
+-		.suppress_bind_attrs = true,
+ 		.of_match_table = qcom_pcie_match,
+ 	},
+ };
+-builtin_platform_driver(qcom_pcie_driver);
++module_platform_driver(qcom_pcie_driver);
++
++MODULE_AUTHOR("Stanimir Varbanov <svarbanov@mm-sol.com>");
++MODULE_DESCRIPTION("Qualcomm PCIe root complex driver");
++MODULE_LICENSE("GPL");
+-- 
+2.39.0
+

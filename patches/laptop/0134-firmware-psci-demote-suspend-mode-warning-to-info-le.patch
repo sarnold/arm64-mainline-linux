@@ -1,0 +1,40 @@
+From c51185ca6c2136b9c1776e46ecf46eb755dc8a70 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Mon, 24 Oct 2022 16:20:33 +0200
+Subject: [PATCH 134/230] firmware/psci: demote suspend-mode warning to info
+ level
+
+On some Qualcomm platforms, like SC8280XP, the attempt to set PC mode
+during boot fails with PSCI_RET_DENIED and since commit 998fcd001feb
+("firmware/psci: Print a warning if PSCI doesn't accept PC mode") this
+is now logged at warning level:
+
+	psci: failed to set PC mode: -3
+
+As there is nothing users can do about the firmware behaving this way,
+demote the warning to info level and clearly mark it as a firmware bug:
+
+	psci: [Firmware Bug]: failed to set PC mode: -3
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/firmware/psci/psci.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/firmware/psci/psci.c b/drivers/firmware/psci/psci.c
+index 447ee4ea5c9..d37a8b13f34 100644
+--- a/drivers/firmware/psci/psci.c
++++ b/drivers/firmware/psci/psci.c
+@@ -165,7 +165,8 @@ int psci_set_osi_mode(bool enable)
+ 
+ 	err = invoke_psci_fn(PSCI_1_0_FN_SET_SUSPEND_MODE, suspend_mode, 0, 0);
+ 	if (err < 0)
+-		pr_warn("failed to set %s mode: %d\n", enable ? "OSI" : "PC", err);
++		pr_info(FW_BUG "failed to set %s mode: %d\n",
++				enable ? "OSI" : "PC", err);
+ 	return psci_to_linux_errno(err);
+ }
+ 
+-- 
+2.39.0
+

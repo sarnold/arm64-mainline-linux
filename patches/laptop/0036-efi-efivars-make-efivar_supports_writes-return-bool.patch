@@ -1,0 +1,44 @@
+From da146dcccd12a23e9f8586afe4265a05bb0c0ef7 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 17 Jan 2023 11:50:30 +0100
+Subject: [PATCH 036/230] efi: efivars: make efivar_supports_writes() return
+ bool
+
+For consistency with the new efivar_is_available() function, change the
+return type of efivar_supports_writes() to bool.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/firmware/efi/vars.c | 2 +-
+ include/linux/efi.h         | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/firmware/efi/vars.c b/drivers/firmware/efi/vars.c
+index d6b2c4f9a57..aa5ba38f81f 100644
+--- a/drivers/firmware/efi/vars.c
++++ b/drivers/firmware/efi/vars.c
+@@ -110,7 +110,7 @@ int efivars_unregister(struct efivars *efivars)
+ }
+ EXPORT_SYMBOL_GPL(efivars_unregister);
+ 
+-int efivar_supports_writes(void)
++bool efivar_supports_writes(void)
+ {
+ 	return __efivars && __efivars->ops->set_variable;
+ }
+diff --git a/include/linux/efi.h b/include/linux/efi.h
+index 77a75c4fa2b..c794c5baf0c 100644
+--- a/include/linux/efi.h
++++ b/include/linux/efi.h
+@@ -1062,7 +1062,7 @@ bool efivar_is_available(void);
+ static inline bool efivar_is_available(void) { return false; }
+ #endif
+ 
+-int efivar_supports_writes(void);
++bool efivar_supports_writes(void);
+ 
+ int efivar_lock(void);
+ int efivar_trylock(void);
+-- 
+2.39.0
+

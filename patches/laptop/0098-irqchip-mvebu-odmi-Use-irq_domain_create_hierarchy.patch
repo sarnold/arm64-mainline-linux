@@ -1,0 +1,59 @@
+From 6ff8942eb29904a2a935c1639362e2c887d0928c Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 8 Dec 2022 14:41:47 +0100
+Subject: [PATCH 098/230] irqchip/mvebu-odmi: Use irq_domain_create_hierarchy()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Use the irq_domain_create_hierarchy() helper to create the hierarchical
+domain, which both serves as documentation and avoids poking at
+irqdomain internals.
+
+Reviewed-by: Philippe Mathieu-Daudé <philmd@linaro.org>
+Tested-by: Hsin-Yi Wang <hsinyi@chromium.org>
+Tested-by: Mark-PK Tsai <mark-pk.tsai@mediatek.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/irqchip/irq-mvebu-odmi.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/irqchip/irq-mvebu-odmi.c b/drivers/irqchip/irq-mvebu-odmi.c
+index dc4145abdd6..108091533e1 100644
+--- a/drivers/irqchip/irq-mvebu-odmi.c
++++ b/drivers/irqchip/irq-mvebu-odmi.c
+@@ -161,7 +161,7 @@ static struct msi_domain_info odmi_msi_domain_info = {
+ static int __init mvebu_odmi_init(struct device_node *node,
+ 				  struct device_node *parent)
+ {
+-	struct irq_domain *inner_domain, *plat_domain;
++	struct irq_domain *parent_domain, *inner_domain, *plat_domain;
+ 	int ret, i;
+ 
+ 	if (of_property_read_u32(node, "marvell,odmi-frames", &odmis_count))
+@@ -197,16 +197,17 @@ static int __init mvebu_odmi_init(struct device_node *node,
+ 		}
+ 	}
+ 
+-	inner_domain = irq_domain_create_linear(of_node_to_fwnode(node),
+-						odmis_count * NODMIS_PER_FRAME,
+-						&odmi_domain_ops, NULL);
++	parent_domain = irq_find_host(parent);
++
++	inner_domain = irq_domain_create_hierarchy(parent_domain, 0,
++						   odmis_count * NODMIS_PER_FRAME,
++						   of_node_to_fwnode(node),
++						   &odmi_domain_ops, NULL);
+ 	if (!inner_domain) {
+ 		ret = -ENOMEM;
+ 		goto err_unmap;
+ 	}
+ 
+-	inner_domain->parent = irq_find_host(parent);
+-
+ 	plat_domain = platform_msi_create_irq_domain(of_node_to_fwnode(node),
+ 						     &odmi_msi_domain_info,
+ 						     inner_domain);
+-- 
+2.39.0
+

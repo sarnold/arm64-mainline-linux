@@ -1,0 +1,155 @@
+From 5aa5005f46f8c9da09a89ca2b7770f05a5a1e4bf Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Wed, 8 Jun 2022 15:56:19 +0200
+Subject: [PATCH 027/230] arm64: dts: qcom: sc8280xp-x13s: enable eDP display
+
+Enable the eDP display on MDSS0 DP3, including backlight control.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ .../qcom/sc8280xp-lenovo-thinkpad-x13s.dts    | 101 +++++++++++++++++-
+ 1 file changed, 99 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index 0201c677674..8c12a040a5a 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -21,7 +21,33 @@ / {
+ 	model = "Lenovo ThinkPad X13s";
+ 	compatible = "lenovo,thinkpad-x13s", "qcom,sc8280xp";
+ 
+-	backlight {
++	wcd938x: audio-codec {
++		compatible = "qcom,wcd9380-codec";
++
++		pinctrl-names = "default";
++		pinctrl-0 = <&wcd_default>;
++
++		reset-gpios = <&tlmm 106 GPIO_ACTIVE_LOW>;
++
++		vdd-buck-supply = <&vreg_s10b>;
++		vdd-rxtx-supply = <&vreg_s10b>;
++		vdd-io-supply = <&vreg_s10b>;
++		vdd-mic-bias-supply = <&vreg_bob>;
++
++		qcom,micbias1-microvolt = <1800000>;
++		qcom,micbias2-microvolt = <1800000>;
++		qcom,micbias3-microvolt = <1800000>;
++		qcom,micbias4-microvolt = <1800000>;
++		qcom,mbhc-buttons-vthreshold-microvolt = <75000 150000 237000 500000 500000 500000 500000 500000>;
++		qcom,mbhc-headset-vthreshold-microvolt = <1700000>;
++		qcom,mbhc-headphone-vthreshold-microvolt = <50000>;
++		qcom,rx-device = <&wcd_rx>;
++		qcom,tx-device = <&wcd_tx>;
++
++		#sound-dai-cells = <1>;
++	};
++
++	backlight: backlight {
+ 		compatible = "pwm-backlight";
+ 		pwms = <&pmc8280c_lpg 3 1000000>;
+ 		enable-gpios = <&pmc8280_1_gpios 8 GPIO_ACTIVE_HIGH>;
+@@ -46,6 +72,22 @@ switch-lid {
+ 		};
+ 	};
+ 
++	vreg_edp_3p3: regulator-edp-3p3 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "VCC3LCD";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpio = <&tlmm 25 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++
++		pinctrl-names = "default";
++		pinctrl-0 = <&edp_reg_en>;
++
++		regulator-boot-on;
++	};
++
+ 	vreg_edp_bl: regulator-edp-bl {
+ 		compatible = "regulator-fixed";
+ 
+@@ -233,7 +275,6 @@ vreg_l6b: ldo6 {
+ 			regulator-max-microvolt = <880000>;
+ 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+ 			regulator-boot-on;
+-			regulator-always-on;	/* FIXME: VDD_A_EDP_0_0P9 */
+ 		};
+ 	};
+ 
+@@ -314,6 +355,55 @@ vreg_l9d: ldo9 {
+ 	};
+ };
+ 
++&dispcc0 {
++	status = "okay";
++};
++
++&mdss0 {
++	status = "okay";
++};
++
++&mdss0_dp3 {
++	compatible = "qcom,sc8280xp-edp";
++
++	data-lanes = <0 1 2 3>;
++
++	status = "okay";
++
++	aux-bus {
++		panel {
++			compatible = "edp-panel";
++
++			backlight = <&backlight>;
++			power-supply = <&vreg_edp_3p3>;
++
++			ports {
++				port {
++					edp_panel_in: endpoint {
++						remote-endpoint = <&mdss0_dp3_out>;
++					};
++				};
++			};
++		};
++	};
++
++	ports {
++		port@1 {
++			reg = <1>;
++			mdss0_dp3_out: endpoint {
++				remote-endpoint = <&edp_panel_in>;
++			};
++		};
++	};
++};
++
++&mdss0_dp3_phy {
++	vdda-phy-supply = <&vreg_l6b>;
++	vdda-pll-supply = <&vreg_l3b>;
++
++	status = "okay";
++};
++
+ &pcie2a {
+ 	perst-gpios = <&tlmm 143 GPIO_ACTIVE_LOW>;
+ 	wake-gpios = <&tlmm 145 GPIO_ACTIVE_LOW>;
+@@ -878,6 +968,13 @@ hastings_reg_en: hastings-reg-en-state {
+ &tlmm {
+ 	gpio-reserved-ranges = <70 2>, <74 6>, <83 4>, <125 2>, <128 2>, <154 7>;
+ 
++	edp_reg_en: edp-reg-en-state {
++		pins = "gpio25";
++		function = "gpio";
++		drive-strength = <16>;
++		bias-disable;
++	};
++
+ 	hall_int_n_default: hall-int-n-state {
+ 		pins = "gpio107";
+ 		function = "gpio";
+-- 
+2.39.0
+

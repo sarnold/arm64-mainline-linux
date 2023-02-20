@@ -1,0 +1,47 @@
+From 5f7051f0b05ef517123cfc1f9cc339f2bc0afb67 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 6 Dec 2022 13:21:32 +0100
+Subject: [PATCH 088/230] irqdomain: Drop dead domain-name assignment
+
+Since commit d59f6617eef0 ("genirq: Allow fwnode to carry name
+information only") an IRQ domain is always given a name during
+allocation (e.g. used for the debugfs entry).
+
+Drop the leftover name assignment when allocating the first IRQ.
+
+Tested-by: Hsin-Yi Wang <hsinyi@chromium.org>
+Tested-by: Mark-PK Tsai <mark-pk.tsai@mediatek.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ kernel/irq/irqdomain.c | 8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index f2247186f71..9bba31de692 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -619,10 +619,6 @@ static int irq_domain_associate_locked(struct irq_domain *domain, unsigned int v
+ 			irq_data->hwirq = 0;
+ 			return ret;
+ 		}
+-
+-		/* If not already assigned, give the domain the chip's name */
+-		if (!domain->name && irq_data->chip)
+-			domain->name = irq_data->chip->name;
+ 	}
+ 
+ 	domain->mapcount++;
+@@ -1182,10 +1178,6 @@ static void irq_domain_insert_irq(int virq)
+ 
+ 		domain->mapcount++;
+ 		irq_domain_set_mapping(domain, data->hwirq, data);
+-
+-		/* If not already assigned, give the domain the chip's name */
+-		if (!domain->name && data->chip)
+-			domain->name = data->chip->name;
+ 	}
+ 
+ 	irq_clear_status_flags(virq, IRQ_NOREQUEST);
+-- 
+2.39.0
+

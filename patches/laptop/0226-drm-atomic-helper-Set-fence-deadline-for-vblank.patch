@@ -1,0 +1,74 @@
+From d6714767adb0088e6ffae334c4a73a4ebe673fcc Mon Sep 17 00:00:00 2001
+From: Rob Clark <robdclark@chromium.org>
+Date: Sat, 18 Feb 2023 13:15:54 -0800
+Subject: [PATCH 226/230] drm/atomic-helper: Set fence deadline for vblank
+
+For an atomic commit updating a single CRTC (ie. a pageflip) calculate
+the next vblank time, and inform the fence(s) of that deadline.
+
+v2: Comment typo fix (danvet)
+
+Signed-off-by: Rob Clark <robdclark@chromium.org>
+Reviewed-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+Link: https://lore.kernel.org/r/20230218211608.1630586-12-robdclark@gmail.com
+---
+ drivers/gpu/drm/drm_atomic_helper.c | 36 +++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
+
+diff --git a/drivers/gpu/drm/drm_atomic_helper.c b/drivers/gpu/drm/drm_atomic_helper.c
+index d579fd8f7cb..35a4dc71492 100644
+--- a/drivers/gpu/drm/drm_atomic_helper.c
++++ b/drivers/gpu/drm/drm_atomic_helper.c
+@@ -1511,6 +1511,40 @@ void drm_atomic_helper_commit_modeset_enables(struct drm_device *dev,
+ }
+ EXPORT_SYMBOL(drm_atomic_helper_commit_modeset_enables);
+ 
++/*
++ * For atomic updates which touch just a single CRTC, calculate the time of the
++ * next vblank, and inform all the fences of the deadline.
++ */
++static void set_fence_deadline(struct drm_device *dev,
++			       struct drm_atomic_state *state)
++{
++	struct drm_crtc *crtc, *wait_crtc = NULL;
++	struct drm_crtc_state *new_crtc_state;
++	struct drm_plane *plane;
++	struct drm_plane_state *new_plane_state;
++	ktime_t vbltime;
++	int i;
++
++	for_each_new_crtc_in_state (state, crtc, new_crtc_state, i) {
++		if (wait_crtc)
++			return;
++		wait_crtc = crtc;
++	}
++
++	/* If no CRTCs updated, then nothing to do: */
++	if (!wait_crtc)
++		return;
++
++	if (drm_crtc_next_vblank_time(wait_crtc, &vbltime))
++		return;
++
++	for_each_new_plane_in_state (state, plane, new_plane_state, i) {
++		if (!new_plane_state->fence)
++			continue;
++		dma_fence_set_deadline(new_plane_state->fence, vbltime);
++	}
++}
++
+ /**
+  * drm_atomic_helper_wait_for_fences - wait for fences stashed in plane state
+  * @dev: DRM device
+@@ -1540,6 +1574,8 @@ int drm_atomic_helper_wait_for_fences(struct drm_device *dev,
+ 	struct drm_plane_state *new_plane_state;
+ 	int i, ret;
+ 
++	set_fence_deadline(dev, state);
++
+ 	for_each_new_plane_in_state(state, plane, new_plane_state, i) {
+ 		if (!new_plane_state->fence)
+ 			continue;
+-- 
+2.39.0
+

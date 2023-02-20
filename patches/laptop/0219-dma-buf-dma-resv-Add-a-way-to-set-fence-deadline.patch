@@ -1,0 +1,61 @@
+From 2a6c5aaad22faefefe24d43cb27637b802a15131 Mon Sep 17 00:00:00 2001
+From: Rob Clark <robdclark@chromium.org>
+Date: Sat, 18 Feb 2023 13:15:47 -0800
+Subject: [PATCH 219/230] dma-buf/dma-resv: Add a way to set fence deadline
+
+Add a way to set a deadline on remaining resv fences according to the
+requested usage.
+
+Signed-off-by: Rob Clark <robdclark@chromium.org>
+Link: https://lore.kernel.org/r/20230218211608.1630586-5-robdclark@gmail.com
+---
+ drivers/dma-buf/dma-resv.c | 19 +++++++++++++++++++
+ include/linux/dma-resv.h   |  2 ++
+ 2 files changed, 21 insertions(+)
+
+diff --git a/drivers/dma-buf/dma-resv.c b/drivers/dma-buf/dma-resv.c
+index 1c76aed8e26..0c86f6d577a 100644
+--- a/drivers/dma-buf/dma-resv.c
++++ b/drivers/dma-buf/dma-resv.c
+@@ -684,6 +684,25 @@ long dma_resv_wait_timeout(struct dma_resv *obj, enum dma_resv_usage usage,
+ }
+ EXPORT_SYMBOL_GPL(dma_resv_wait_timeout);
+ 
++/**
++ * dma_resv_set_deadline - Set a deadline on reservation's objects fences
++ * @obj: the reservation object
++ * @usage: controls which fences to include, see enum dma_resv_usage.
++ * @deadline: the requested deadline (MONOTONIC)
++ */
++void dma_resv_set_deadline(struct dma_resv *obj, enum dma_resv_usage usage,
++			   ktime_t deadline)
++{
++	struct dma_resv_iter cursor;
++	struct dma_fence *fence;
++
++	dma_resv_iter_begin(&cursor, obj, usage);
++	dma_resv_for_each_fence_unlocked(&cursor, fence) {
++		dma_fence_set_deadline(fence, deadline);
++	}
++	dma_resv_iter_end(&cursor);
++}
++EXPORT_SYMBOL_GPL(dma_resv_set_deadline);
+ 
+ /**
+  * dma_resv_test_signaled - Test if a reservation object's fences have been
+diff --git a/include/linux/dma-resv.h b/include/linux/dma-resv.h
+index 0637659a702..8d0e34dad44 100644
+--- a/include/linux/dma-resv.h
++++ b/include/linux/dma-resv.h
+@@ -479,6 +479,8 @@ int dma_resv_get_singleton(struct dma_resv *obj, enum dma_resv_usage usage,
+ int dma_resv_copy_fences(struct dma_resv *dst, struct dma_resv *src);
+ long dma_resv_wait_timeout(struct dma_resv *obj, enum dma_resv_usage usage,
+ 			   bool intr, unsigned long timeout);
++void dma_resv_set_deadline(struct dma_resv *obj, enum dma_resv_usage usage,
++			   ktime_t deadline);
+ bool dma_resv_test_signaled(struct dma_resv *obj, enum dma_resv_usage usage);
+ void dma_resv_describe(struct dma_resv *obj, struct seq_file *seq);
+ 
+-- 
+2.39.0
+

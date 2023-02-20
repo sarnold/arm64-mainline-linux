@@ -1,0 +1,48 @@
+From 9ff9e07b8ac9198c435730ef9d808a28b5f0700d Mon Sep 17 00:00:00 2001
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Date: Thu, 9 Feb 2023 12:28:06 +0000
+Subject: [PATCH 064/230] ASoC: codecs: lpass: remove not so useful verbose log
+
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Link: https://lore.kernel.org/r/20230209122806.18923-9-srinivas.kandagatla@linaro.org
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ sound/soc/codecs/lpass-rx-macro.c  | 4 +---
+ sound/soc/codecs/lpass-wsa-macro.c | 4 +---
+ 2 files changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/sound/soc/codecs/lpass-rx-macro.c b/sound/soc/codecs/lpass-rx-macro.c
+index e0d891a67a1..a73a7d7a1c0 100644
+--- a/sound/soc/codecs/lpass-rx-macro.c
++++ b/sound/soc/codecs/lpass-rx-macro.c
+@@ -2296,10 +2296,8 @@ static int rx_macro_mux_put(struct snd_kcontrol *kcontrol,
+ 
+ 	aif_rst = rx->rx_port_value[widget->shift];
+ 	if (!rx_port_value) {
+-		if (aif_rst == 0) {
+-			dev_err(component->dev, "%s:AIF reset already\n", __func__);
++		if (aif_rst == 0)
+ 			return 0;
+-		}
+ 		if (aif_rst > RX_MACRO_AIF4_PB) {
+ 			dev_err(component->dev, "%s: Invalid AIF reset\n", __func__);
+ 			return 0;
+diff --git a/sound/soc/codecs/lpass-wsa-macro.c b/sound/soc/codecs/lpass-wsa-macro.c
+index e6b85f3692a..ba7480f3831 100644
+--- a/sound/soc/codecs/lpass-wsa-macro.c
++++ b/sound/soc/codecs/lpass-wsa-macro.c
+@@ -1856,10 +1856,8 @@ static int wsa_macro_rx_mux_put(struct snd_kcontrol *kcontrol,
+ 
+ 	aif_rst = wsa->rx_port_value[widget->shift];
+ 	if (!rx_port_value) {
+-		if (aif_rst == 0) {
+-			dev_err(component->dev, "%s: AIF reset already\n", __func__);
++		if (aif_rst == 0)
+ 			return 0;
+-		}
+ 		if (aif_rst >= WSA_MACRO_RX_MAX) {
+ 			dev_err(component->dev, "%s: Invalid AIF reset\n", __func__);
+ 			return 0;
+-- 
+2.39.0
+

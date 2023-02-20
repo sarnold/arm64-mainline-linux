@@ -1,0 +1,171 @@
+From 12b258078c4c52b399f8b9a9694fc7c57b82d7b1 Mon Sep 17 00:00:00 2001
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Date: Wed, 15 Feb 2023 14:28:54 +0000
+Subject: [PATCH 199/230] clk: qcom: sc8280xp: add lpass csr driver
+
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+---
+ drivers/clk/qcom/Kconfig                      |  8 ++
+ drivers/clk/qcom/Makefile                     |  1 +
+ drivers/clk/qcom/lpass-csr-sc8280xp.c         | 93 +++++++++++++++++++
+ .../clock/qcom,lpass-csr-sc8280xp.h           | 17 ++++
+ 4 files changed, 119 insertions(+)
+ create mode 100644 drivers/clk/qcom/lpass-csr-sc8280xp.c
+ create mode 100644 include/dt-bindings/clock/qcom,lpass-csr-sc8280xp.h
+
+diff --git a/drivers/clk/qcom/Kconfig b/drivers/clk/qcom/Kconfig
+index 70d43f0a891..24b89b5ec8c 100644
+--- a/drivers/clk/qcom/Kconfig
++++ b/drivers/clk/qcom/Kconfig
+@@ -410,6 +410,14 @@ config SC_DISPCC_8280XP
+ 	  Say Y if you want to support display devices and functionality such as
+ 	  splash screen.
+ 
++config SC_LPASSCSR_8280XP
++	tristate "SC8280 Low Power Audio Subsystem (LPASS) Clock Controller"
++	select SC_GCC_8280XP
++	help
++	  Support for the LPASS clock controller on SC8280XP devices.
++	  Say Y if you want to use the LPASS branch clocks of the LPASS clock
++	  controller to reset the LPASS subsystem.
++
+ config SC_GCC_7180
+ 	tristate "SC7180 Global Clock Controller"
+ 	select QCOM_GDSC
+diff --git a/drivers/clk/qcom/Makefile b/drivers/clk/qcom/Makefile
+index f18c446a97e..3797ea9502b 100644
+--- a/drivers/clk/qcom/Makefile
++++ b/drivers/clk/qcom/Makefile
+@@ -67,6 +67,7 @@ obj-$(CONFIG_SC_CAMCC_7280) += camcc-sc7280.o
+ obj-$(CONFIG_SC_DISPCC_7180) += dispcc-sc7180.o
+ obj-$(CONFIG_SC_DISPCC_7280) += dispcc-sc7280.o
+ obj-$(CONFIG_SC_DISPCC_8280XP) += dispcc-sc8280xp.o
++obj-$(CONFIG_SC_LPASSCSR_8280XP) += lpass-csr-sc8280xp.o
+ obj-$(CONFIG_SC_GCC_7180) += gcc-sc7180.o
+ obj-$(CONFIG_SC_GCC_7280) += gcc-sc7280.o
+ obj-$(CONFIG_SC_GCC_8180X) += gcc-sc8180x.o
+diff --git a/drivers/clk/qcom/lpass-csr-sc8280xp.c b/drivers/clk/qcom/lpass-csr-sc8280xp.c
+new file mode 100644
+index 00000000000..88a86b22b78
+--- /dev/null
++++ b/drivers/clk/qcom/lpass-csr-sc8280xp.c
+@@ -0,0 +1,93 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright (c) 2022, Linaro Limited
++ */
++
++#include <linux/clk-provider.h>
++#include <linux/err.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_device.h>
++#include <linux/regmap.h>
++#include <dt-bindings/clock/qcom,lpass-csr-sc8280xp.h>
++#include "common.h"
++#include "reset.h"
++
++static const struct qcom_reset_map lpass_audio_csr_sc8280xp_resets[] = {
++	[LPASS_AUDIO_SWR_RX_CGCR] =  { 0xa0, 1 },
++	[LPASS_AUDIO_SWR_WSA_CGCR] = { 0xb0, 1 },
++	[LPASS_AUDIO_SWR_WSA2_CGCR] =  { 0xd8, 1 },
++};
++
++static struct regmap_config lpass_audio_csr_sc8280xp_regmap_config = {
++	.reg_bits = 32,
++	.reg_stride = 4,
++	.val_bits = 32,
++	.name = "lpass-audio-csr",
++	.max_register = 0x1000,
++};
++
++static const struct qcom_cc_desc lpass_audio_csr_reset_sc8280xp_desc = {
++	.config = &lpass_audio_csr_sc8280xp_regmap_config,
++	.resets = lpass_audio_csr_sc8280xp_resets,
++	.num_resets = ARRAY_SIZE(lpass_audio_csr_sc8280xp_resets),
++};
++
++static const struct qcom_reset_map lpass_tcsr_sc8280xp_resets[] = {
++	[LPASS_AUDIO_SWR_TX_CGCR] = { 0xc010, 1 },
++};
++
++static struct regmap_config lpass_tcsr_sc8280xp_regmap_config = {
++	.reg_bits = 32,
++	.reg_stride = 4,
++	.val_bits = 32,
++	.name = "lpass-tcsr",
++	.max_register = 0x21000,
++};
++
++static const struct qcom_cc_desc lpass_tcsr_reset_sc8280xp_desc = {
++	.config = &lpass_tcsr_sc8280xp_regmap_config,
++	.resets = lpass_tcsr_sc8280xp_resets,
++	.num_resets = ARRAY_SIZE(lpass_tcsr_sc8280xp_resets),
++};
++
++static const struct of_device_id lpass_audio_csr_sc8280xp_match_table[] = {
++	{	.compatible = "qcom,sc8280xp-lpass-audio-csr",
++		.data = &lpass_audio_csr_reset_sc8280xp_desc,
++	}, {
++		.compatible = "qcom,sc8280xp-lpass-tcsr",
++		.data = &lpass_tcsr_reset_sc8280xp_desc,
++	},
++	{ }
++};
++MODULE_DEVICE_TABLE(of, lpass_audio_csr_sc8280xp_match_table);
++
++static int lpass_audio_csr_sc8280xp_probe(struct platform_device *pdev)
++{
++	const struct qcom_cc_desc *desc = of_device_get_match_data(&pdev->dev);
++
++	return qcom_cc_probe_by_index(pdev, 0, desc);
++}
++
++static struct platform_driver lpass_audio_csr_sc8280xp_driver = {
++	.probe = lpass_audio_csr_sc8280xp_probe,
++	.driver = {
++		.name = "lpass-csr-sc8280xp",
++		.of_match_table = lpass_audio_csr_sc8280xp_match_table,
++	},
++};
++
++static int __init lpass_audio_csr_sc8280xp_init(void)
++{
++	return platform_driver_register(&lpass_audio_csr_sc8280xp_driver);
++}
++subsys_initcall(lpass_audio_csr_sc8280xp_init);
++
++static void __exit lpass_audio_csr_sc8280xp_exit(void)
++{
++	platform_driver_unregister(&lpass_audio_csr_sc8280xp_driver);
++}
++module_exit(lpass_audio_csr_sc8280xp_exit);
++
++MODULE_DESCRIPTION("QTI LPASS CSR SC8280XP Driver");
++MODULE_LICENSE("GPL");
+diff --git a/include/dt-bindings/clock/qcom,lpass-csr-sc8280xp.h b/include/dt-bindings/clock/qcom,lpass-csr-sc8280xp.h
+new file mode 100644
+index 00000000000..bfdc26e7df7
+--- /dev/null
++++ b/include/dt-bindings/clock/qcom,lpass-csr-sc8280xp.h
+@@ -0,0 +1,17 @@
++/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause) */
++/*
++ * Copyright (c) 2022, The Linux Foundation. All rights reserved.
++ */
++
++#ifndef _DT_BINDINGS_CLK_QCOM_LPASS_AUDIO_CC_SC8280XP_H
++#define _DT_BINDINGS_CLK_QCOM_LPASS_AUDIO_CC_SC8280XP_H
++
++/* LPASS AUDIO CC CSR */
++#define LPASS_AUDIO_SWR_RX_CGCR				0
++#define LPASS_AUDIO_SWR_WSA_CGCR			1
++#define LPASS_AUDIO_SWR_WSA2_CGCR			2
++
++/* LPASS TCSR */
++#define LPASS_AUDIO_SWR_TX_CGCR				0
++
++#endif
+-- 
+2.39.0
+

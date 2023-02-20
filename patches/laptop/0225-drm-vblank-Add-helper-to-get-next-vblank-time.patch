@@ -1,0 +1,73 @@
+From fc5af3e75b8dd9a13fdf5e58fd4488a6d3ca6307 Mon Sep 17 00:00:00 2001
+From: Rob Clark <robdclark@chromium.org>
+Date: Sat, 18 Feb 2023 13:15:53 -0800
+Subject: [PATCH 225/230] drm/vblank: Add helper to get next vblank time
+
+Will be used in the next commit to set a deadline on fences that an
+atomic update is waiting on.
+
+Signed-off-by: Rob Clark <robdclark@chromium.org>
+Link: https://lore.kernel.org/r/20230218211608.1630586-11-robdclark@gmail.com
+---
+ drivers/gpu/drm/drm_vblank.c | 32 ++++++++++++++++++++++++++++++++
+ include/drm/drm_vblank.h     |  1 +
+ 2 files changed, 33 insertions(+)
+
+diff --git a/drivers/gpu/drm/drm_vblank.c b/drivers/gpu/drm/drm_vblank.c
+index 2ff31717a3d..caf25ebb34c 100644
+--- a/drivers/gpu/drm/drm_vblank.c
++++ b/drivers/gpu/drm/drm_vblank.c
+@@ -980,6 +980,38 @@ u64 drm_crtc_vblank_count_and_time(struct drm_crtc *crtc,
+ }
+ EXPORT_SYMBOL(drm_crtc_vblank_count_and_time);
+ 
++/**
++ * drm_crtc_next_vblank_time - calculate the time of the next vblank
++ * @crtc: the crtc for which to calculate next vblank time
++ * @vblanktime: pointer to time to receive the next vblank timestamp.
++ *
++ * Calculate the expected time of the next vblank based on time of previous
++ * vblank and frame duration
++ */
++int drm_crtc_next_vblank_time(struct drm_crtc *crtc, ktime_t *vblanktime)
++{
++	unsigned int pipe = drm_crtc_index(crtc);
++	struct drm_vblank_crtc *vblank = &crtc->dev->vblank[pipe];
++	u64 count;
++
++	if (!vblank->framedur_ns)
++		return -EINVAL;
++
++	count = drm_vblank_count_and_time(crtc->dev, pipe, vblanktime);
++
++	/*
++	 * If we don't get a valid count, then we probably also don't
++	 * have a valid time:
++	 */
++	if (!count)
++		return -EINVAL;
++
++	*vblanktime = ktime_add(*vblanktime, ns_to_ktime(vblank->framedur_ns));
++
++	return 0;
++}
++EXPORT_SYMBOL(drm_crtc_next_vblank_time);
++
+ static void send_vblank_event(struct drm_device *dev,
+ 		struct drm_pending_vblank_event *e,
+ 		u64 seq, ktime_t now)
+diff --git a/include/drm/drm_vblank.h b/include/drm/drm_vblank.h
+index 733a3e2d1d1..a63bc2c92f3 100644
+--- a/include/drm/drm_vblank.h
++++ b/include/drm/drm_vblank.h
+@@ -230,6 +230,7 @@ bool drm_dev_has_vblank(const struct drm_device *dev);
+ u64 drm_crtc_vblank_count(struct drm_crtc *crtc);
+ u64 drm_crtc_vblank_count_and_time(struct drm_crtc *crtc,
+ 				   ktime_t *vblanktime);
++int drm_crtc_next_vblank_time(struct drm_crtc *crtc, ktime_t *vblanktime);
+ void drm_crtc_send_vblank_event(struct drm_crtc *crtc,
+ 			       struct drm_pending_vblank_event *e);
+ void drm_crtc_arm_vblank_event(struct drm_crtc *crtc,
+-- 
+2.39.0
+

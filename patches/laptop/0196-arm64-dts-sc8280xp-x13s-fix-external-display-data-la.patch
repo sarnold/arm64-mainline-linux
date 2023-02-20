@@ -1,0 +1,51 @@
+From fe0812dca5f63f8d46709cb080c5dcdc2f14ce28 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Wed, 15 Feb 2023 17:45:24 +0100
+Subject: [PATCH 196/230] arm64: dts: sc8280xp-x13s: fix external display
+ 'data-lanes'
+
+The 'data-lanes' property belongs in the controller node but was
+erroneously moved to the endpoint nodes in the last revision of the
+external display series:
+
+	[drm] Invalid property "data-lanes", default max DP lanes = 4
+
+Fixes: 8fcff430faee ("arm64: dts: qcom: sc8280xp-x13s: Enable external display")
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+Link: https://lore.kernel.org/r/20230215164524.1335-2-johan+linaro@kernel.org
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index 107471ec45d..82c61ac7786 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -537,20 +537,22 @@ &mdss0 {
+ };
+ 
+ &mdss0_dp0 {
++	data-lanes = <0 1>;
++
+ 	status = "okay";
+ };
+ 
+ &mdss0_dp0_out {
+-	data-lanes = <0 1>;
+ 	remote-endpoint = <&pmic_glink_con0_ss>;
+ };
+ 
+ &mdss0_dp1 {
++	data-lanes = <0 1>;
++
+ 	status = "okay";
+ };
+ 
+ &mdss0_dp1_out {
+-	data-lanes = <0 1>;
+ 	remote-endpoint = <&pmic_glink_con1_ss>;
+ };
+ 
+-- 
+2.39.0
+

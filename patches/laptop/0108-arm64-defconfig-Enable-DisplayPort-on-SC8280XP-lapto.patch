@@ -1,0 +1,42 @@
+From 7d3d1e23da7d4de320dec4dc23d8720d1b8b4b6d Mon Sep 17 00:00:00 2001
+From: Bjorn Andersson <quic_bjorande@quicinc.com>
+Date: Mon, 13 Feb 2023 13:56:19 -0800
+Subject: [PATCH 108/230] arm64: defconfig: Enable DisplayPort on SC8280XP
+ laptops
+
+The QCOM_PMIC_GLINK implements the parts of a TCPM necessary for
+negotiating DP altmode and the TYPEC_MUX_GPIO_SBU driver is used for
+controlling connection and orientation switching of the SBU lanes in the
+USB-C connector  Enable these to enable USB Type-C DisplayPort on
+SC8280XP laptops.
+
+Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Link: https://lore.kernel.org/r/20230213215619.1362566-5-quic_bjorande@quicinc.com
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/configs/defconfig | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index ed866f0e5c4..715d65027c8 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -950,6 +950,7 @@ CONFIG_TYPEC_TCPCI=m
+ CONFIG_TYPEC_FUSB302=m
+ CONFIG_TYPEC_TPS6598X=m
+ CONFIG_TYPEC_HD3SS3220=m
++CONFIG_TYPEC_MUX_GPIO_SBU=m
+ CONFIG_MMC=y
+ CONFIG_MMC_BLOCK_MINORS=32
+ CONFIG_MMC_ARMMMCI=y
+@@ -1166,6 +1167,7 @@ CONFIG_QCOM_CPR=y
+ CONFIG_QCOM_GENI_SE=y
+ CONFIG_QCOM_LLCC=m
+ CONFIG_QCOM_OCMEM=m
++CONFIG_QCOM_PMIC_GLINK=m
+ CONFIG_QCOM_RMTFS_MEM=m
+ CONFIG_QCOM_RPMH=y
+ CONFIG_QCOM_RPMHPD=y
+-- 
+2.39.0
+

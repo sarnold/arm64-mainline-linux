@@ -1,0 +1,31 @@
+From 32915dd7228b5e3a286be0b28e06688188aa47a4 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 31 Jan 2023 14:51:51 +0100
+Subject: [PATCH 112/230] interconnect: fix mem leak when freeing nodes
+
+The node link array is allocated when adding links to a node but is not
+deallocated when nodes are destroyed.
+
+Fixes: 11f1ceca7031 ("interconnect: Add generic on-chip interconnect API")
+Cc: stable@vger.kernel.org      # 5.1
+Cc: Georgi Djakov <georgi.djakov@linaro.org>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/interconnect/core.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/interconnect/core.c b/drivers/interconnect/core.c
+index 25debded65a..16109d21429 100644
+--- a/drivers/interconnect/core.c
++++ b/drivers/interconnect/core.c
+@@ -850,6 +850,7 @@ void icc_node_destroy(int id)
+ 
+ 	mutex_unlock(&icc_lock);
+ 
++	kfree(node->links);
+ 	kfree(node);
+ }
+ EXPORT_SYMBOL_GPL(icc_node_destroy);
+-- 
+2.39.0
+

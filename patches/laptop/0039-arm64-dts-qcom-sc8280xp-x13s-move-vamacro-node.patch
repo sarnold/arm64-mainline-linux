@@ -1,0 +1,55 @@
+From c9dd1a82228eb1d6d454e75d157516b5b97502b7 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 3 Jan 2023 10:42:19 +0100
+Subject: [PATCH 039/230] arm64: dts: qcom: sc8280xp-x13s: move vamacro node
+
+Move the vamacro node to restore the alphabetical sort order.
+
+While at it, add some newline separators to improve readability.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ .../qcom/sc8280xp-lenovo-thinkpad-x13s.dts    | 20 ++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index 2d8541beb45..f20de53b3fe 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -876,15 +876,6 @@ &txmacro {
+ 	status = "okay";
+ };
+ 
+-&vamacro {
+-	pinctrl-0 = <&dmic01_default>, <&dmic02_default>;
+-	pinctrl-names = "default";
+-	vdd-micb-supply = <&vreg_s10b>;
+-	qcom,dmic-sample-rate = <600000>;
+-
+-	status = "okay";
+-};
+-
+ &usb_0 {
+ 	status = "okay";
+ };
+@@ -933,6 +924,17 @@ &usb_1_qmpphy {
+ 	status = "okay";
+ };
+ 
++&vamacro {
++	pinctrl-0 = <&dmic01_default>, <&dmic02_default>;
++	pinctrl-names = "default";
++
++	vdd-micb-supply = <&vreg_s10b>;
++
++	qcom,dmic-sample-rate = <600000>;
++
++	status = "okay";
++};
++
+ &wsamacro {
+ 	status = "okay";
+ };
+-- 
+2.39.0
+

@@ -1,0 +1,107 @@
+From d94cbe83196cc6ea20744dab063e7dabe64be248 Mon Sep 17 00:00:00 2001
+From: Rob Clark <robdclark@chromium.org>
+Date: Sat, 18 Feb 2023 13:15:44 -0800
+Subject: [PATCH 216/230] dma-buf/dma-fence: Add deadline awareness
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Add a way to hint to the fence signaler of an upcoming deadline, such as
+vblank, which the fence waiter would prefer not to miss.  This is to aid
+the fence signaler in making power management decisions, like boosting
+frequency as the deadline approaches and awareness of missing deadlines
+so that can be factored in to the frequency scaling.
+
+v2: Drop dma_fence::deadline and related logic to filter duplicate
+    deadlines, to avoid increasing dma_fence size.  The fence-context
+    implementation will need similar logic to track deadlines of all
+    the fences on the same timeline.  [ckoenig]
+v3: Clarify locking wrt. set_deadline callback
+
+Signed-off-by: Rob Clark <robdclark@chromium.org>
+Reviewed-by: Christian König <christian.koenig@amd.com>
+Link: https://lore.kernel.org/r/20230218211608.1630586-2-robdclark@gmail.com
+---
+ drivers/dma-buf/dma-fence.c | 20 ++++++++++++++++++++
+ include/linux/dma-fence.h   | 20 ++++++++++++++++++++
+ 2 files changed, 40 insertions(+)
+
+diff --git a/drivers/dma-buf/dma-fence.c b/drivers/dma-buf/dma-fence.c
+index 0de0482cd36..763b3262768 100644
+--- a/drivers/dma-buf/dma-fence.c
++++ b/drivers/dma-buf/dma-fence.c
+@@ -912,6 +912,26 @@ dma_fence_wait_any_timeout(struct dma_fence **fences, uint32_t count,
+ }
+ EXPORT_SYMBOL(dma_fence_wait_any_timeout);
+ 
++
++/**
++ * dma_fence_set_deadline - set desired fence-wait deadline
++ * @fence:    the fence that is to be waited on
++ * @deadline: the time by which the waiter hopes for the fence to be
++ *            signaled
++ *
++ * Inform the fence signaler of an upcoming deadline, such as vblank, by
++ * which point the waiter would prefer the fence to be signaled by.  This
++ * is intended to give feedback to the fence signaler to aid in power
++ * management decisions, such as boosting GPU frequency if a periodic
++ * vblank deadline is approaching.
++ */
++void dma_fence_set_deadline(struct dma_fence *fence, ktime_t deadline)
++{
++	if (fence->ops->set_deadline && !dma_fence_is_signaled(fence))
++		fence->ops->set_deadline(fence, deadline);
++}
++EXPORT_SYMBOL(dma_fence_set_deadline);
++
+ /**
+  * dma_fence_describe - Dump fence describtion into seq_file
+  * @fence: the 6fence to describe
+diff --git a/include/linux/dma-fence.h b/include/linux/dma-fence.h
+index 775cdc0b4f2..d77f6591c45 100644
+--- a/include/linux/dma-fence.h
++++ b/include/linux/dma-fence.h
+@@ -99,6 +99,7 @@ enum dma_fence_flag_bits {
+ 	DMA_FENCE_FLAG_SIGNALED_BIT,
+ 	DMA_FENCE_FLAG_TIMESTAMP_BIT,
+ 	DMA_FENCE_FLAG_ENABLE_SIGNAL_BIT,
++	DMA_FENCE_FLAG_HAS_DEADLINE_BIT,
+ 	DMA_FENCE_FLAG_USER_BITS, /* must always be last member */
+ };
+ 
+@@ -257,6 +258,23 @@ struct dma_fence_ops {
+ 	 */
+ 	void (*timeline_value_str)(struct dma_fence *fence,
+ 				   char *str, int size);
++
++	/**
++	 * @set_deadline:
++	 *
++	 * Callback to allow a fence waiter to inform the fence signaler of
++	 * an upcoming deadline, such as vblank, by which point the waiter
++	 * would prefer the fence to be signaled by.  This is intended to
++	 * give feedback to the fence signaler to aid in power management
++	 * decisions, such as boosting GPU frequency.
++	 *
++	 * This is called without &dma_fence.lock held, it can be called
++	 * multiple times and from any context.  Locking is up to the callee
++	 * if it has some state to manage.
++	 *
++	 * This callback is optional.
++	 */
++	void (*set_deadline)(struct dma_fence *fence, ktime_t deadline);
+ };
+ 
+ void dma_fence_init(struct dma_fence *fence, const struct dma_fence_ops *ops,
+@@ -583,6 +601,8 @@ static inline signed long dma_fence_wait(struct dma_fence *fence, bool intr)
+ 	return ret < 0 ? ret : 0;
+ }
+ 
++void dma_fence_set_deadline(struct dma_fence *fence, ktime_t deadline);
++
+ struct dma_fence *dma_fence_get_stub(void);
+ struct dma_fence *dma_fence_allocate_private_stub(void);
+ u64 dma_fence_context_alloc(unsigned num);
+-- 
+2.39.0
+

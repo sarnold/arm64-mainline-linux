@@ -1,0 +1,123 @@
+From 214b59e7daef98c4026311259a5928bc20129444 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 31 Jan 2023 17:11:02 +0100
+Subject: [PATCH 132/230] interconnect: drop unused icc_get() interface
+
+The icc_get() interface can be used to lookup an interconnect path based
+on global node ids. There has never been any users of this interface and
+all lookups are currently done from the devicetree.
+
+Remove the unused icc_get() interface.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/interconnect/core.c  | 52 ++----------------------------------
+ include/linux/interconnect.h |  8 ------
+ 2 files changed, 2 insertions(+), 58 deletions(-)
+
+diff --git a/drivers/interconnect/core.c b/drivers/interconnect/core.c
+index 49dae1b99f5..59250c8ceb0 100644
+--- a/drivers/interconnect/core.c
++++ b/drivers/interconnect/core.c
+@@ -588,7 +588,7 @@ EXPORT_SYMBOL_GPL(icc_set_tag);
+ 
+ /**
+  * icc_get_name() - Get name of the icc path
+- * @path: reference to the path returned by icc_get()
++ * @path: interconnect path
+  *
+  * This function is used by an interconnect consumer to get the name of the icc
+  * path.
+@@ -606,7 +606,7 @@ EXPORT_SYMBOL_GPL(icc_get_name);
+ 
+ /**
+  * icc_set_bw() - set bandwidth constraints on an interconnect path
+- * @path: reference to the path returned by icc_get()
++ * @path: interconnect path
+  * @avg_bw: average bandwidth in kilobytes per second
+  * @peak_bw: peak bandwidth in kilobytes per second
+  *
+@@ -705,54 +705,6 @@ int icc_disable(struct icc_path *path)
+ }
+ EXPORT_SYMBOL_GPL(icc_disable);
+ 
+-/**
+- * icc_get() - return a handle for path between two endpoints
+- * @dev: the device requesting the path
+- * @src_id: source device port id
+- * @dst_id: destination device port id
+- *
+- * This function will search for a path between two endpoints and return an
+- * icc_path handle on success. Use icc_put() to release
+- * constraints when they are not needed anymore.
+- * If the interconnect API is disabled, NULL is returned and the consumer
+- * drivers will still build. Drivers are free to handle this specifically,
+- * but they don't have to.
+- *
+- * Return: icc_path pointer on success, ERR_PTR() on error or NULL if the
+- * interconnect API is disabled.
+- */
+-struct icc_path *icc_get(struct device *dev, const int src_id, const int dst_id)
+-{
+-	struct icc_node *src, *dst;
+-	struct icc_path *path = ERR_PTR(-EPROBE_DEFER);
+-
+-	mutex_lock(&icc_lock);
+-
+-	src = node_find(src_id);
+-	if (!src)
+-		goto out;
+-
+-	dst = node_find(dst_id);
+-	if (!dst)
+-		goto out;
+-
+-	path = path_find(dev, src, dst);
+-	if (IS_ERR(path)) {
+-		dev_err(dev, "%s: invalid path=%ld\n", __func__, PTR_ERR(path));
+-		goto out;
+-	}
+-
+-	path->name = kasprintf(GFP_KERNEL, "%s-%s", src->name, dst->name);
+-	if (!path->name) {
+-		kfree(path);
+-		path = ERR_PTR(-ENOMEM);
+-	}
+-out:
+-	mutex_unlock(&icc_lock);
+-	return path;
+-}
+-EXPORT_SYMBOL_GPL(icc_get);
+-
+ /**
+  * icc_put() - release the reference to the icc_path
+  * @path: interconnect path
+diff --git a/include/linux/interconnect.h b/include/linux/interconnect.h
+index 2b0e784ba77..97ac253df62 100644
+--- a/include/linux/interconnect.h
++++ b/include/linux/interconnect.h
+@@ -40,8 +40,6 @@ struct icc_bulk_data {
+ 
+ #if IS_ENABLED(CONFIG_INTERCONNECT)
+ 
+-struct icc_path *icc_get(struct device *dev, const int src_id,
+-			 const int dst_id);
+ struct icc_path *of_icc_get(struct device *dev, const char *name);
+ struct icc_path *devm_of_icc_get(struct device *dev, const char *name);
+ int devm_of_icc_bulk_get(struct device *dev, int num_paths, struct icc_bulk_data *paths);
+@@ -61,12 +59,6 @@ void icc_bulk_disable(int num_paths, const struct icc_bulk_data *paths);
+ 
+ #else
+ 
+-static inline struct icc_path *icc_get(struct device *dev, const int src_id,
+-				       const int dst_id)
+-{
+-	return NULL;
+-}
+-
+ static inline struct icc_path *of_icc_get(struct device *dev,
+ 					  const char *name)
+ {
+-- 
+2.39.0
+

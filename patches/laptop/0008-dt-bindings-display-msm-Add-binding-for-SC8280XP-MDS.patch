@@ -1,0 +1,301 @@
+From 8114430032ed0d6c4c67ea982ac230f64a06e732 Mon Sep 17 00:00:00 2001
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+Date: Wed, 7 Dec 2022 14:00:01 -0800
+Subject: [PATCH 008/230] dt-bindings: display/msm: Add binding for SC8280XP
+ MDSS
+
+Add binding for the display subsystem and display processing unit in the
+Qualcomm SC8280XP platform.
+
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+Link: https://lore.kernel.org/r/20221207220012.16529-2-quic_bjorande@quicinc.com
+---
+ .../display/msm/qcom,sc8280xp-dpu.yaml        | 122 +++++++++++++++
+ .../display/msm/qcom,sc8280xp-mdss.yaml       | 143 ++++++++++++++++++
+ 2 files changed, 265 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/display/msm/qcom,sc8280xp-dpu.yaml
+ create mode 100644 Documentation/devicetree/bindings/display/msm/qcom,sc8280xp-mdss.yaml
+
+diff --git a/Documentation/devicetree/bindings/display/msm/qcom,sc8280xp-dpu.yaml b/Documentation/devicetree/bindings/display/msm/qcom,sc8280xp-dpu.yaml
+new file mode 100644
+index 00000000000..f2c8e16cf06
+--- /dev/null
++++ b/Documentation/devicetree/bindings/display/msm/qcom,sc8280xp-dpu.yaml
+@@ -0,0 +1,122 @@
++# SPDX-License-Identifier: GPL-2.0-only or BSD-2-Clause
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/display/msm/qcom,sc8280xp-dpu.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Qualcomm SC8280XP Display Processing Unit
++
++maintainers:
++  - Bjorn Andersson <andersson@kernel.org>
++
++description:
++  Device tree bindings for SC8280XP Display Processing Unit.
++
++$ref: /schemas/display/msm/dpu-common.yaml#
++
++properties:
++  compatible:
++    const: qcom,sc8280xp-dpu
++
++  reg:
++    items:
++      - description: Address offset and size for mdp register set
++      - description: Address offset and size for vbif register set
++
++  reg-names:
++    items:
++      - const: mdp
++      - const: vbif
++
++  clocks:
++    items:
++      - description: Display hf axi clock
++      - description: Display sf axi clock
++      - description: Display ahb clock
++      - description: Display lut clock
++      - description: Display core clock
++      - description: Display vsync clock
++
++  clock-names:
++    items:
++      - const: bus
++      - const: nrt_bus
++      - const: iface
++      - const: lut
++      - const: core
++      - const: vsync
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/qcom,dispcc-sc8280xp.h>
++    #include <dt-bindings/clock/qcom,gcc-sc8280xp.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/interconnect/qcom,sc8280xp.h>
++    #include <dt-bindings/power/qcom-rpmpd.h>
++
++    display-controller@ae01000 {
++        compatible = "qcom,sc8280xp-dpu";
++        reg = <0x0ae01000 0x8f000>,
++              <0x0aeb0000 0x2008>;
++        reg-names = "mdp", "vbif";
++
++        clocks = <&gcc GCC_DISP_HF_AXI_CLK>,
++                 <&gcc GCC_DISP_SF_AXI_CLK>,
++                 <&dispcc0 DISP_CC_MDSS_AHB_CLK>,
++                 <&dispcc0 DISP_CC_MDSS_MDP_LUT_CLK>,
++                 <&dispcc0 DISP_CC_MDSS_MDP_CLK>,
++                 <&dispcc0 DISP_CC_MDSS_VSYNC_CLK>;
++        clock-names = "bus",
++                      "nrt_bus",
++                      "iface",
++                      "lut",
++                      "core",
++                      "vsync";
++
++        assigned-clocks = <&dispcc0 DISP_CC_MDSS_MDP_CLK>,
++                          <&dispcc0 DISP_CC_MDSS_VSYNC_CLK>;
++        assigned-clock-rates = <460000000>,
++                               <19200000>;
++
++        operating-points-v2 = <&mdp_opp_table>;
++        power-domains = <&rpmhpd SC8280XP_MMCX>;
++
++        interrupt-parent = <&mdss0>;
++        interrupts = <0>;
++
++        ports {
++            #address-cells = <1>;
++            #size-cells = <0>;
++
++            port@0 {
++                reg = <0>;
++                endpoint {
++                    remote-endpoint = <&mdss0_dp0_in>;
++                };
++            };
++
++            port@4 {
++                reg = <4>;
++                endpoint {
++                    remote-endpoint = <&mdss0_dp1_in>;
++                };
++            };
++
++            port@5 {
++                reg = <5>;
++                endpoint {
++                    remote-endpoint = <&mdss0_dp3_in>;
++                };
++            };
++
++            port@6 {
++                reg = <6>;
++                endpoint {
++                    remote-endpoint = <&mdss0_dp2_in>;
++                };
++            };
++        };
++    };
++...
+diff --git a/Documentation/devicetree/bindings/display/msm/qcom,sc8280xp-mdss.yaml b/Documentation/devicetree/bindings/display/msm/qcom,sc8280xp-mdss.yaml
+new file mode 100644
+index 00000000000..b67e7874ed5
+--- /dev/null
++++ b/Documentation/devicetree/bindings/display/msm/qcom,sc8280xp-mdss.yaml
+@@ -0,0 +1,143 @@
++# SPDX-License-Identifier: GPL-2.0-only or BSD-2-Clause
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/display/msm/qcom,sc8280xp-mdss.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Qualcomm SC8280XP Mobile Display Subsystem
++
++maintainers:
++  - Bjorn Andersson <andersson@kernel.org>
++
++description:
++  Device tree bindings for MSM Mobile Display Subsystem (MDSS) that encapsulates
++  sub-blocks like DPU display controller, DSI and DP interfaces etc.
++
++$ref: /schemas/display/msm/mdss-common.yaml#
++
++properties:
++  compatible:
++    const: qcom,sc8280xp-mdss
++
++  clocks:
++    items:
++      - description: Display AHB clock from gcc
++      - description: Display AHB clock from dispcc
++      - description: Display core clock
++
++  clock-names:
++    items:
++      - const: iface
++      - const: ahb
++      - const: core
++
++patternProperties:
++  "^display-controller@[0-9a-f]+$":
++    type: object
++    properties:
++      compatible:
++        const: qcom,sc8280xp-dpu
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/qcom,dispcc-sc8280xp.h>
++    #include <dt-bindings/clock/qcom,gcc-sc8280xp.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/interconnect/qcom,sc8280xp.h>
++    #include <dt-bindings/power/qcom-rpmpd.h>
++
++    display-subsystem@ae00000 {
++        compatible = "qcom,sc8280xp-mdss";
++        reg = <0x0ae00000 0x1000>;
++        reg-names = "mdss";
++
++        power-domains = <&dispcc0 MDSS_GDSC>;
++
++        clocks = <&gcc GCC_DISP_AHB_CLK>,
++                 <&dispcc0 DISP_CC_MDSS_AHB_CLK>,
++                 <&dispcc0 DISP_CC_MDSS_MDP_CLK>;
++        clock-names = "iface",
++                      "ahb",
++                      "core";
++
++        resets = <&dispcc0 DISP_CC_MDSS_CORE_BCR>;
++
++        interrupts = <GIC_SPI 83 IRQ_TYPE_LEVEL_HIGH>;
++        interrupt-controller;
++        #interrupt-cells = <1>;
++
++        interconnects = <&mmss_noc MASTER_MDP0 0 &mc_virt SLAVE_EBI1 0>,
++                        <&mmss_noc MASTER_MDP1 0 &mc_virt SLAVE_EBI1 0>;
++        interconnect-names = "mdp0-mem", "mdp1-mem";
++
++        iommus = <&apps_smmu 0x1000 0x402>;
++
++        #address-cells = <1>;
++        #size-cells = <1>;
++        ranges;
++
++        display-controller@ae01000 {
++            compatible = "qcom,sc8280xp-dpu";
++            reg = <0x0ae01000 0x8f000>,
++            <0x0aeb0000 0x2008>;
++            reg-names = "mdp", "vbif";
++
++            clocks = <&gcc GCC_DISP_HF_AXI_CLK>,
++                     <&gcc GCC_DISP_SF_AXI_CLK>,
++                     <&dispcc0 DISP_CC_MDSS_AHB_CLK>,
++                     <&dispcc0 DISP_CC_MDSS_MDP_LUT_CLK>,
++                     <&dispcc0 DISP_CC_MDSS_MDP_CLK>,
++                     <&dispcc0 DISP_CC_MDSS_VSYNC_CLK>;
++            clock-names = "bus",
++                          "nrt_bus",
++                          "iface",
++                          "lut",
++                          "core",
++                          "vsync";
++
++            assigned-clocks = <&dispcc0 DISP_CC_MDSS_VSYNC_CLK>;
++            assigned-clock-rates = <19200000>;
++
++            operating-points-v2 = <&mdss0_mdp_opp_table>;
++            power-domains = <&rpmhpd SC8280XP_MMCX>;
++
++            interrupt-parent = <&mdss0>;
++            interrupts = <0>;
++
++            ports {
++                #address-cells = <1>;
++                #size-cells = <0>;
++
++                port@0 {
++                    reg = <0>;
++                    endpoint {
++                        remote-endpoint = <&mdss0_dp0_in>;
++                    };
++                };
++
++                port@4 {
++                    reg = <4>;
++                    endpoint {
++                        remote-endpoint = <&mdss0_dp1_in>;
++                    };
++                };
++
++                port@5 {
++                    reg = <5>;
++                    endpoint {
++                        remote-endpoint = <&mdss0_dp3_in>;
++                    };
++                };
++
++                port@6 {
++                    reg = <6>;
++                    endpoint {
++                        remote-endpoint = <&mdss0_dp2_in>;
++                    };
++                };
++            };
++        };
++    };
++...
+-- 
+2.39.0
+

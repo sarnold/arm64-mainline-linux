@@ -1,0 +1,50 @@
+From 58964a38bbf80eaf713298aa5b253507f9df522d Mon Sep 17 00:00:00 2001
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Date: Thu, 9 Feb 2023 13:13:33 +0000
+Subject: [PATCH 169/230] soundwire: qcom: enable runtime pm before controller
+ is registered
+
+Registering controller even before pm runtime is enabled will result
+in pm runtime underflow warnings. Fix this by properly moving
+the runtime pm enable before registering controller.
+
+Fixes: 74e79da9fd46 ("soundwire: qcom: add runtime pm support")
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Link: https://lore.kernel.org/r/20230209131336.18252-3-srinivas.kandagatla@linaro.org
+---
+ drivers/soundwire/qcom.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/soundwire/qcom.c b/drivers/soundwire/qcom.c
+index 9d8ae77bad0..b2363839624 100644
+--- a/drivers/soundwire/qcom.c
++++ b/drivers/soundwire/qcom.c
+@@ -1417,6 +1417,12 @@ static int qcom_swrm_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
++	pm_runtime_set_autosuspend_delay(dev, 3000);
++	pm_runtime_use_autosuspend(dev);
++	pm_runtime_mark_last_busy(dev);
++	pm_runtime_set_active(dev);
++	pm_runtime_enable(dev);
++
+ 	ret = sdw_bus_master_add(&ctrl->bus, dev, dev->fwnode);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to register Soundwire controller (%d)\n",
+@@ -1435,12 +1441,6 @@ static int qcom_swrm_probe(struct platform_device *pdev)
+ 		 (ctrl->version >> 24) & 0xff, (ctrl->version >> 16) & 0xff,
+ 		 ctrl->version & 0xffff);
+ 
+-	pm_runtime_set_autosuspend_delay(dev, 3000);
+-	pm_runtime_use_autosuspend(dev);
+-	pm_runtime_mark_last_busy(dev);
+-	pm_runtime_set_active(dev);
+-	pm_runtime_enable(dev);
+-
+ 	/* Clk stop is not supported on WSA Soundwire masters */
+ 	if (ctrl->version <= 0x01030000) {
+ 		ctrl->clock_stop_not_supported = true;
+-- 
+2.39.0
+

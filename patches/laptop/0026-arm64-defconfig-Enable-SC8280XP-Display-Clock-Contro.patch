@@ -1,0 +1,35 @@
+From 10d14e07ded5eb2d14c0847aa81b0c52d30a94de Mon Sep 17 00:00:00 2001
+From: Bjorn Andersson <quic_bjorande@quicinc.com>
+Date: Tue, 10 Jan 2023 19:59:06 -0800
+Subject: [PATCH 026/230] arm64: defconfig: Enable SC8280XP Display Clock
+ Controller
+
+The Display Clock Controller provides clocks and power-domains for
+the display subsystem, enable this to enable display on the SC8280XP.
+
+Now that power-domains can probe defer past late_initcall() this should
+be possible to leave as module.
+
+Acked-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+Link: https://lore.kernel.org/r/20230111035906.2975494-5-quic_bjorande@quicinc.com
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 851e8f9be06..6a862f3658a 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -1098,6 +1098,7 @@ CONFIG_MSM_GCC_8994=y
+ CONFIG_MSM_MMCC_8996=y
+ CONFIG_MSM_GCC_8998=y
+ CONFIG_QCS_GCC_404=y
++CONFIG_SC_DISPCC_8280XP=m
+ CONFIG_SC_GCC_7180=y
+ CONFIG_SC_GCC_7280=y
+ CONFIG_SC_GCC_8180X=y
+-- 
+2.39.0
+

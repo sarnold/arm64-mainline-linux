@@ -1,0 +1,35 @@
+From 8120439326ad67decb60202e975318fe49fbca53 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 31 Jan 2023 15:02:38 +0100
+Subject: [PATCH 126/230] interconnect: exynos: drop redundant link destroy
+
+There is no longer any need to explicitly destroy node links as this is
+now done when the node is destroyed as part of icc_nodes_remove().
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/interconnect/samsung/exynos.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/drivers/interconnect/samsung/exynos.c b/drivers/interconnect/samsung/exynos.c
+index 72e42603823..ebf09bbf725 100644
+--- a/drivers/interconnect/samsung/exynos.c
++++ b/drivers/interconnect/samsung/exynos.c
+@@ -96,14 +96,8 @@ static struct icc_node *exynos_generic_icc_xlate(struct of_phandle_args *spec,
+ static int exynos_generic_icc_remove(struct platform_device *pdev)
+ {
+ 	struct exynos_icc_priv *priv = platform_get_drvdata(pdev);
+-	struct icc_node *parent_node, *node = priv->node;
+ 
+ 	icc_provider_deregister(&priv->provider);
+-
+-	parent_node = exynos_icc_get_parent(priv->dev->parent->of_node);
+-	if (parent_node && !IS_ERR(parent_node))
+-		icc_link_destroy(node, parent_node);
+-
+ 	icc_nodes_remove(&priv->provider);
+ 
+ 	return 0;
+-- 
+2.39.0
+

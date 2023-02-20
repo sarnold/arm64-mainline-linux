@@ -1,0 +1,47 @@
+From d27269e0c61146d064fc5c4c177ae27e0b291102 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 8 Dec 2022 14:19:57 +0100
+Subject: [PATCH 093/230] irqchip/alpine-msi: Use irq_domain_add_hierarchy()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Use the irq_domain_add_hierarchy() helper to create the hierarchical
+domain, which both serves as documentation and avoids poking at
+irqdomain internals.
+
+Reviewed-by: Philippe Mathieu-Daudé <philmd@linaro.org>
+Tested-by: Hsin-Yi Wang <hsinyi@chromium.org>
+Tested-by: Mark-PK Tsai <mark-pk.tsai@mediatek.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/irqchip/irq-alpine-msi.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/irqchip/irq-alpine-msi.c b/drivers/irqchip/irq-alpine-msi.c
+index 5ddb8e578ac..604459372fd 100644
+--- a/drivers/irqchip/irq-alpine-msi.c
++++ b/drivers/irqchip/irq-alpine-msi.c
+@@ -204,16 +204,14 @@ static int alpine_msix_init_domains(struct alpine_msix_data *priv,
+ 		return -ENXIO;
+ 	}
+ 
+-	middle_domain = irq_domain_add_tree(NULL,
+-					    &alpine_msix_middle_domain_ops,
+-					    priv);
++	middle_domain = irq_domain_add_hierarchy(gic_domain, 0, 0, NULL,
++						 &alpine_msix_middle_domain_ops,
++						 priv);
+ 	if (!middle_domain) {
+ 		pr_err("Failed to create the MSIX middle domain\n");
+ 		return -ENOMEM;
+ 	}
+ 
+-	middle_domain->parent = gic_domain;
+-
+ 	msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(node),
+ 					       &alpine_msix_domain_info,
+ 					       middle_domain);
+-- 
+2.39.0
+

@@ -135,9 +135,14 @@ local_patch () {
 	${git} "${DIR}/patches/dir/0001-patch.patch"
 }
 
+msm_laptops () {
+	dir 'laptop'
+}
+
 #external_git
 #rt
 #local_patch
+msm_laptops
 
 pre_backports () {
 	echo "dir: backports/${subsystem}"

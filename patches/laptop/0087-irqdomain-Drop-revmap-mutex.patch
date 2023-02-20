@@ -1,0 +1,116 @@
+From 1ad9ce46be0ac1d0f6ec2c885b0a237e496369f5 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Wed, 7 Dec 2022 10:42:08 +0100
+Subject: [PATCH 087/230] irqdomain: Drop revmap mutex
+
+The revmap mutex is essentially only used to maintain the integrity of
+the radix tree during updates (lookups use RCU).
+
+As the global irq_domain_mutex is now held in all paths that update the
+revmap structures there is strictly no longer any need for the dedicated
+mutex, which can be removed.
+
+Drop the revmap mutex and add lockdep assertions to the revmap helpers
+to make sure that the global lock is always held when updating the
+revmap.
+
+Tested-by: Hsin-Yi Wang <hsinyi@chromium.org>
+Tested-by: Mark-PK Tsai <mark-pk.tsai@mediatek.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ include/linux/irqdomain.h |  2 --
+ kernel/irq/irqdomain.c    | 13 ++++++-------
+ 2 files changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index a372086750c..16399de00b4 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -143,7 +143,6 @@ struct irq_domain_chip_generic;
+  * Revmap data, used internally by the irq domain code:
+  * @revmap_size:	Size of the linear map table @revmap[]
+  * @revmap_tree:	Radix map tree for hwirqs that don't fit in the linear map
+- * @revmap_mutex:	Lock for the revmap
+  * @revmap:		Linear table of irq_data pointers
+  */
+ struct irq_domain {
+@@ -171,7 +170,6 @@ struct irq_domain {
+ 	irq_hw_number_t			hwirq_max;
+ 	unsigned int			revmap_size;
+ 	struct radix_tree_root		revmap_tree;
+-	struct mutex			revmap_mutex;
+ 	struct irq_data __rcu		*revmap[];
+ };
+ 
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 8e14805c550..f2247186f71 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -206,7 +206,6 @@ static struct irq_domain *__irq_domain_create(struct fwnode_handle *fwnode,
+ 
+ 	/* Fill structure */
+ 	INIT_RADIX_TREE(&domain->revmap_tree, GFP_KERNEL);
+-	mutex_init(&domain->revmap_mutex);
+ 	domain->ops = ops;
+ 	domain->host_data = host_data;
+ 	domain->hwirq_max = hwirq_max;
+@@ -526,30 +525,30 @@ static bool irq_domain_is_nomap(struct irq_domain *domain)
+ static void irq_domain_clear_mapping(struct irq_domain *domain,
+ 				     irq_hw_number_t hwirq)
+ {
++	lockdep_assert_held(&irq_domain_mutex);
++
+ 	if (irq_domain_is_nomap(domain))
+ 		return;
+ 
+-	mutex_lock(&domain->revmap_mutex);
+ 	if (hwirq < domain->revmap_size)
+ 		rcu_assign_pointer(domain->revmap[hwirq], NULL);
+ 	else
+ 		radix_tree_delete(&domain->revmap_tree, hwirq);
+-	mutex_unlock(&domain->revmap_mutex);
+ }
+ 
+ static void irq_domain_set_mapping(struct irq_domain *domain,
+ 				   irq_hw_number_t hwirq,
+ 				   struct irq_data *irq_data)
+ {
++	lockdep_assert_held(&irq_domain_mutex);
++
+ 	if (irq_domain_is_nomap(domain))
+ 		return;
+ 
+-	mutex_lock(&domain->revmap_mutex);
+ 	if (hwirq < domain->revmap_size)
+ 		rcu_assign_pointer(domain->revmap[hwirq], irq_data);
+ 	else
+ 		radix_tree_insert(&domain->revmap_tree, hwirq, irq_data);
+-	mutex_unlock(&domain->revmap_mutex);
+ }
+ 
+ static void irq_domain_disassociate(struct irq_domain *domain, unsigned int irq)
+@@ -1580,11 +1579,12 @@ static void irq_domain_fix_revmap(struct irq_data *d)
+ {
+ 	void __rcu **slot;
+ 
++	lockdep_assert_held(&irq_domain_mutex);
++
+ 	if (irq_domain_is_nomap(d->domain))
+ 		return;
+ 
+ 	/* Fix up the revmap. */
+-	mutex_lock(&d->domain->revmap_mutex);
+ 	if (d->hwirq < d->domain->revmap_size) {
+ 		/* Not using radix tree */
+ 		rcu_assign_pointer(d->domain->revmap[d->hwirq], d);
+@@ -1593,7 +1593,6 @@ static void irq_domain_fix_revmap(struct irq_data *d)
+ 		if (slot)
+ 			radix_tree_replace_slot(&d->domain->revmap_tree, slot, d);
+ 	}
+-	mutex_unlock(&d->domain->revmap_mutex);
+ }
+ 
+ /**
+-- 
+2.39.0
+

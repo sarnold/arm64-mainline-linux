@@ -1,0 +1,59 @@
+From 86a4db58882abedc23d7ddf09b01c25d18ab90db Mon Sep 17 00:00:00 2001
+From: Bjorn Andersson <quic_bjorande@quicinc.com>
+Date: Mon, 13 Feb 2023 07:52:15 -0800
+Subject: [PATCH 179/230] rpmsg: glink: Cancel pending intent requests at
+ removal
+
+During removal of the glink edge interrupts are disabled and no more
+incoming messages are being serviced. In addition to the remote endpoint
+being defunct that means that any outstanding requests for intents will
+not be serviced, and qcom_glink_request_intent() will blindly wait for
+up to 10 seconds.
+
+Mark the intent request as not granted and complete the intent request
+completion to fail the waiting client immediately.
+
+Once the current intent request is failed, any potential clients waiting
+for the intent request mutex will not enter the same wait, as the
+qcom_glink_tx() call will fail fast.
+
+Reviewed-by: Chris Lew <quic_clew@quicinc.com>
+Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Link: https://lore.kernel.org/r/20230213155215.1237059-7-quic_bjorande@quicinc.com
+---
+ drivers/rpmsg/qcom_glink_native.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/rpmsg/qcom_glink_native.c b/drivers/rpmsg/qcom_glink_native.c
+index 946128c343f..324c75d59a6 100644
+--- a/drivers/rpmsg/qcom_glink_native.c
++++ b/drivers/rpmsg/qcom_glink_native.c
+@@ -423,6 +423,12 @@ static void qcom_glink_handle_intent_req_ack(struct qcom_glink *glink,
+ 	complete(&channel->intent_req_comp);
+ }
+ 
++static void qcom_glink_intent_req_abort(struct glink_channel *channel)
++{
++	channel->intent_req_result = 0;
++	complete(&channel->intent_req_comp);
++}
++
+ /**
+  * qcom_glink_send_open_req() - send a RPM_CMD_OPEN request to the remote
+  * @glink: Ptr to the glink edge
+@@ -1788,6 +1794,12 @@ void qcom_glink_native_remove(struct qcom_glink *glink)
+ 	wake_up_all(&glink->tx_avail_notify);
+ 	spin_unlock_irqrestore(&glink->tx_lock, flags);
+ 
++	/* Abort any senders waiting for intent requests */
++	spin_lock_irqsave(&glink->idr_lock, flags);
++	idr_for_each_entry(&glink->lcids, channel, cid)
++		qcom_glink_intent_req_abort(channel);
++	spin_unlock_irqrestore(&glink->idr_lock, flags);
++
+ 	ret = device_for_each_child(glink->dev, NULL, qcom_glink_remove_device);
+ 	if (ret)
+ 		dev_warn(glink->dev, "Can't remove GLINK devices: %d\n", ret);
+-- 
+2.39.0
+

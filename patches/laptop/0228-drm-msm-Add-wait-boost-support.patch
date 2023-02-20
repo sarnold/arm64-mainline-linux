@@ -1,0 +1,125 @@
+From 9f07e6874d35eac68709bff131d23d12a394d273 Mon Sep 17 00:00:00 2001
+From: Rob Clark <robdclark@chromium.org>
+Date: Sat, 18 Feb 2023 13:15:56 -0800
+Subject: [PATCH 228/230] drm/msm: Add wait-boost support
+
+Add a way for various userspace waits to signal urgency.
+
+Signed-off-by: Rob Clark <robdclark@chromium.org>
+Link: https://lore.kernel.org/r/20230218211608.1630586-14-robdclark@gmail.com
+---
+ drivers/gpu/drm/msm/msm_drv.c | 12 ++++++++----
+ drivers/gpu/drm/msm/msm_gem.c |  5 +++++
+ include/uapi/drm/msm_drm.h    | 14 ++++++++++++--
+ 3 files changed, 25 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/msm_drv.c b/drivers/gpu/drm/msm/msm_drv.c
+index 20cbc16cb9e..ea565998bb0 100644
+--- a/drivers/gpu/drm/msm/msm_drv.c
++++ b/drivers/gpu/drm/msm/msm_drv.c
+@@ -46,6 +46,7 @@
+  * - 1.8.0 - Add MSM_BO_CACHED_COHERENT for supported GPUs (a6xx)
+  * - 1.9.0 - Add MSM_SUBMIT_FENCE_SN_IN
+  * - 1.10.0 - Add MSM_SUBMIT_BO_NO_IMPLICIT
++ * - 1.11.0 - Add wait boost (MSM_WAIT_FENCE_BOOST, MSM_PREP_BOOST)
+  */
+ #define MSM_VERSION_MAJOR	1
+ #define MSM_VERSION_MINOR	10
+@@ -899,7 +900,7 @@ static int msm_ioctl_gem_info(struct drm_device *dev, void *data,
+ }
+ 
+ static int wait_fence(struct msm_gpu_submitqueue *queue, uint32_t fence_id,
+-		      ktime_t timeout)
++		      ktime_t timeout, uint32_t flags)
+ {
+ 	struct dma_fence *fence;
+ 	int ret;
+@@ -929,6 +930,9 @@ static int wait_fence(struct msm_gpu_submitqueue *queue, uint32_t fence_id,
+ 	if (!fence)
+ 		return 0;
+ 
++	if (flags & MSM_WAIT_FENCE_BOOST)
++		dma_fence_set_deadline(fence, ktime_get());
++
+ 	ret = dma_fence_wait_timeout(fence, true, timeout_to_jiffies(&timeout));
+ 	if (ret == 0) {
+ 		ret = -ETIMEDOUT;
+@@ -949,8 +953,8 @@ static int msm_ioctl_wait_fence(struct drm_device *dev, void *data,
+ 	struct msm_gpu_submitqueue *queue;
+ 	int ret;
+ 
+-	if (args->pad) {
+-		DRM_ERROR("invalid pad: %08x\n", args->pad);
++	if (args->flags & ~MSM_WAIT_FENCE_FLAGS) {
++		DRM_ERROR("invalid flags: %08x\n", args->flags);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -961,7 +965,7 @@ static int msm_ioctl_wait_fence(struct drm_device *dev, void *data,
+ 	if (!queue)
+ 		return -ENOENT;
+ 
+-	ret = wait_fence(queue, args->fence, to_ktime(args->timeout));
++	ret = wait_fence(queue, args->fence, to_ktime(args->timeout), args->flags);
+ 
+ 	msm_submitqueue_put(queue);
+ 
+diff --git a/drivers/gpu/drm/msm/msm_gem.c b/drivers/gpu/drm/msm/msm_gem.c
+index 1dee0d18abb..dd4a0d773f6 100644
+--- a/drivers/gpu/drm/msm/msm_gem.c
++++ b/drivers/gpu/drm/msm/msm_gem.c
+@@ -846,6 +846,11 @@ int msm_gem_cpu_prep(struct drm_gem_object *obj, uint32_t op, ktime_t *timeout)
+ 		op & MSM_PREP_NOSYNC ? 0 : timeout_to_jiffies(timeout);
+ 	long ret;
+ 
++	if (op & MSM_PREP_BOOST) {
++		dma_resv_set_deadline(obj->resv, dma_resv_usage_rw(write),
++				      ktime_get());
++	}
++
+ 	ret = dma_resv_wait_timeout(obj->resv, dma_resv_usage_rw(write),
+ 				    true,  remain);
+ 	if (ret == 0)
+diff --git a/include/uapi/drm/msm_drm.h b/include/uapi/drm/msm_drm.h
+index 329100016e7..dbf0d6f43fa 100644
+--- a/include/uapi/drm/msm_drm.h
++++ b/include/uapi/drm/msm_drm.h
+@@ -151,8 +151,13 @@ struct drm_msm_gem_info {
+ #define MSM_PREP_READ        0x01
+ #define MSM_PREP_WRITE       0x02
+ #define MSM_PREP_NOSYNC      0x04
++#define MSM_PREP_BOOST       0x08
+ 
+-#define MSM_PREP_FLAGS       (MSM_PREP_READ | MSM_PREP_WRITE | MSM_PREP_NOSYNC)
++#define MSM_PREP_FLAGS       (MSM_PREP_READ | \
++			      MSM_PREP_WRITE | \
++			      MSM_PREP_NOSYNC | \
++			      MSM_PREP_BOOST | \
++			      0)
+ 
+ struct drm_msm_gem_cpu_prep {
+ 	__u32 handle;         /* in */
+@@ -286,6 +291,11 @@ struct drm_msm_gem_submit {
+ 
+ };
+ 
++#define MSM_WAIT_FENCE_BOOST	0x00000001
++#define MSM_WAIT_FENCE_FLAGS	( \
++		MSM_WAIT_FENCE_BOOST | \
++		0)
++
+ /* The normal way to synchronize with the GPU is just to CPU_PREP on
+  * a buffer if you need to access it from the CPU (other cmdstream
+  * submission from same or other contexts, PAGE_FLIP ioctl, etc, all
+@@ -295,7 +305,7 @@ struct drm_msm_gem_submit {
+  */
+ struct drm_msm_wait_fence {
+ 	__u32 fence;          /* in */
+-	__u32 pad;
++	__u32 flags;          /* in, bitmask of MSM_WAIT_FENCE_x */
+ 	struct drm_msm_timespec timeout;   /* in */
+ 	__u32 queueid;         /* in, submitqueue id */
+ };
+-- 
+2.39.0
+

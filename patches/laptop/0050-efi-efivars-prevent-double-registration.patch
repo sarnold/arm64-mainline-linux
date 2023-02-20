@@ -1,0 +1,54 @@
+From 720feea058a08439ad379724f026239e71f9c142 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 19 Jan 2023 11:47:51 +0100
+Subject: [PATCH 050/230] efi: efivars: prevent double registration
+
+Add the missing sanity check to efivars_register() so that it is no
+longer possible to override an already registered set of efivar ops
+(without first deregistering them).
+
+This can help debug initialisation ordering issues where drivers have so
+far unknowingly been relying on overriding the generic ops.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/firmware/efi/vars.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/firmware/efi/vars.c b/drivers/firmware/efi/vars.c
+index f34e7741e0c..bd75b87f5fc 100644
+--- a/drivers/firmware/efi/vars.c
++++ b/drivers/firmware/efi/vars.c
+@@ -62,18 +62,27 @@ EXPORT_SYMBOL_GPL(efivar_is_available);
+ int efivars_register(struct efivars *efivars,
+ 		     const struct efivar_operations *ops)
+ {
++	int rv;
++
+ 	if (down_interruptible(&efivars_lock))
+ 		return -EINTR;
+ 
++	if (__efivars) {
++		pr_warn("efivars already registered\n");
++		rv = -EBUSY;
++		goto out;
++	}
++
+ 	efivars->ops = ops;
+ 
+ 	__efivars = efivars;
+ 
+ 	pr_info("Registered efivars operations\n");
+-
++	rv = 0;
++out:
+ 	up(&efivars_lock);
+ 
+-	return 0;
++	return rv;
+ }
+ EXPORT_SYMBOL_GPL(efivars_register);
+ 
+-- 
+2.39.0
+

@@ -1,0 +1,98 @@
+From 9aaaba169f76a99b2a05fb17d3542d2528a45687 Mon Sep 17 00:00:00 2001
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Date: Wed, 15 Feb 2023 12:33:51 +0530
+Subject: [PATCH 186/230] arm64: dts: qcom: sm6350: Supply clock from cpufreq
+ node to CPUs
+
+Qualcomm platforms making use of CPUFreq HW Engine (EPSS/OSM) supply clocks
+to the CPU cores. But this relationship is not represented in DTS so far.
+
+So let's make cpufreq node as the clock provider and CPU nodes as the
+consumers. The clock index for each CPU node is based on the frequency
+domain index.
+
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Link: https://lore.kernel.org/r/20230215070400.5901-4-manivannan.sadhasivam@linaro.org
+---
+ arch/arm64/boot/dts/qcom/sm6350.dtsi | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm6350.dtsi b/arch/arm64/boot/dts/qcom/sm6350.dtsi
+index 43324bf291c..9bdd5dc1927 100644
+--- a/arch/arm64/boot/dts/qcom/sm6350.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm6350.dtsi
+@@ -42,6 +42,7 @@ CPU0: cpu@0 {
+ 			device_type = "cpu";
+ 			compatible = "qcom,kryo560";
+ 			reg = <0x0 0x0>;
++			clocks = <&cpufreq_hw 0>;
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <1024>;
+ 			dynamic-power-coefficient = <100>;
+@@ -61,6 +62,7 @@ CPU1: cpu@100 {
+ 			device_type = "cpu";
+ 			compatible = "qcom,kryo560";
+ 			reg = <0x0 0x100>;
++			clocks = <&cpufreq_hw 0>;
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <1024>;
+ 			dynamic-power-coefficient = <100>;
+@@ -77,6 +79,7 @@ CPU2: cpu@200 {
+ 			device_type = "cpu";
+ 			compatible = "qcom,kryo560";
+ 			reg = <0x0 0x200>;
++			clocks = <&cpufreq_hw 0>;
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <1024>;
+ 			dynamic-power-coefficient = <100>;
+@@ -93,6 +96,7 @@ CPU3: cpu@300 {
+ 			device_type = "cpu";
+ 			compatible = "qcom,kryo560";
+ 			reg = <0x0 0x300>;
++			clocks = <&cpufreq_hw 0>;
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <1024>;
+ 			dynamic-power-coefficient = <100>;
+@@ -109,6 +113,7 @@ CPU4: cpu@400 {
+ 			device_type = "cpu";
+ 			compatible = "qcom,kryo560";
+ 			reg = <0x0 0x400>;
++			clocks = <&cpufreq_hw 0>;
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <1024>;
+ 			dynamic-power-coefficient = <100>;
+@@ -125,6 +130,7 @@ CPU5: cpu@500 {
+ 			device_type = "cpu";
+ 			compatible = "qcom,kryo560";
+ 			reg = <0x0 0x500>;
++			clocks = <&cpufreq_hw 0>;
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <1024>;
+ 			dynamic-power-coefficient = <100>;
+@@ -142,6 +148,7 @@ CPU6: cpu@600 {
+ 			device_type = "cpu";
+ 			compatible = "qcom,kryo560";
+ 			reg = <0x0 0x600>;
++			clocks = <&cpufreq_hw 1>;
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <1894>;
+ 			dynamic-power-coefficient = <703>;
+@@ -158,6 +165,7 @@ CPU7: cpu@700 {
+ 			device_type = "cpu";
+ 			compatible = "qcom,kryo560";
+ 			reg = <0x0 0x700>;
++			clocks = <&cpufreq_hw 1>;
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <1894>;
+ 			dynamic-power-coefficient = <703>;
+@@ -1678,6 +1686,7 @@ cpufreq_hw: cpufreq@18323000 {
+ 			clock-names = "xo", "alternate";
+ 
+ 			#freq-domain-cells = <1>;
++			#clock-cells = <1>;
+ 		};
+ 	};
+ 
+-- 
+2.39.0
+

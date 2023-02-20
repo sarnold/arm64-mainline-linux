@@ -1,0 +1,55 @@
+From 2188674b4d9795d6b86df588adae869771ed17e3 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 31 Jan 2023 13:08:12 +0100
+Subject: [PATCH 118/230] interconnect: qcom: rpm: fix probe PM domain error
+ handling
+
+Make sure to disable clocks also in case attaching the power domain
+fails.
+
+Fixes: 7de109c0abe9 ("interconnect: icc-rpm: Add support for bus power domain")
+Cc: stable@vger.kernel.org      # 5.17
+Cc: Yassine Oudjana <y.oudjana@protonmail.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/interconnect/qcom/icc-rpm.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/interconnect/qcom/icc-rpm.c b/drivers/interconnect/qcom/icc-rpm.c
+index 91778cfcbc6..da595059caf 100644
+--- a/drivers/interconnect/qcom/icc-rpm.c
++++ b/drivers/interconnect/qcom/icc-rpm.c
+@@ -498,8 +498,7 @@ int qnoc_probe(struct platform_device *pdev)
+ 
+ 	if (desc->has_bus_pd) {
+ 		ret = dev_pm_domain_attach(dev, true);
+-		if (ret)
+-			return ret;
++		goto err_disable_clks;
+ 	}
+ 
+ 	provider = &qp->provider;
+@@ -514,8 +513,7 @@ int qnoc_probe(struct platform_device *pdev)
+ 	ret = icc_provider_add(provider);
+ 	if (ret) {
+ 		dev_err(dev, "error adding interconnect provider: %d\n", ret);
+-		clk_bulk_disable_unprepare(qp->num_clks, qp->bus_clks);
+-		return ret;
++		goto err_disable_clks;
+ 	}
+ 
+ 	for (i = 0; i < num_nodes; i++) {
+@@ -550,8 +548,9 @@ int qnoc_probe(struct platform_device *pdev)
+ 	return 0;
+ err:
+ 	icc_nodes_remove(provider);
+-	clk_bulk_disable_unprepare(qp->num_clks, qp->bus_clks);
+ 	icc_provider_del(provider);
++err_disable_clks:
++	clk_bulk_disable_unprepare(qp->num_clks, qp->bus_clks);
+ 
+ 	return ret;
+ }
+-- 
+2.39.0
+

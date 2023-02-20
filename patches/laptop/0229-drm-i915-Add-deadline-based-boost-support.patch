@@ -1,0 +1,66 @@
+From 8e12557de8d6325ae1fea9dd0be570795d816708 Mon Sep 17 00:00:00 2001
+From: Rob Clark <robdclark@chromium.org>
+Date: Sat, 18 Feb 2023 13:15:57 -0800
+Subject: [PATCH 229/230] drm/i915: Add deadline based boost support
+
+Signed-off-by: Rob Clark <robdclark@chromium.org>
+Link: https://lore.kernel.org/r/20230218211608.1630586-15-robdclark@gmail.com
+---
+ drivers/gpu/drm/i915/i915_driver.c  |  2 +-
+ drivers/gpu/drm/i915/i915_request.c | 20 ++++++++++++++++++++
+ 2 files changed, 21 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/i915_driver.c b/drivers/gpu/drm/i915/i915_driver.c
+index 61c38fc734c..ff28c9bb5ed 100644
+--- a/drivers/gpu/drm/i915/i915_driver.c
++++ b/drivers/gpu/drm/i915/i915_driver.c
+@@ -1911,7 +1911,7 @@ static const struct drm_driver i915_drm_driver = {
+ 	.driver_features =
+ 	    DRIVER_GEM |
+ 	    DRIVER_RENDER | DRIVER_MODESET | DRIVER_ATOMIC | DRIVER_SYNCOBJ |
+-	    DRIVER_SYNCOBJ_TIMELINE,
++	    DRIVER_SYNCOBJ_TIMELINE | DRIVER_SYNCOBJ_DEADLINE,
+ 	.release = i915_driver_release,
+ 	.open = i915_driver_open,
+ 	.lastclose = i915_driver_lastclose,
+diff --git a/drivers/gpu/drm/i915/i915_request.c b/drivers/gpu/drm/i915/i915_request.c
+index f949a949575..92a984f305a 100644
+--- a/drivers/gpu/drm/i915/i915_request.c
++++ b/drivers/gpu/drm/i915/i915_request.c
+@@ -96,6 +96,25 @@ static bool i915_fence_enable_signaling(struct dma_fence *fence)
+ 	return i915_request_enable_breadcrumb(to_request(fence));
+ }
+ 
++static void i915_fence_set_deadline(struct dma_fence *fence, ktime_t deadline)
++{
++	struct i915_request *rq = to_request(fence);
++
++	if (i915_request_completed(rq))
++		return;
++
++	if (i915_request_started(rq))
++		return;
++
++	/*
++	 * TODO something more clever for deadlines that are in the
++	 * future.  I think probably track the nearest deadline in
++	 * rq->timeline and set timer to trigger boost accordingly?
++	 */
++
++	intel_rps_boost(rq);
++}
++
+ static signed long i915_fence_wait(struct dma_fence *fence,
+ 				   bool interruptible,
+ 				   signed long timeout)
+@@ -181,6 +200,7 @@ const struct dma_fence_ops i915_fence_ops = {
+ 	.signaled = i915_fence_signaled,
+ 	.wait = i915_fence_wait,
+ 	.release = i915_fence_release,
++	.set_deadline = i915_fence_set_deadline,
+ };
+ 
+ static void irq_execute_cb(struct irq_work *wrk)
+-- 
+2.39.0
+

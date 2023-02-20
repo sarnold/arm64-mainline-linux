@@ -1,0 +1,105 @@
+From 0ae4a9808515acc5d6afaee4701a098e4b29c1fa Mon Sep 17 00:00:00 2001
+From: Eric Chanudet <echanude@redhat.com>
+Date: Mon, 19 Dec 2022 14:10:01 -0500
+Subject: [PATCH 020/230] arm64: dts: qcom: pm8941-rtc add alarm register
+
+A few descriptions including a qcom,pm8941-rtc describe two reg-names
+for the "rtc" and "alarm" register banks, but only one offset.
+For consistency with reg-names, add the "alarm" register offset.
+No functional change is expected from this.
+
+Signed-off-by: Eric Chanudet <echanude@redhat.com>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+Link: https://lore.kernel.org/r/20221219191000.2570545-5-echanude@redhat.com
+---
+ arch/arm64/boot/dts/qcom/pm8150.dtsi      | 2 +-
+ arch/arm64/boot/dts/qcom/pm8916.dtsi      | 3 ++-
+ arch/arm64/boot/dts/qcom/pm8950.dtsi      | 2 +-
+ arch/arm64/boot/dts/qcom/pmm8155au_1.dtsi | 2 +-
+ arch/arm64/boot/dts/qcom/pmp8074.dtsi     | 2 +-
+ arch/arm64/boot/dts/qcom/pms405.dtsi      | 2 +-
+ 6 files changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/pm8150.dtsi b/arch/arm64/boot/dts/qcom/pm8150.dtsi
+index 574fa95a287..db90c55fa2c 100644
+--- a/arch/arm64/boot/dts/qcom/pm8150.dtsi
++++ b/arch/arm64/boot/dts/qcom/pm8150.dtsi
+@@ -121,7 +121,7 @@ pm8150_adc_tm: adc-tm@3500 {
+ 
+ 		rtc@6000 {
+ 			compatible = "qcom,pm8941-rtc";
+-			reg = <0x6000>;
++			reg = <0x6000>, <0x6100>;
+ 			reg-names = "rtc", "alarm";
+ 			interrupts = <0x0 0x61 0x1 IRQ_TYPE_NONE>;
+ 		};
+diff --git a/arch/arm64/boot/dts/qcom/pm8916.dtsi b/arch/arm64/boot/dts/qcom/pm8916.dtsi
+index 08f9ca006e7..e2a6b66d884 100644
+--- a/arch/arm64/boot/dts/qcom/pm8916.dtsi
++++ b/arch/arm64/boot/dts/qcom/pm8916.dtsi
+@@ -93,7 +93,8 @@ adc-chan@f {
+ 
+ 		rtc@6000 {
+ 			compatible = "qcom,pm8941-rtc";
+-			reg = <0x6000>;
++			reg = <0x6000>, <0x6100>;
++			reg-names = "rtc", "alarm";
+ 			interrupts = <0x0 0x61 0x1 IRQ_TYPE_EDGE_RISING>;
+ 		};
+ 
+diff --git a/arch/arm64/boot/dts/qcom/pm8950.dtsi b/arch/arm64/boot/dts/qcom/pm8950.dtsi
+index 07c3896bd36..d7df4ad6050 100644
+--- a/arch/arm64/boot/dts/qcom/pm8950.dtsi
++++ b/arch/arm64/boot/dts/qcom/pm8950.dtsi
+@@ -126,7 +126,7 @@ xo-therm-buf@3c {
+ 
+ 		rtc@6000 {
+ 			compatible = "qcom,pm8941-rtc";
+-			reg = <0x6000>;
++			reg = <0x6000>, <0x6100>;
+ 			reg-names = "rtc", "alarm";
+ 			interrupts = <0x0 0x61 0x1 IRQ_TYPE_NONE>;
+ 		};
+diff --git a/arch/arm64/boot/dts/qcom/pmm8155au_1.dtsi b/arch/arm64/boot/dts/qcom/pmm8155au_1.dtsi
+index 20c5d60c8c2..ee1e428d3a6 100644
+--- a/arch/arm64/boot/dts/qcom/pmm8155au_1.dtsi
++++ b/arch/arm64/boot/dts/qcom/pmm8155au_1.dtsi
+@@ -108,7 +108,7 @@ pmm8155au_1_adc_tm: adc-tm@3500 {
+ 
+ 		pmm8155au_1_rtc: rtc@6000 {
+ 			compatible = "qcom,pm8941-rtc";
+-			reg = <0x6000>;
++			reg = <0x6000>, <0x6100>;
+ 			reg-names = "rtc", "alarm";
+ 			interrupts = <0x0 0x61 0x1 IRQ_TYPE_NONE>;
+ 
+diff --git a/arch/arm64/boot/dts/qcom/pmp8074.dtsi b/arch/arm64/boot/dts/qcom/pmp8074.dtsi
+index ceb2e6358b3..580684411d7 100644
+--- a/arch/arm64/boot/dts/qcom/pmp8074.dtsi
++++ b/arch/arm64/boot/dts/qcom/pmp8074.dtsi
+@@ -74,7 +74,7 @@ vph-pwr@131 {
+ 
+ 		pmp8074_rtc: rtc@6000 {
+ 			compatible = "qcom,pm8941-rtc";
+-			reg = <0x6000>;
++			reg = <0x6000>, <0x6100>;
+ 			reg-names = "rtc", "alarm";
+ 			interrupts = <0x0 0x61 0x1 IRQ_TYPE_NONE>;
+ 			allow-set-time;
+diff --git a/arch/arm64/boot/dts/qcom/pms405.dtsi b/arch/arm64/boot/dts/qcom/pms405.dtsi
+index ffe9e33808d..22edb47c6a8 100644
+--- a/arch/arm64/boot/dts/qcom/pms405.dtsi
++++ b/arch/arm64/boot/dts/qcom/pms405.dtsi
+@@ -125,7 +125,7 @@ xo_therm: xo_temp@76 {
+ 
+ 		rtc@6000 {
+ 			compatible = "qcom,pm8941-rtc";
+-			reg = <0x6000>;
++			reg = <0x6000>, <0x6100>;
+ 			reg-names = "rtc", "alarm";
+ 			interrupts = <0x0 0x61 0x1 IRQ_TYPE_NONE>;
+ 		};
+-- 
+2.39.0
+

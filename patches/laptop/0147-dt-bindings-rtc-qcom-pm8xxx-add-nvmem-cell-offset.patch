@@ -1,0 +1,53 @@
+From 9b0e7da82dad3e25010fbe37705a6db9990a37e3 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Wed, 11 Jan 2023 11:08:30 +0100
+Subject: [PATCH 147/230] dt-bindings: rtc: qcom-pm8xxx: add nvmem-cell offset
+
+On many Qualcomm platforms the PMIC RTC control and time registers are
+read-only so that the RTC time can not be updated. Instead an offset
+needs be stored in some machine-specific non-volatile memory, which a
+driver can take into account.
+
+Add an 'offset' nvmem cell which can be used to store a 32-bit offset
+from the Unix epoch so that the RTC time can be updated on such
+platforms.
+
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ .../devicetree/bindings/rtc/qcom-pm8xxx-rtc.yaml     | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/rtc/qcom-pm8xxx-rtc.yaml b/Documentation/devicetree/bindings/rtc/qcom-pm8xxx-rtc.yaml
+index 21c8ea08ff0..b95a69cc9ae 100644
+--- a/Documentation/devicetree/bindings/rtc/qcom-pm8xxx-rtc.yaml
++++ b/Documentation/devicetree/bindings/rtc/qcom-pm8xxx-rtc.yaml
+@@ -40,6 +40,16 @@ properties:
+     description:
+       Indicates that the setting of RTC time is allowed by the host CPU.
+ 
++  nvmem-cells:
++    items:
++      - description:
++          four-byte nvmem cell holding a little-endian offset from the Unix
++          epoch representing the time when the RTC timer was last reset
++
++  nvmem-cell-names:
++    items:
++      - const: offset
++
+   wakeup-source: true
+ 
+ required:
+@@ -69,6 +79,8 @@ examples:
+           compatible = "qcom,pm8921-rtc";
+           reg = <0x11d>;
+           interrupts = <0x27 0>;
++          nvmem-cells = <&rtc_offset>;
++          nvmem-cell-names = "offset";
+         };
+       };
+     };
+-- 
+2.39.0
+

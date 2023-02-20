@@ -1,0 +1,38 @@
+From 1d41a98e1ba09e3370d352b2734f919811b976a5 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 10 Jan 2023 14:50:29 +0100
+Subject: [PATCH 069/230] rtc: pm8xxx: return IRQ_NONE on errors
+
+In the unlikely event that disabling the alarm and clearing the status
+ever fails, return IRQ_NONE instead of IRQ_HANDLED.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/rtc/rtc-pm8xxx.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/rtc/rtc-pm8xxx.c b/drivers/rtc/rtc-pm8xxx.c
+index 053a04f74a9..dc7e659cbb2 100644
+--- a/drivers/rtc/rtc-pm8xxx.c
++++ b/drivers/rtc/rtc-pm8xxx.c
+@@ -291,14 +291,14 @@ static irqreturn_t pm8xxx_alarm_trigger(int irq, void *dev_id)
+ 	rc = regmap_update_bits(rtc_dd->regmap, regs->alarm_ctrl,
+ 				regs->alarm_en, 0);
+ 	if (rc)
+-		goto out;
++		return IRQ_NONE;
+ 
+ 	/* Clear RTC alarm register */
+ 	rc = regmap_update_bits(rtc_dd->regmap, regs->alarm_ctrl2,
+ 				PM8xxx_RTC_ALARM_CLEAR, 0);
+ 	if (rc)
+-		goto out;
+-out:
++		return IRQ_NONE;
++
+ 	return IRQ_HANDLED;
+ }
+ 
+-- 
+2.39.0
+

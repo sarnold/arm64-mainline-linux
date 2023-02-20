@@ -1,0 +1,67 @@
+From 4bf6409916b0bafb2ea37203ae124ac2f233f675 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Mon, 9 Jan 2023 16:16:42 +0100
+Subject: [PATCH 074/230] rtc: pm8xxx: rename alarm irq variable
+
+Clean up the driver somewhat by renaming the driver-data alarm irq
+variable by dropping the redundant "rtc" prefix.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/rtc/rtc-pm8xxx.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/rtc/rtc-pm8xxx.c b/drivers/rtc/rtc-pm8xxx.c
+index 0fdbd233b10..ea867b20573 100644
+--- a/drivers/rtc/rtc-pm8xxx.c
++++ b/drivers/rtc/rtc-pm8xxx.c
+@@ -46,7 +46,7 @@ struct pm8xxx_rtc_regs {
+  * @rtc:		rtc device for this driver.
+  * @regmap:		regmap used to access RTC registers
+  * @allow_set_time:	indicates whether writing to the RTC is allowed
+- * @rtc_alarm_irq:	rtc alarm irq number.
++ * @alarm_irq:		alarm irq number
+  * @regs:		rtc registers description.
+  * @dev:		device structure
+  */
+@@ -54,7 +54,7 @@ struct pm8xxx_rtc {
+ 	struct rtc_device *rtc;
+ 	struct regmap *regmap;
+ 	bool allow_set_time;
+-	int rtc_alarm_irq;
++	int alarm_irq;
+ 	const struct pm8xxx_rtc_regs *regs;
+ 	struct device *dev;
+ };
+@@ -364,8 +364,8 @@ static int pm8xxx_rtc_probe(struct platform_device *pdev)
+ 		return -ENXIO;
+ 	}
+ 
+-	rtc_dd->rtc_alarm_irq = platform_get_irq(pdev, 0);
+-	if (rtc_dd->rtc_alarm_irq < 0)
++	rtc_dd->alarm_irq = platform_get_irq(pdev, 0);
++	if (rtc_dd->alarm_irq < 0)
+ 		return -ENXIO;
+ 
+ 	rtc_dd->allow_set_time = of_property_read_bool(pdev->dev.of_node,
+@@ -391,7 +391,7 @@ static int pm8xxx_rtc_probe(struct platform_device *pdev)
+ 	rtc_dd->rtc->range_max = U32_MAX;
+ 
+ 	/* Request the alarm IRQ */
+-	rc = devm_request_any_context_irq(&pdev->dev, rtc_dd->rtc_alarm_irq,
++	rc = devm_request_any_context_irq(&pdev->dev, rtc_dd->alarm_irq,
+ 					  pm8xxx_alarm_trigger,
+ 					  IRQF_TRIGGER_RISING,
+ 					  "pm8xxx_rtc_alarm", rtc_dd);
+@@ -404,7 +404,7 @@ static int pm8xxx_rtc_probe(struct platform_device *pdev)
+ 	if (rc)
+ 		return rc;
+ 
+-	rc = dev_pm_set_wake_irq(&pdev->dev, rtc_dd->rtc_alarm_irq);
++	rc = dev_pm_set_wake_irq(&pdev->dev, rtc_dd->alarm_irq);
+ 	if (rc)
+ 		return rc;
+ 
+-- 
+2.39.0
+

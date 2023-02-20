@@ -1,0 +1,130 @@
+From d227034f223eeaa0d0afb07aa9b79c49f2424929 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 13 Dec 2022 14:10:56 +0100
+Subject: [PATCH 030/230] irqchip: Use irq_domain_alloc_irqs()
+
+Use the irq_domain_alloc_irqs() wrapper instead of the full
+__irq_domain_alloc_irqs() interface, which was only intended for some
+legacy (x86) use cases.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/irqchip/irq-apple-aic.c     |  5 ++---
+ drivers/irqchip/irq-armada-370-xp.c |  4 ++--
+ drivers/irqchip/irq-bcm2836.c       |  6 ++----
+ drivers/irqchip/irq-gic-v3.c        |  5 ++---
+ drivers/irqchip/irq-gic-v4.c        | 10 ++++------
+ drivers/irqchip/irq-gic.c           |  5 ++---
+ 6 files changed, 14 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/irqchip/irq-apple-aic.c b/drivers/irqchip/irq-apple-aic.c
+index ae3437f03e6..848ccef03c9 100644
+--- a/drivers/irqchip/irq-apple-aic.c
++++ b/drivers/irqchip/irq-apple-aic.c
+@@ -924,9 +924,8 @@ static int __init aic_init_smp(struct aic_irq_chip *irqc, struct device_node *no
+ 	ipi_domain->flags |= IRQ_DOMAIN_FLAG_IPI_SINGLE;
+ 	irq_domain_update_bus_token(ipi_domain, DOMAIN_BUS_IPI);
+ 
+-	base_ipi = __irq_domain_alloc_irqs(ipi_domain, -1, AIC_NR_SWIPI,
+-					   NUMA_NO_NODE, NULL, false, NULL);
+-
++	base_ipi = irq_domain_alloc_irqs(ipi_domain, AIC_NR_SWIPI, NUMA_NO_NODE,
++					 NULL);
+ 	if (WARN_ON(!base_ipi)) {
+ 		irq_domain_remove(ipi_domain);
+ 		return -ENODEV;
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index ee18eb3e72b..c6f8f5b07ec 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -454,8 +454,8 @@ static __init void armada_xp_ipi_init(struct device_node *node)
+ 		return;
+ 
+ 	irq_domain_update_bus_token(ipi_domain, DOMAIN_BUS_IPI);
+-	base_ipi = __irq_domain_alloc_irqs(ipi_domain, -1, IPI_DOORBELL_END,
+-					   NUMA_NO_NODE, NULL, false, NULL);
++	base_ipi = irq_domain_alloc_irqs(ipi_domain, IPI_DOORBELL_END,
++					 NUMA_NO_NODE, NULL);
+ 	if (WARN_ON(!base_ipi))
+ 		return;
+ 
+diff --git a/drivers/irqchip/irq-bcm2836.c b/drivers/irqchip/irq-bcm2836.c
+index 51491c3c6fd..0f49246af16 100644
+--- a/drivers/irqchip/irq-bcm2836.c
++++ b/drivers/irqchip/irq-bcm2836.c
+@@ -268,10 +268,8 @@ static void __init bcm2836_arm_irqchip_smp_init(void)
+ 	ipi_domain->flags |= IRQ_DOMAIN_FLAG_IPI_SINGLE;
+ 	irq_domain_update_bus_token(ipi_domain, DOMAIN_BUS_IPI);
+ 
+-	base_ipi = __irq_domain_alloc_irqs(ipi_domain, -1, BITS_PER_MBOX,
+-					   NUMA_NO_NODE, NULL,
+-					   false, NULL);
+-
++	base_ipi = irq_domain_alloc_irqs(ipi_domain, BITS_PER_MBOX,
++					 NUMA_NO_NODE, NULL);
+ 	if (WARN_ON(!base_ipi))
+ 		return;
+ 
+diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
+index 997104d4338..7acf501c9a1 100644
+--- a/drivers/irqchip/irq-gic-v3.c
++++ b/drivers/irqchip/irq-gic-v3.c
+@@ -1310,9 +1310,8 @@ static void __init gic_smp_init(void)
+ 				  gic_starting_cpu, NULL);
+ 
+ 	/* Register all 8 non-secure SGIs */
+-	base_sgi = __irq_domain_alloc_irqs(gic_data.domain, -1, 8,
+-					   NUMA_NO_NODE, &sgi_fwspec,
+-					   false, NULL);
++	base_sgi = irq_domain_alloc_irqs(gic_data.domain, 8, NUMA_NO_NODE,
++					 &sgi_fwspec);
+ 	if (WARN_ON(base_sgi <= 0))
+ 		return;
+ 
+diff --git a/drivers/irqchip/irq-gic-v4.c b/drivers/irqchip/irq-gic-v4.c
+index a6277dea4c7..7635707c37e 100644
+--- a/drivers/irqchip/irq-gic-v4.c
++++ b/drivers/irqchip/irq-gic-v4.c
+@@ -139,9 +139,8 @@ static int its_alloc_vcpu_sgis(struct its_vpe *vpe, int idx)
+ 	if (!vpe->sgi_domain)
+ 		goto err;
+ 
+-	sgi_base = __irq_domain_alloc_irqs(vpe->sgi_domain, -1, 16,
+-					       NUMA_NO_NODE, vpe,
+-					       false, NULL);
++	sgi_base = irq_domain_alloc_irqs(vpe->sgi_domain, 16, NUMA_NO_NODE,
++					 vpe);
+ 	if (sgi_base <= 0)
+ 		goto err;
+ 
+@@ -176,9 +175,8 @@ int its_alloc_vcpu_irqs(struct its_vm *vm)
+ 		vm->vpes[i]->idai = true;
+ 	}
+ 
+-	vpe_base_irq = __irq_domain_alloc_irqs(vm->domain, -1, vm->nr_vpes,
+-					       NUMA_NO_NODE, vm,
+-					       false, NULL);
++	vpe_base_irq = irq_domain_alloc_irqs(vm->domain, vm->nr_vpes,
++					     NUMA_NO_NODE, vm);
+ 	if (vpe_base_irq <= 0)
+ 		goto err;
+ 
+diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+index 210bc2f4d55..c87021f037c 100644
+--- a/drivers/irqchip/irq-gic.c
++++ b/drivers/irqchip/irq-gic.c
+@@ -868,9 +868,8 @@ static __init void gic_smp_init(void)
+ 				  "irqchip/arm/gic:starting",
+ 				  gic_starting_cpu, NULL);
+ 
+-	base_sgi = __irq_domain_alloc_irqs(gic_data[0].domain, -1, 8,
+-					   NUMA_NO_NODE, &sgi_fwspec,
+-					   false, NULL);
++	base_sgi = irq_domain_alloc_irqs(gic_data[0].domain, 8, NUMA_NO_NODE,
++					 &sgi_fwspec);
+ 	if (WARN_ON(base_sgi <= 0))
+ 		return;
+ 
+-- 
+2.39.0
+

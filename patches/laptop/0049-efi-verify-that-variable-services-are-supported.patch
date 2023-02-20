@@ -1,0 +1,70 @@
+From 05a9697dd5a1c879177724b0d990a20c8cf86a8b Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 19 Jan 2023 11:39:52 +0100
+Subject: [PATCH 049/230] efi: verify that variable services are supported
+
+Current Qualcomm UEFI firmware does not implement the variable services
+but not all revisions clear the corresponding bits in the RT_PROP table
+services mask and instead the corresponding calls return
+EFI_UNSUPPORTED.
+
+This leads to efi core registering the generic efivar ops even when the
+variable services are not supported or when they are accessed through
+some other interface (e.g. Google SMI or the upcoming Qualcomm SCM
+implementation).
+
+Instead of playing games with init call levels to make sure that the
+custom implementations are registered after the generic one, make sure
+that get_next_variable() is actually supported before registering the
+generic ops.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/firmware/efi/efi.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/drivers/firmware/efi/efi.c b/drivers/firmware/efi/efi.c
+index 23cdbc82383..3bf3c6a3815 100644
+--- a/drivers/firmware/efi/efi.c
++++ b/drivers/firmware/efi/efi.c
+@@ -187,8 +187,27 @@ static const struct attribute_group efi_subsys_attr_group = {
+ static struct efivars generic_efivars;
+ static struct efivar_operations generic_ops;
+ 
++static bool generic_ops_supported(void)
++{
++	unsigned long name_size;
++	efi_status_t status;
++	efi_char16_t name;
++	efi_guid_t guid;
++
++	name_size = sizeof(name);
++
++	status = efi.get_next_variable(&name_size, &name, &guid);
++	if (status == EFI_UNSUPPORTED)
++		return false;
++
++	return true;
++}
++
+ static int generic_ops_register(void)
+ {
++	if (!generic_ops_supported())
++		return 0;
++
+ 	generic_ops.get_variable = efi.get_variable;
+ 	generic_ops.get_next_variable = efi.get_next_variable;
+ 	generic_ops.query_variable_store = efi_query_variable_store;
+@@ -202,6 +221,9 @@ static int generic_ops_register(void)
+ 
+ static void generic_ops_unregister(void)
+ {
++	if (!generic_ops.get_variable)
++		return;
++
+ 	efivars_unregister(&generic_efivars);
+ }
+ 
+-- 
+2.39.0
+

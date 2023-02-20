@@ -1,0 +1,32 @@
+From 5d9913102cf7573a3e0d8dbc450a250cf0af5bda Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 24 Jan 2023 11:35:17 +0100
+Subject: [PATCH 052/230] arm64: defconfig: enable Qualcomm SDAM nvmem driver
+
+The SDAM nvmem driver can be used to access the Shared Direct Access
+Memory Module registers in some Qualcomm PMICs.
+
+These registers can specifically be used to store a time offset on
+platforms where the PMIC RTC time registers are read-only in order to
+allow the RTC time to be updated.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 02cd913008e..ed866f0e5c4 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -1308,6 +1308,7 @@ CONFIG_NVMEM_MTK_EFUSE=y
+ CONFIG_NVMEM_QCOM_QFPROM=y
+ CONFIG_NVMEM_ROCKCHIP_EFUSE=y
+ CONFIG_NVMEM_SNVS_LPGPR=y
++CONFIG_NVMEM_SPMI_SDAM=m
+ CONFIG_NVMEM_SUNXI_SID=y
+ CONFIG_NVMEM_UNIPHIER_EFUSE=y
+ CONFIG_NVMEM_MESON_EFUSE=m
+-- 
+2.39.0
+

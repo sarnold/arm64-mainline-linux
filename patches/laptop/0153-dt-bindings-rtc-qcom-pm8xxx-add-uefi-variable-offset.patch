@@ -1,0 +1,47 @@
+From d296d9d17a7655bc342bc8cc2c880b17ac51366e Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 24 Jan 2023 10:58:27 +0100
+Subject: [PATCH 153/230] dt-bindings: rtc: qcom-pm8xxx: add uefi-variable
+ offset
+
+On many Qualcomm platforms the PMIC RTC control and time registers are
+read-only so that the RTC time can not be updated. Instead an offset
+needs be stored in some machine-specific non-volatile memory, which a
+driver can take into account.
+
+Add a 'qcom,uefi-rtc-info' boolean flag which indicates that the RTC
+offset is stored in a Qualcomm specific UEFI variable so that the RTC
+time can be updated on such platforms.
+
+The UEFI variable is
+
+	882f8c2b-9646-435f-8de5-f208ff80c1bd-RTCInfo
+
+and holds a 12-byte structure where the first four bytes is a GPS time
+offset in little-endian byte order.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ Documentation/devicetree/bindings/rtc/qcom-pm8xxx-rtc.yaml | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/rtc/qcom-pm8xxx-rtc.yaml b/Documentation/devicetree/bindings/rtc/qcom-pm8xxx-rtc.yaml
+index b95a69cc9ae..774c34c3f8f 100644
+--- a/Documentation/devicetree/bindings/rtc/qcom-pm8xxx-rtc.yaml
++++ b/Documentation/devicetree/bindings/rtc/qcom-pm8xxx-rtc.yaml
+@@ -50,6 +50,12 @@ properties:
+     items:
+       - const: offset
+ 
++  qcom,uefi-rtc-info:
++    type: boolean
++    description:
++      RTC offset is stored as a four-byte GPS time offset in a 12-byte UEFI
++      variable 882f8c2b-9646-435f-8de5-f208ff80c1bd-RTCInfo
++
+   wakeup-source: true
+ 
+ required:
+-- 
+2.39.0
+

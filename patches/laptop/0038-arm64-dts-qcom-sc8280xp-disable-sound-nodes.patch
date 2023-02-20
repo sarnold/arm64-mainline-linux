@@ -1,0 +1,160 @@
+From c06031a9f52f5b97028a9c6e684746f1e1aad1f7 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Mon, 2 Jan 2023 09:58:18 +0100
+Subject: [PATCH 038/230] arm64: dts: qcom: sc8280xp: disable sound nodes
+
+The sound nodes in the SoC dtsi should be disabled by default.
+
+Note that the lpass-tlmm and macro blocks depend on having the board dts
+enable the adsp and specifying an appropriate firmware to enable the
+q6prm clock controller.
+
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ .../qcom/sc8280xp-lenovo-thinkpad-x13s.dts    | 20 +++++++++++++++++++
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi        | 16 +++++++++++++++
+ 2 files changed, 36 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index 8c12a040a5a..2d8541beb45 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -718,6 +718,10 @@ &remoteproc_nsp0 {
+ 	status = "okay";
+ };
+ 
++&rxmacro {
++	status = "okay";
++};
++
+ &soc {
+ 	wcd938x: codec {
+ 		compatible = "qcom,wcd9380-codec";
+@@ -821,6 +825,8 @@ codec {
+ };
+ 
+ &swr0 {
++	status = "okay";
++
+ 	left_spkr: wsa8830-left@0,1 {
+ 		compatible = "sdw10217020200";
+ 		reg = <0 1>;
+@@ -866,11 +872,17 @@ wcd_tx: wcd9380-tx@0,3 {
+ 	};
+ };
+ 
++&txmacro {
++	status = "okay";
++};
++
+ &vamacro {
+ 	pinctrl-0 = <&dmic01_default>, <&dmic02_default>;
+ 	pinctrl-names = "default";
+ 	vdd-micb-supply = <&vreg_s10b>;
+ 	qcom,dmic-sample-rate = <600000>;
++
++	status = "okay";
+ };
+ 
+ &usb_0 {
+@@ -921,12 +933,20 @@ &usb_1_qmpphy {
+ 	status = "okay";
+ };
+ 
++&wsamacro {
++	status = "okay";
++};
++
+ &xo_board_clk {
+ 	clock-frequency = <38400000>;
+ };
+ 
+ /* PINCTRL */
+ 
++&lpass_tlmm {
++	status = "okay";
++};
++
+ &pmc8280_1_gpios {
+ 	edp_bl_en: edp-bl-en-state {
+ 		pins = "gpio8";
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index 5190647e2ab..51e97868262 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -1734,6 +1734,8 @@ rxmacro: rxmacro@3200000 {
+ 
+ 			pinctrl-names = "default";
+ 			pinctrl-0 = <&rx_swr_default>;
++
++			status = "disabled";
+ 		};
+ 
+ 		/* RX */
+@@ -1761,6 +1763,8 @@ swr1: soundwire-controller@3210000 {
+ 			#sound-dai-cells = <1>;
+ 			#address-cells = <2>;
+ 			#size-cells = <0>;
++
++			status = "disabled";
+ 		};
+ 
+ 		txmacro: txmacro@3220000 {
+@@ -1784,6 +1788,8 @@ txmacro: txmacro@3220000 {
+ 			#address-cells = <2>;
+ 			#size-cells = <2>;
+ 			#sound-dai-cells = <1>;
++
++			status = "disabled";
+ 		};
+ 
+ 		wsamacro: codec@3240000 {
+@@ -1805,6 +1811,8 @@ wsamacro: codec@3240000 {
+ 
+ 			pinctrl-names = "default";
+ 			pinctrl-0 = <&wsa_swr_default>;
++
++			status = "disabled";
+ 		};
+ 
+ 		/* WSA */
+@@ -1831,6 +1839,8 @@ swr0: soundwire-controller@3250000 {
+ 			#sound-dai-cells = <1>;
+ 			#address-cells = <2>;
+ 			#size-cells = <0>;
++
++			status = "disabled";
+ 		};
+ 
+ 		/* TX */
+@@ -1859,6 +1869,8 @@ swr2: soundwire-controller@3330000 {
+ 			qcom,ports-word-length =	/bits/ 8 <0xff 0x00 0xff 0xff>;
+ 			qcom,ports-block-group-count =	/bits/ 8 <0xff 0xff 0xff 0xff>;
+ 			qcom,ports-lane-control =	/bits/ 8 <0x00 0x01 0x00 0x00>;
++
++			status = "disabled";
+ 		};
+ 
+ 		vamacro: codec@3370000 {
+@@ -1875,6 +1887,8 @@ vamacro: codec@3370000 {
+ 			#clock-cells = <0>;
+ 			clock-output-names = "fsgen";
+ 			#sound-dai-cells = <1>;
++
++			status = "disabled";
+ 		};
+ 
+ 		lpass_tlmm: pinctrl@33c0000 {
+@@ -1889,6 +1903,8 @@ lpass_tlmm: pinctrl@33c0000 {
+ 				 <&q6prmcc LPASS_HW_DCODEC_VOTE LPASS_CLK_ATTRIBUTE_COUPLE_NO>;
+ 			clock-names = "core", "audio";
+ 
++			status = "disabled";
++
+ 			tx_swr_default: tx-swr-default-state {
+ 				clk-pins {
+ 					pins = "gpio0";
+-- 
+2.39.0
+

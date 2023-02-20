@@ -1,0 +1,106 @@
+From 90e3910302216abeccbe467aaacf5c070aa6685b Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Wed, 11 Jan 2023 09:08:00 +0100
+Subject: [PATCH 029/230] arm64: dts: qcom: sa8540p-pmics: rename pmic labels
+
+The SA8540P PMICs are named PMM8540. Rename the devicetree source labels
+to reflect this.
+
+Reviewed-by: Brian Masney <bmasney@redhat.com>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Reviewed-by: Eric Chanudet <echanude@redhat.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sa8540p-pmics.dtsi | 24 ++++++++++-----------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sa8540p-pmics.dtsi b/arch/arm64/boot/dts/qcom/sa8540p-pmics.dtsi
+index 8c393f0bd6a..1221be89b3d 100644
+--- a/arch/arm64/boot/dts/qcom/sa8540p-pmics.dtsi
++++ b/arch/arm64/boot/dts/qcom/sa8540p-pmics.dtsi
+@@ -8,7 +8,7 @@
+ #include <dt-bindings/spmi/spmi.h>
+ 
+ &spmi_bus {
+-	pm8450a: pmic@0 {
++	pmm8540a: pmic@0 {
+ 		compatible = "qcom,pm8150", "qcom,spmi-pmic";
+ 		reg = <0x0 SPMI_USID>;
+ 		#address-cells = <1>;
+@@ -22,62 +22,62 @@ rtc@6000 {
+ 			wakeup-source;
+ 		};
+ 
+-		pm8450a_gpios: gpio@c000 {
++		pmm8540a_gpios: gpio@c000 {
+ 			compatible = "qcom,pm8150-gpio", "qcom,spmi-gpio";
+ 			reg = <0xc000>;
+ 			gpio-controller;
+-			gpio-ranges = <&pm8450a_gpios 0 0 10>;
++			gpio-ranges = <&pmm8540a_gpios 0 0 10>;
+ 			#gpio-cells = <2>;
+ 			interrupt-controller;
+ 			#interrupt-cells = <2>;
+ 		};
+ 	};
+ 
+-	pm8450c: pmic@4 {
++	pmm8540c: pmic@4 {
+ 		compatible = "qcom,pm8150", "qcom,spmi-pmic";
+ 		reg = <0x4 SPMI_USID>;
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+ 
+-		pm8450c_gpios: gpio@c000 {
++		pmm8540c_gpios: gpio@c000 {
+ 			compatible = "qcom,pm8150-gpio", "qcom,spmi-gpio";
+ 			reg = <0xc000>;
+ 			gpio-controller;
+-			gpio-ranges = <&pm8450c_gpios 0 0 10>;
++			gpio-ranges = <&pmm8540c_gpios 0 0 10>;
+ 			#gpio-cells = <2>;
+ 			interrupt-controller;
+ 			#interrupt-cells = <2>;
+ 		};
+ 	};
+ 
+-	pm8450e: pmic@8 {
++	pmm8540e: pmic@8 {
+ 		compatible = "qcom,pm8150", "qcom,spmi-pmic";
+ 		reg = <0x8 SPMI_USID>;
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+ 
+-		pm8450e_gpios: gpio@c000 {
++		pmm8540e_gpios: gpio@c000 {
+ 			compatible = "qcom,pm8150-gpio", "qcom,spmi-gpio";
+ 			reg = <0xc000>;
+ 			gpio-controller;
+-			gpio-ranges = <&pm8450e_gpios 0 0 10>;
++			gpio-ranges = <&pmm8540e_gpios 0 0 10>;
+ 			#gpio-cells = <2>;
+ 			interrupt-controller;
+ 			#interrupt-cells = <2>;
+ 		};
+ 	};
+ 
+-	pm8450g: pmic@c {
++	pmm8540g: pmic@c {
+ 		compatible = "qcom,pm8150", "qcom,spmi-pmic";
+ 		reg = <0xc SPMI_USID>;
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+ 
+-		pm8450g_gpios: gpio@c000 {
++		pmm8540g_gpios: gpio@c000 {
+ 			compatible = "qcom,pm8150-gpio", "qcom,spmi-gpio";
+ 			reg = <0xc000>;
+ 			gpio-controller;
+-			gpio-ranges = <&pm8450g_gpios 0 0 10>;
++			gpio-ranges = <&pmm8540g_gpios 0 0 10>;
+ 			#gpio-cells = <2>;
+ 			interrupt-controller;
+ 			#interrupt-cells = <2>;
+-- 
+2.39.0
+

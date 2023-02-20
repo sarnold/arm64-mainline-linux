@@ -1,0 +1,65 @@
+From d64d957365cb3e7142352081c9897e45f3b9a31e Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Wed, 1 Jun 2022 13:22:30 +0200
+Subject: [PATCH 152/230] arm64: dts: qcom: sc8280xp-x13s: enable rtc
+
+The Lenovo X13s firmware does not implement the UEFI time runtime
+services so the RTC in the PM8280K PMIC needs to be accessed directly.
+
+To complicate things further, the RTC control and time registers are
+read-only on this platform so an offset must be stored in some other
+machine-specific non-volatile memory which an RTC driver can take into
+account when reading or updating the time.
+
+The UEFI firmware (and Windows) use a UEFI variable for this:
+
+	882f8c2b-9646-435f-8de5-f208ff80c1bd-RTCInfo
+
+but the offset can only be accessed via the Qualcomm UEFI Secure
+Application residing in the TEE as the firmware does not implement the
+variable runtime services either.
+
+While it is possible to access this UEFI variable from Linux on the
+X13s, this requires using a fairly complex and reverse-engineered
+firmware interface. As the only benefit of doing so is to make sure that
+the UEFI (Windows) and Linux time never gets out of sync, it seems
+preferable to use the PMIC scratch registers for storing an offset
+instead. This also avoids flash wear in case of RTC drift, etc.
+
+So instead of using the UEFI RTC offset, reserve four bytes in one of
+the PMIC SDAM scratch-register blocks to hold the RTC offset.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ .../dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts    | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index f90f04b616a..372814707c0 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -692,6 +692,21 @@ &pmk8280_pon_resin {
+ 	status = "okay";
+ };
+ 
++&pmk8280_rtc {
++	nvmem-cells = <&rtc_offset>;
++	nvmem-cell-names = "offset";
++
++	status = "okay";
++};
++
++&pmk8280_sdam_6 {
++	status = "okay";
++
++	rtc_offset: rtc-offset@bc {
++		reg = <0xbc 0x4>;
++	};
++};
++
+ &pmk8280_vadc {
+ 	status = "okay";
+ 
+-- 
+2.39.0
+

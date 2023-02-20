@@ -1,0 +1,42 @@
+From 2f091fdb0831a32e1e46c9449bea7eb54f77e6c8 Mon Sep 17 00:00:00 2001
+From: Bjorn Andersson <quic_bjorande@quicinc.com>
+Date: Thu, 12 Jan 2023 05:51:17 -0800
+Subject: [PATCH 032/230] arm64: dts: qcom: sc8280xp: Vote for CX in USB
+ controllers
+
+Running GCC_USB30_*_MASTER_CLK at 200MHz requires CX at nominal level,
+not doing so results in occasional lockups. This was previously hidden
+by the fact that the display stack incorrectly voted for CX (instead of
+MMCX).
+
+Fixes: 152d1faf1e2f ("arm64: dts: qcom: add SC8280XP platform")
+Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+Link: https://lore.kernel.org/r/20230112135117.3836655-1-quic_bjorande@quicinc.com
+---
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index 040495e0e13..5190647e2ab 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -2256,6 +2256,7 @@ usb_0: usb@a6f8800 {
+ 					  "ss_phy_irq";
+ 
+ 			power-domains = <&gcc USB30_PRIM_GDSC>;
++			required-opps = <&rpmhpd_opp_nom>;
+ 
+ 			resets = <&gcc GCC_USB30_PRIM_BCR>;
+ 
+@@ -2310,6 +2311,7 @@ usb_1: usb@a8f8800 {
+ 					  "ss_phy_irq";
+ 
+ 			power-domains = <&gcc USB30_SEC_GDSC>;
++			required-opps = <&rpmhpd_opp_nom>;
+ 
+ 			resets = <&gcc GCC_USB30_SEC_BCR>;
+ 
+-- 
+2.39.0
+

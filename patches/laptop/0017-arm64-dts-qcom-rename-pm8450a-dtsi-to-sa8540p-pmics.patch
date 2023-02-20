@@ -1,0 +1,40 @@
+From a2cf447d5aed90941a0dce863882363ddcdbb4b1 Mon Sep 17 00:00:00 2001
+From: Eric Chanudet <echanude@redhat.com>
+Date: Mon, 19 Dec 2022 14:09:58 -0500
+Subject: [PATCH 017/230] arm64: dts: qcom: rename pm8450a dtsi to
+ sa8540p-pmics
+
+pm8450a.dtsi was introduced for the descriptions of pmics used on
+sa8540p based boards. Rename the dtsi to make this relationship
+explicit.
+
+Signed-off-by: Eric Chanudet <echanude@redhat.com>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+Link: https://lore.kernel.org/r/20221219191000.2570545-2-echanude@redhat.com
+---
+ arch/arm64/boot/dts/qcom/{pm8450a.dtsi => sa8540p-pmics.dtsi} | 0
+ arch/arm64/boot/dts/qcom/sa8540p-ride.dts                     | 2 +-
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+ rename arch/arm64/boot/dts/qcom/{pm8450a.dtsi => sa8540p-pmics.dtsi} (100%)
+
+diff --git a/arch/arm64/boot/dts/qcom/pm8450a.dtsi b/arch/arm64/boot/dts/qcom/sa8540p-pmics.dtsi
+similarity index 100%
+rename from arch/arm64/boot/dts/qcom/pm8450a.dtsi
+rename to arch/arm64/boot/dts/qcom/sa8540p-pmics.dtsi
+diff --git a/arch/arm64/boot/dts/qcom/sa8540p-ride.dts b/arch/arm64/boot/dts/qcom/sa8540p-ride.dts
+index 6c547f1b13d..77d499702ea 100644
+--- a/arch/arm64/boot/dts/qcom/sa8540p-ride.dts
++++ b/arch/arm64/boot/dts/qcom/sa8540p-ride.dts
+@@ -10,7 +10,7 @@
+ #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
+ 
+ #include "sa8540p.dtsi"
+-#include "pm8450a.dtsi"
++#include "sa8540p-pmics.dtsi"
+ 
+ / {
+ 	model = "Qualcomm SA8540P Ride";
+-- 
+2.39.0
+

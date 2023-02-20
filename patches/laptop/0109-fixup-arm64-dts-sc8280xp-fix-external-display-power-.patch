@@ -1,0 +1,36 @@
+From 8c7de2c15bf7d5938a676a972011a06d5289cc70 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 10 Jan 2023 08:55:24 +0100
+Subject: [PATCH 109/230] fixup: arm64: dts: sc8280xp: fix external display
+ power domain
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index 14dd5aae865..69d35903b03 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -2502,7 +2502,7 @@ mdss0_dp0: displayport-controller@ae90000 {
+ 				#sound-dai-cells = <0>;
+ 
+ 				operating-points-v2 = <&mdss0_dp0_opp_table>;
+-				power-domains = <&rpmhpd SC8280XP_CX>;
++				power-domains = <&rpmhpd SC8280XP_MMCX>;
+ 
+ 				status = "disabled";
+ 
+@@ -2577,7 +2577,7 @@ mdss0_dp1: displayport-controller@ae98000 {
+ 				#sound-dai-cells = <0>;
+ 
+ 				operating-points-v2 = <&mdss0_dp1_opp_table>;
+-				power-domains = <&rpmhpd SC8280XP_CX>;
++				power-domains = <&rpmhpd SC8280XP_MMCX>;
+ 
+ 				status = "disabled";
+ 
+-- 
+2.39.0
+

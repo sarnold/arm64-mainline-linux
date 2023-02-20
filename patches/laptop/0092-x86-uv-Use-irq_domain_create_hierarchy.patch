@@ -1,0 +1,41 @@
+From 04b15542e82da7043df684a47743accd98078943 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 8 Dec 2022 14:10:22 +0100
+Subject: [PATCH 092/230] x86/uv: Use irq_domain_create_hierarchy()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Use the irq_domain_create_hierarchy() helper to create the hierarchical
+domain, which both serves as documentation and avoids poking at
+irqdomain internals.
+
+Reviewed-by: Philippe Mathieu-Daudé <philmd@linaro.org>
+Tested-by: Hsin-Yi Wang <hsinyi@chromium.org>
+Tested-by: Mark-PK Tsai <mark-pk.tsai@mediatek.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/x86/platform/uv/uv_irq.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
+index 1a536a187d7..ee21d6a36a8 100644
+--- a/arch/x86/platform/uv/uv_irq.c
++++ b/arch/x86/platform/uv/uv_irq.c
+@@ -166,10 +166,9 @@ static struct irq_domain *uv_get_irq_domain(void)
+ 	if (!fn)
+ 		goto out;
+ 
+-	uv_domain = irq_domain_create_tree(fn, &uv_domain_ops, NULL);
+-	if (uv_domain)
+-		uv_domain->parent = x86_vector_domain;
+-	else
++	uv_domain = irq_domain_create_hierarchy(x86_vector_domain, 0, 0, fn,
++						&uv_domain_ops, NULL);
++	if (!uv_domain)
+ 		irq_domain_free_fwnode(fn);
+ out:
+ 	mutex_unlock(&uv_lock);
+-- 
+2.39.0
+

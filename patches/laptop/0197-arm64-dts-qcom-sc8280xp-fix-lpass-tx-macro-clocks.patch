@@ -1,0 +1,26 @@
+From 0f84b8948f738342d81b0034f9d3ef7382029322 Mon Sep 17 00:00:00 2001
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Date: Tue, 17 Jan 2023 11:42:47 +0000
+Subject: [PATCH 197/230] arm64: dts: qcom: sc8280xp: fix lpass tx macro clocks
+
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index 6dbbf8163fa..ddc2df28d65 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -2042,7 +2042,7 @@ swr2: soundwire-controller@3330000 {
+ 					      <&intc GIC_SPI 520 IRQ_TYPE_LEVEL_HIGH>;
+ 			interrupt-names = "core", "wake";
+ 
+-			clocks = <&vamacro>;
++			clocks = <&txmacro>;
+ 			clock-names = "iface";
+ 			label = "TX";
+ 			#sound-dai-cells = <1>;
+-- 
+2.39.0
+
