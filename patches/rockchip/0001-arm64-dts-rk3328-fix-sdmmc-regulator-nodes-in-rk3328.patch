@@ -1,0 +1,27 @@
+From e82cd35bb2c9b290ee48d4d60aacf470c9c39394 Mon Sep 17 00:00:00 2001
+From: Stephen L Arnold <nerdboy@gentoo.org>
+Date: Mon, 17 Jan 2022 16:49:38 -0800
+Subject: [PATCH] arm64: dts: rk3328: fix sdmmc regulator nodes in
+ rk3328-roc-cc.dts
+
+Signed-off-by: Stephen L Arnold <nerdboy@gentoo.org>
+---
+ arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts b/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts
+index daa9a0c601a9..6459acd3dc52 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3328-roc-cc.dts
+@@ -309,7 +309,7 @@ &sdmmc {
+ 	sd-uhs-sdr50;
+ 	sd-uhs-sdr104;
+ 	vmmc-supply = <&vcc_sd>;
+-	vqmmc-supply = <&vcc_sdio>;
++	vqmmc-supply = <&vcc_sd>;
+ 	status = "okay";
+ };
+ 
+-- 
+2.34.1
+
