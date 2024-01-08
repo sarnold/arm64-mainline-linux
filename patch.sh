@@ -129,6 +129,10 @@ rt () {
 	dir 'rt'
 }
 
+rockchip () {
+	dir 'rockchip'
+}
+
 local_patch () {
 	echo "dir: dir"
 	${git} "${DIR}/patches/dir/0001-patch.patch"
@@ -136,6 +140,7 @@ local_patch () {
 
 #external_git
 #rt
+rockchip
 #local_patch
 
 pre_backports () {
