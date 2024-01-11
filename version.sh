@@ -2,11 +2,11 @@
 #
 ARCH=$(uname -m)
 
-config="defconfig"
+config="laptop_defconfig"
 
-build_prefix="-arm64-r"
-branch_prefix="v"
-branch_postfix=".x"
+build_prefix="-x13s-r"
+branch_prefix="lenovo-x13s-"
+branch_postfix=".y"
 
 #https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/Documentation/process/changes.rst?h=v6.7-rc1
 #arm
@@ -47,7 +47,7 @@ KERNEL_REL=6.7
 KERNEL_TAG=${KERNEL_REL}
 kernel_rt=".X-rtY"
 #Kernel Build
-BUILD=${build_prefix}0
+BUILD=${build_prefix}1
 
 #v6.X-rcX + upto SHA
 #prev_KERNEL_SHA=""
