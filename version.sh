@@ -5,8 +5,8 @@ ARCH=$(uname -m)
 config="laptop_defconfig"
 
 build_prefix="-x13s-r"
-branch_prefix="lenovo-x13s-"
-branch_postfix=".y"
+branch_prefix="v"
+branch_postfix=".x"
 
 #https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/Documentation/process/changes.rst?h=v6.7-rc1
 #arm
