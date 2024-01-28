@@ -2,7 +2,7 @@
 #
 ARCH=$(uname -m)
 
-config="defconfig"
+config="rockchip_defconfig"
 
 build_prefix="-arm64-r"
 branch_prefix="v"
