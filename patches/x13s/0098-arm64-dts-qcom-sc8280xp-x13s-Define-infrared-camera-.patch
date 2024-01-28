@@ -1,0 +1,44 @@
+From e850444bdc171e749e5b2d3887f275c022b70d75 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 29 May 2023 17:19:26 +0100
+Subject: [PATCH 098/173] arm64: dts: qcom: sc8280xp-x13s: Define infrared
+ camera clock and reset pinout
+
+The IR camera sensor uses MCLK4/gpio6 as clock with SC_IR_XSHUT_N/gpio7
+as reset.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ .../dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts   | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index e62d399b5417..921e86a14eb2 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -1447,6 +1447,22 @@ cam_indicator_en: cam-indicator-en-state {
+ 		bias-disable;
+ 	};
+ 
++	cam_ir_default: cam-ir-default-state {
++		mclk-pins {
++			pins = "gpio6";
++			function = "cam_mclk";
++			drive-strength = <16>;
++			bias-disable;
++		};
++
++		sc-ir-xshut-n-pins {
++			pins = "gpio7";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-disable;
++		};
++	};
++
+ 	edp_reg_en: edp-reg-en-state {
+ 		pins = "gpio25";
+ 		function = "gpio";
+-- 
+2.43.0
+

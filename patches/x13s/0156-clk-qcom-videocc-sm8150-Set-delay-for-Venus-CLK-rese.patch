@@ -1,0 +1,30 @@
+From ff3e5468493c9c5c640a9c579f1b22b1feef1acd Mon Sep 17 00:00:00 2001
+From: Konrad Dybcio <konrad.dybcio@linaro.org>
+Date: Mon, 8 Jan 2024 13:32:31 +0100
+Subject: [PATCH 156/173] clk: qcom: videocc-sm8150: Set delay for Venus CLK
+ resets
+
+Some Venus resets may require more time when toggling. Describe that.
+
+Signed-off-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20240105-topic-venus_reset-v1-14-981c7a624855@linaro.org
+---
+ drivers/clk/qcom/videocc-sm8150.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/clk/qcom/videocc-sm8150.c b/drivers/clk/qcom/videocc-sm8150.c
+index 5579463f7e46..bd46859c5af5 100644
+--- a/drivers/clk/qcom/videocc-sm8150.c
++++ b/drivers/clk/qcom/videocc-sm8150.c
+@@ -214,7 +214,7 @@ static const struct regmap_config video_cc_sm8150_regmap_config = {
+ };
+ 
+ static const struct qcom_reset_map video_cc_sm8150_resets[] = {
+-	[VIDEO_CC_MVSC_CORE_CLK_BCR] = { 0x850, 2 },
++	[VIDEO_CC_MVSC_CORE_CLK_BCR] = { .reg = 0x850, .bit = 2, .udelay = 150 },
+ };
+ 
+ static const struct qcom_cc_desc video_cc_sm8150_desc = {
+-- 
+2.43.0
+

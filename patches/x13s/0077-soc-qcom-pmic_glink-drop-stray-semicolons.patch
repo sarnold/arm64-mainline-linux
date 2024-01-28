@@ -1,0 +1,52 @@
+From 7f919962923e05e6c17b6e6dc8ebbb1713466f79 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Fri, 8 Dec 2023 13:58:27 +0100
+Subject: [PATCH 077/173] soc: qcom: pmic_glink: drop stray semicolons
+
+Drop stray semicolons after function definitions to avoid having this be
+reproduced elsewhere.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+Link: https://lore.kernel.org/r/20231208125827.10363-1-johan+linaro@kernel.org
+---
+ drivers/soc/qcom/pmic_glink.c         | 4 ++--
+ drivers/soc/qcom/pmic_glink_altmode.c | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/soc/qcom/pmic_glink.c b/drivers/soc/qcom/pmic_glink.c
+index 511aa40842a1..f4bfd24386f1 100644
+--- a/drivers/soc/qcom/pmic_glink.c
++++ b/drivers/soc/qcom/pmic_glink.c
+@@ -363,14 +363,14 @@ static int pmic_glink_init(void)
+ 	register_rpmsg_driver(&pmic_glink_rpmsg_driver);
+ 
+ 	return 0;
+-};
++}
+ module_init(pmic_glink_init);
+ 
+ static void pmic_glink_exit(void)
+ {
+ 	unregister_rpmsg_driver(&pmic_glink_rpmsg_driver);
+ 	platform_driver_unregister(&pmic_glink_driver);
+-};
++}
+ module_exit(pmic_glink_exit);
+ 
+ MODULE_DESCRIPTION("Qualcomm PMIC GLINK driver");
+diff --git a/drivers/soc/qcom/pmic_glink_altmode.c b/drivers/soc/qcom/pmic_glink_altmode.c
+index 7ee52cf2570f..ad922f0dca6b 100644
+--- a/drivers/soc/qcom/pmic_glink_altmode.c
++++ b/drivers/soc/qcom/pmic_glink_altmode.c
+@@ -236,7 +236,7 @@ static void pmic_glink_altmode_worker(struct work_struct *work)
+ 		drm_bridge_hpd_notify(&alt_port->bridge, connector_status_disconnected);
+ 
+ 	pmic_glink_altmode_request(altmode, ALTMODE_PAN_ACK, alt_port->index);
+-};
++}
+ 
+ static enum typec_orientation pmic_glink_altmode_orientation(unsigned int orientation)
+ {
+-- 
+2.43.0
+

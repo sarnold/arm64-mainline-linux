@@ -1,0 +1,30 @@
+From f094f2c4d227e896e131a8b569a387edce673a62 Mon Sep 17 00:00:00 2001
+From: Andrew Halaney <ahalaney@redhat.com>
+Date: Tue, 18 Apr 2023 16:28:16 -0500
+Subject: [PATCH 057/173] arm64: configs: laptop_defconfig: Re-enable
+ CONFIG_QCOM_QSEECOM_UEFISECAPP
+
+The config got dropped out when updating the defconfig in the prior
+commit due to it being renamed. Let's enable this again!
+
+Signed-off-by: Andrew Halaney <ahalaney@redhat.com>
+---
+ arch/arm64/configs/laptop_defconfig | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/configs/laptop_defconfig b/arch/arm64/configs/laptop_defconfig
+index 56c9fa55a207..c560e021e66a 100644
+--- a/arch/arm64/configs/laptop_defconfig
++++ b/arch/arm64/configs/laptop_defconfig
+@@ -635,6 +635,8 @@ CONFIG_ARM_SCMI_TRANSPORT_SMC_ATOMIC_ENABLE=y
+ CONFIG_ARM_SCPI_PROTOCOL=y
+ CONFIG_DMI_SYSFS=y
+ CONFIG_FW_CFG_SYSFS=m
++CONFIG_QCOM_QSEECOM=y
++CONFIG_QCOM_QSEECOM_UEFISECAPP=y
+ CONFIG_GOOGLE_FIRMWARE=y
+ CONFIG_GOOGLE_COREBOOT_TABLE=m
+ CONFIG_GOOGLE_MEMCONSOLE_COREBOOT=m
+-- 
+2.43.0
+

@@ -1,0 +1,32 @@
+From a9e3771d7079863427fc2c06dfc42922415a52ab Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Mon, 11 Dec 2023 10:01:37 +0100
+Subject: [PATCH 049/173] wip: arm64: dts: qcom: pm8008: override i2c address
+
+Override the default PMIC i2c address with the Lenovo ThinkPad X13s
+firmware configured address to avoid having to reconfigure it.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/pm8008.dtsi | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/pm8008.dtsi b/arch/arm64/boot/dts/qcom/pm8008.dtsi
+index 0ffef2f8f52d..6187034a9fc9 100644
+--- a/arch/arm64/boot/dts/qcom/pm8008.dtsi
++++ b/arch/arm64/boot/dts/qcom/pm8008.dtsi
+@@ -2,9 +2,9 @@
+ // Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ 
+ &pm8008_bus {
+-	pm8008: pmic@8 {
++	pm8008: pmic@c {
+ 		compatible = "qcom,pm8008";
+-		reg = <0x8>;
++		reg = <0xc>;
+ 		#address-cells = <2>;
+ 		#size-cells = <0>;
+ 		#interrupt-cells = <2>;
+-- 
+2.43.0
+

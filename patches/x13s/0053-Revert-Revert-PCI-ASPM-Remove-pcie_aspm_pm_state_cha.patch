@@ -1,0 +1,93 @@
+From 9e8e1345721ce0c94fae26b81f21e2d5ba616738 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Mon, 8 Jan 2024 09:41:48 +0100
+Subject: [PATCH 053/173] Revert "Revert "PCI/ASPM: Remove
+ pcie_aspm_pm_state_change()""
+
+This reverts commit f93e71aea6c60ebff8adbd8941e678302d377869.
+
+A revert in 6.7 final reintroduced a possible deadlock when enabling
+ASPM on Qualcomm platforms and prevents using lockdep.
+
+Link: https://lore.kernel.org/r/ZZu0qx2cmn7IwTyQ@hovoldconsulting.com/
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/pci/pci.c       |  6 ------
+ drivers/pci/pci.h       |  2 --
+ drivers/pci/pcie/aspm.c | 19 -------------------
+ 3 files changed, 27 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index bdbf8a94b4d0..55bc3576a985 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1335,9 +1335,6 @@ static int pci_set_full_power_state(struct pci_dev *dev)
+ 		pci_restore_bars(dev);
+ 	}
+ 
+-	if (dev->bus->self)
+-		pcie_aspm_pm_state_change(dev->bus->self);
+-
+ 	return 0;
+ }
+ 
+@@ -1432,9 +1429,6 @@ static int pci_set_low_power_state(struct pci_dev *dev, pci_power_t state)
+ 				     pci_power_name(dev->current_state),
+ 				     pci_power_name(state));
+ 
+-	if (dev->bus->self)
+-		pcie_aspm_pm_state_change(dev->bus->self);
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index f43873049d52..5ecbcf041179 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -569,12 +569,10 @@ int pcie_retrain_link(struct pci_dev *pdev, bool use_lt);
+ #ifdef CONFIG_PCIEASPM
+ void pcie_aspm_init_link_state(struct pci_dev *pdev);
+ void pcie_aspm_exit_link_state(struct pci_dev *pdev);
+-void pcie_aspm_pm_state_change(struct pci_dev *pdev);
+ void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
+ #else
+ static inline void pcie_aspm_init_link_state(struct pci_dev *pdev) { }
+ static inline void pcie_aspm_exit_link_state(struct pci_dev *pdev) { }
+-static inline void pcie_aspm_pm_state_change(struct pci_dev *pdev) { }
+ static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev) { }
+ #endif
+ 
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 060f4b3c8698..5dab531c8654 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -1008,25 +1008,6 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+ 	up_read(&pci_bus_sem);
+ }
+ 
+-/* @pdev: the root port or switch downstream port */
+-void pcie_aspm_pm_state_change(struct pci_dev *pdev)
+-{
+-	struct pcie_link_state *link = pdev->link_state;
+-
+-	if (aspm_disabled || !link)
+-		return;
+-	/*
+-	 * Devices changed PM state, we should recheck if latency
+-	 * meets all functions' requirement
+-	 */
+-	down_read(&pci_bus_sem);
+-	mutex_lock(&aspm_lock);
+-	pcie_update_aspm_capable(link->root);
+-	pcie_config_aspm_path(link);
+-	mutex_unlock(&aspm_lock);
+-	up_read(&pci_bus_sem);
+-}
+-
+ void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
+ {
+ 	struct pcie_link_state *link = pdev->link_state;
+-- 
+2.43.0
+

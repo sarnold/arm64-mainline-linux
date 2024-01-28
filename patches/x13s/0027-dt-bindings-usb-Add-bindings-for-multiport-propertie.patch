@@ -1,0 +1,48 @@
+From 39b5078a11f674595883a46639d600ad1f11749a Mon Sep 17 00:00:00 2001
+From: Krishna Kurapati <quic_kriskura@quicinc.com>
+Date: Mon, 28 Aug 2023 19:00:22 +0530
+Subject: [PATCH 027/173] dt-bindings: usb: Add bindings for multiport
+ properties on DWC3 controller
+
+Add bindings to indicate properties required to support multiport
+on Synopsys DWC3 controller.
+
+Suggested-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Signed-off-by: Krishna Kurapati <quic_kriskura@quicinc.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Link: https://lore.kernel.org/r/20230828133033.11988-3-quic_kriskura@quicinc.com
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ .../devicetree/bindings/usb/snps,dwc3.yaml          | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/usb/snps,dwc3.yaml b/Documentation/devicetree/bindings/usb/snps,dwc3.yaml
+index ee5af4b381b1..d81c2e849ca9 100644
+--- a/Documentation/devicetree/bindings/usb/snps,dwc3.yaml
++++ b/Documentation/devicetree/bindings/usb/snps,dwc3.yaml
+@@ -85,15 +85,16 @@ properties:
+ 
+   phys:
+     minItems: 1
+-    maxItems: 2
++    maxItems: 8
+ 
+   phy-names:
+     minItems: 1
+-    maxItems: 2
+-    items:
+-      enum:
+-        - usb2-phy
+-        - usb3-phy
++    maxItems: 8
++    oneOf:
++      - items:
++          enum: [ usb2-phy, usb3-phy ]
++      - items:
++          pattern: "^usb[23]-port[0-3]$"
+ 
+   power-domains:
+     description:
+-- 
+2.43.0
+

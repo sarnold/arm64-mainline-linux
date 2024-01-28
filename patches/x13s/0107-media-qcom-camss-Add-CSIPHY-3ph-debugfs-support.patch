@@ -1,0 +1,204 @@
+From b9fb38d9466ca7852ab3b4dd798e9437d3825c8d Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Fri, 23 Jun 2023 17:12:46 +0100
+Subject: [PATCH 107/173] media: qcom: camss: Add CSIPHY 3ph debugfs support
+
+Add in the ability to export registers of interest read-only via debugfs
+for the CSIPHY 3ph block.
+
+We can extend this out to other CSIPHY versions later.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ .../qcom/camss/camss-csiphy-3ph-1-0.c         | 22 ++++++++
+ .../media/platform/qcom/camss/camss-csiphy.c  | 56 +++++++++++++++++--
+ .../media/platform/qcom/camss/camss-csiphy.h  |  4 ++
+ 3 files changed, 77 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/media/platform/qcom/camss/camss-csiphy-3ph-1-0.c b/drivers/media/platform/qcom/camss/camss-csiphy-3ph-1-0.c
+index 2dbfb722716b..43f731ed7927 100644
+--- a/drivers/media/platform/qcom/camss/camss-csiphy-3ph-1-0.c
++++ b/drivers/media/platform/qcom/camss/camss-csiphy-3ph-1-0.c
+@@ -613,6 +613,27 @@ static void csiphy_lanes_disable(struct csiphy_device *csiphy,
+ 			  CSIPHY_3PH_CMN_CSI_COMMON_CTRLn(6));
+ }
+ 
++static size_t csiphy_dump_regs(struct csiphy_device *csiphy, char *buf, size_t buf_len)
++{
++	size_t len = 0;
++	int i;
++
++	for (i = 0; i < 6; i++) {
++		len += scnprintf(buf + len, buf_len - len,
++				 "CSIPHY_3PH_CMN_CSI_COMMON_CTRLn(%d) 0x%08x\n",
++				 i, readl_relaxed(csiphy->base + CSIPHY_3PH_CMN_CSI_COMMON_CTRLn(i)));
++	}
++
++	for (i = 0; i < 11; i++) {
++		len += scnprintf(buf + len, buf_len - len,
++				 "CSIPHY_3PH_CMN_CSI_COMMON_STATUSn(%d) 0x%08x\n",
++				 i, readl_relaxed(csiphy->base + CSIPHY_3PH_CMN_CSI_COMMON_STATUSn(i)));
++	}
++
++	return len;
++}
++
++
+ const struct csiphy_hw_ops csiphy_ops_3ph_1_0 = {
+ 	.get_lane_mask = csiphy_get_lane_mask,
+ 	.hw_version_read = csiphy_hw_version_read,
+@@ -620,4 +641,5 @@ const struct csiphy_hw_ops csiphy_ops_3ph_1_0 = {
+ 	.lanes_enable = csiphy_lanes_enable,
+ 	.lanes_disable = csiphy_lanes_disable,
+ 	.isr = csiphy_isr,
++	.dump_regs = csiphy_dump_regs,
+ };
+diff --git a/drivers/media/platform/qcom/camss/camss-csiphy.c b/drivers/media/platform/qcom/camss/camss-csiphy.c
+index 8241acf78986..e5db8a882a55 100644
+--- a/drivers/media/platform/qcom/camss/camss-csiphy.c
++++ b/drivers/media/platform/qcom/camss/camss-csiphy.c
+@@ -194,24 +194,25 @@ static int csiphy_set_power(struct v4l2_subdev *sd, int on)
+ {
+ 	struct csiphy_device *csiphy = v4l2_get_subdevdata(sd);
+ 	struct device *dev = csiphy->camss->dev;
++	int ret = 0;
+ 
++	mutex_lock(&csiphy->mutex);
+ 	if (on) {
+-		int ret;
+ 
+ 		ret = pm_runtime_resume_and_get(dev);
+ 		if (ret < 0)
+-			return ret;
++			goto error;
+ 
+ 		ret = csiphy_set_clock_rates(csiphy);
+ 		if (ret < 0) {
+ 			pm_runtime_put_sync(dev);
+-			return ret;
++			goto error;
+ 		}
+ 
+ 		ret = camss_enable_clocks(csiphy->nclocks, csiphy->clock, dev);
+ 		if (ret < 0) {
+ 			pm_runtime_put_sync(dev);
+-			return ret;
++			goto error;
+ 		}
+ 
+ 		enable_irq(csiphy->irq);
+@@ -219,7 +220,9 @@ static int csiphy_set_power(struct v4l2_subdev *sd, int on)
+ 		csiphy->ops->reset(csiphy);
+ 
+ 		csiphy->ops->hw_version_read(csiphy, dev);
++		csiphy->active = true;
+ 	} else {
++		csiphy->active = false;
+ 		disable_irq(csiphy->irq);
+ 
+ 		camss_disable_clocks(csiphy->nclocks, csiphy->clock);
+@@ -227,7 +230,9 @@ static int csiphy_set_power(struct v4l2_subdev *sd, int on)
+ 		pm_runtime_put_sync(dev);
+ 	}
+ 
+-	return 0;
++error:
++	mutex_unlock(&csiphy->mutex);
++	return ret;
+ }
+ 
+ /*
+@@ -752,6 +757,40 @@ static const struct media_entity_operations csiphy_media_ops = {
+ 	.link_validate = v4l2_subdev_link_validate,
+ };
+ 
++static ssize_t read_file_csiphy_dump_regs(struct file *file,
++					char __user *user_buf,
++					size_t count, loff_t *ppos)
++{
++	struct csiphy_device *csiphy = file->private_data;
++	size_t len = 0, buf_len = 2048;
++	char *buf;
++	int ret;
++
++	buf = kzalloc(buf_len, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	mutex_lock(&csiphy->mutex);
++
++	if (csiphy->active)
++		len = csiphy->ops->dump_regs(csiphy, buf, buf_len);
++	else
++		len = scnprintf(buf + len, buf_len - len, "%s %s\n",
++				csiphy->irq_name,
++				csiphy->active ? "active" : "inactive");
++	ret = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	kfree(buf);
++
++	mutex_unlock(&csiphy->mutex);
++
++	return ret;
++}
++
++static const struct file_operations fops_csiphy_dump_regs = {
++	.open = simple_open,
++	.read = read_file_csiphy_dump_regs,
++};
++
+ /*
+  * msm_csiphy_register_entity - Register subdev node for CSIPHY module
+  * @csiphy: CSIPHY device
+@@ -767,6 +806,7 @@ int msm_csiphy_register_entity(struct csiphy_device *csiphy,
+ 	struct device *dev = csiphy->camss->dev;
+ 	int ret;
+ 
++	mutex_init(&csiphy->mutex);
+ 	v4l2_subdev_init(sd, &csiphy_v4l2_ops);
+ 	sd->internal_ops = &csiphy_v4l2_internal_ops;
+ 	sd->flags |= V4L2_SUBDEV_FL_HAS_DEVNODE;
+@@ -797,6 +837,12 @@ int msm_csiphy_register_entity(struct csiphy_device *csiphy,
+ 		media_entity_cleanup(&sd->entity);
+ 	}
+ 
++	if (csiphy->camss->debugfs_rootdir) {
++		debugfs_create_file(csiphy->irq_name, 0200,
++				    csiphy->camss->debugfs_rootdir, csiphy,
++				    &fops_csiphy_dump_regs);
++	}
++
+ 	return ret;
+ }
+ 
+diff --git a/drivers/media/platform/qcom/camss/camss-csiphy.h b/drivers/media/platform/qcom/camss/camss-csiphy.h
+index c9b7fe82b1f0..7193971d934d 100644
+--- a/drivers/media/platform/qcom/camss/camss-csiphy.h
++++ b/drivers/media/platform/qcom/camss/camss-csiphy.h
+@@ -12,6 +12,7 @@
+ 
+ #include <linux/clk.h>
+ #include <linux/interrupt.h>
++#include <linux/mutex.h>
+ #include <media/media-entity.h>
+ #include <media/v4l2-device.h>
+ #include <media/v4l2-mediabus.h>
+@@ -61,6 +62,7 @@ struct csiphy_hw_ops {
+ 	void (*lanes_disable)(struct csiphy_device *csiphy,
+ 			      struct csiphy_config *cfg);
+ 	irqreturn_t (*isr)(int irq, void *dev);
++	size_t (*dump_regs)(struct csiphy_device *csiphy, char *buf, size_t buf_len);
+ };
+ 
+ struct csiphy_device {
+@@ -81,6 +83,8 @@ struct csiphy_device {
+ 	const struct csiphy_hw_ops *ops;
+ 	const struct csiphy_format *formats;
+ 	unsigned int nformats;
++	struct mutex mutex;	/* atomicity of active flag */
++	bool active;
+ };
+ 
+ struct camss_subdev_resources;
+-- 
+2.43.0
+

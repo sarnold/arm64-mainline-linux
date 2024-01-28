@@ -1,0 +1,72 @@
+From 09da73f6734d8a1581edba08a4f03540e09a296d Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Fri, 23 Jun 2023 17:08:17 +0100
+Subject: [PATCH 105/173] media: qcom: camss: Add core debugfs support
+
+Add in a basic debugfs top directory /sys/kernel/debug/qcom_camss for
+the various blocks to hang register debug interfaces out of.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ drivers/media/platform/qcom/camss/camss.c | 5 +++++
+ drivers/media/platform/qcom/camss/camss.h | 9 +++++++++
+ 2 files changed, 14 insertions(+)
+
+diff --git a/drivers/media/platform/qcom/camss/camss.c b/drivers/media/platform/qcom/camss/camss.c
+index 73661a2e28ee..b8ef2286dbd2 100644
+--- a/drivers/media/platform/qcom/camss/camss.c
++++ b/drivers/media/platform/qcom/camss/camss.c
+@@ -1984,6 +1984,10 @@ static int camss_probe(struct platform_device *pdev)
+ 		goto err_v4l2_device_unregister;
+ 	}
+ 
++	camss->debugfs_rootdir = debugfs_create_dir(KBUILD_MODNAME, NULL);
++	if (IS_ERR(camss->debugfs_rootdir))
++		camss->debugfs_rootdir = NULL;
++
+ 	ret = camss_register_entities(camss);
+ 	if (ret < 0)
+ 		goto err_v4l2_device_unregister;
+@@ -2051,6 +2055,7 @@ static void camss_remove(struct platform_device *pdev)
+ 	v4l2_async_nf_unregister(&camss->notifier);
+ 	v4l2_async_nf_cleanup(&camss->notifier);
+ 	camss_unregister_entities(camss);
++	debugfs_remove_recursive(camss->debugfs_rootdir);
+ 
+ 	if (atomic_read(&camss->ref_count) == 0)
+ 		camss_delete(camss);
+diff --git a/drivers/media/platform/qcom/camss/camss.h b/drivers/media/platform/qcom/camss/camss.h
+index ac15fe23a702..126f007cebb3 100644
+--- a/drivers/media/platform/qcom/camss/camss.h
++++ b/drivers/media/platform/qcom/camss/camss.h
+@@ -10,6 +10,7 @@
+ #ifndef QC_MSM_CAMSS_H
+ #define QC_MSM_CAMSS_H
+ 
++#include <linux/debugfs.h>
+ #include <linux/device.h>
+ #include <linux/types.h>
+ #include <media/v4l2-async.h>
+@@ -114,6 +115,7 @@ struct camss {
+ 	struct device_link *genpd_link;
+ 	struct icc_path *icc_path[ICC_SM8250_COUNT];
+ 	const struct camss_resources *res;
++	struct dentry *debugfs_rootdir;
+ };
+ 
+ struct camss_camera_interface {
+@@ -145,4 +147,11 @@ int camss_pm_domain_on(struct camss *camss, int id);
+ void camss_pm_domain_off(struct camss *camss, int id);
+ void camss_delete(struct camss *camss);
+ 
++#define CAMSS_DEBUGFS_ADD(rootdir, name, mode, fop, priv_data)	\
++do {								\
++	debugfs_create_file(__stringify(name),		\
++			    mode, rootdir,		\
++			    priv_data, fop);		\
++} while (0)
++
+ #endif /* QC_MSM_CAMSS_H */
+-- 
+2.43.0
+

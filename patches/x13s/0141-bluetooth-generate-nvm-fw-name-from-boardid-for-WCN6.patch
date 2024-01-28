@@ -1,0 +1,86 @@
+From 1dda3ab6c627a5cf73188ab0b172e01b62fb3ab7 Mon Sep 17 00:00:00 2001
+From: Steev Klimaszewski <steev@kali.org>
+Date: Thu, 28 Dec 2023 19:44:18 -0600
+Subject: [PATCH 141/173] bluetooth: generate nvm fw name from boardid for
+ WCN6855
+
+This is based on the 2066 work, which the 6855 is basically the same
+thing.
+
+The .b8c firmware is found on the Windows partition, and is supposed to
+work a little bit better than the .bin.
+
+Signed-off-by: Steev Klimaszewski <steev@kali.org>
+---
+ drivers/bluetooth/btqca.c | 27 ++++++++++++++++++++-------
+ 1 file changed, 20 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/bluetooth/btqca.c b/drivers/bluetooth/btqca.c
+index 29035daf21bc..6f2316e62880 100644
+--- a/drivers/bluetooth/btqca.c
++++ b/drivers/bluetooth/btqca.c
+@@ -510,6 +510,21 @@ static int qca_download_firmware(struct hci_dev *hdev,
+ 					   config->fwname, ret);
+ 				return ret;
+ 			}
++			/* For WCN6855, if Windows firmware file isn't in place
++			 * then use the default .bin file.
++			 */
++		} else if (soc_type == QCA_WCN6855) {
++			bt_dev_dbg(hdev, "QCA Failed to request file: %s (%d)",
++				   config->fwname, ret);
++			snprintf(config->fwname, sizeof(config->fwname),
++				 "qca/hpnv%02x.bin", rom_ver);
++			bt_dev_info(hdev, "QCA Downloading %s", config->fwname);
++			ret = request_firmware(&fw, config->fwname, &hdev->dev);
++			if (ret) {
++				bt_dev_err(hdev, "QCA Failed to request file: %s (%d)",
++					   config->fwname, ret);
++				return ret;
++			}
+ 		} else {
+ 			bt_dev_err(hdev, "QCA Failed to request file: %s (%d)",
+ 				   config->fwname, ret);
+@@ -672,6 +687,7 @@ int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
+ 			 "qca/apbtfw%02x.tlv", rom_ver);
+ 		break;
+ 	case QCA_QCA2066:
++	case QCA_WCN6855:
+ 		snprintf(config.fwname, sizeof(config.fwname),
+ 			 "qca/hpbtfw%02x.tlv", rom_ver);
+ 		break;
+@@ -687,10 +703,6 @@ int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
+ 		snprintf(config.fwname, sizeof(config.fwname),
+ 			 "qca/msbtfw%02x.mbn", rom_ver);
+ 		break;
+-	case QCA_WCN6855:
+-		snprintf(config.fwname, sizeof(config.fwname),
+-			 "qca/hpbtfw%02x.tlv", rom_ver);
+-		break;
+ 	case QCA_WCN7850:
+ 		snprintf(config.fwname, sizeof(config.fwname),
+ 			 "qca/hmtbtfw%02x.tlv", rom_ver);
+@@ -709,7 +721,7 @@ int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
+ 	/* Give the controller some time to get ready to receive the NVM */
+ 	msleep(10);
+ 
+-	if (soc_type == QCA_QCA2066)
++	if (soc_type == QCA_QCA2066 || soc_type == QCA_WCN6855)
+ 		qca_read_fw_board_id(hdev, &boardid);
+ 
+ 	/* Download NVM configuration */
+@@ -747,8 +759,9 @@ int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
+ 				 "qca/msnv%02x.bin", rom_ver);
+ 			break;
+ 		case QCA_WCN6855:
+-			snprintf(config.fwname, sizeof(config.fwname),
+-				 "qca/hpnv%02x.bin", rom_ver);
++			qca_generate_hsp_nvm_name(config.fwname,
++				sizeof(config.fwname), ver, rom_ver,
++				boardid == 0x8c ? 0xb8c : boardid);
+ 			break;
+ 		case QCA_WCN7850:
+ 			snprintf(config.fwname, sizeof(config.fwname),
+-- 
+2.43.0
+

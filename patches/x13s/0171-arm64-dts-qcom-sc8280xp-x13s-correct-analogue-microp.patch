@@ -1,0 +1,33 @@
+From 92ffd24fcc048a41a987a9bf23492c4b5075bfd8 Mon Sep 17 00:00:00 2001
+From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Date: Thu, 25 Jan 2024 16:45:31 +0100
+Subject: [PATCH 171/173] arm64: dts: qcom: sc8280xp-x13s: correct analogue
+ microphone route
+
+Starting with Qualcomm SM8350 SoC, so Low Power Audio SubSystem (LPASS)
+block version v9.2, the register responsible for TX SMIC MUXn muxes is
+different.  The LPASS TX macro codec driver is being fixed to handle
+that difference, so the DTS must be updated as well for new widget name.
+
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Link: https://lore.kernel.org/r/20240125154531.417098-1-krzysztof.kozlowski@linaro.org
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index 4816e2034ad6..8e392d5edc50 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -1152,7 +1152,7 @@ &sound {
+ 		"VA DMIC0", "VA MIC BIAS1",
+ 		"VA DMIC1", "VA MIC BIAS1",
+ 		"VA DMIC2", "VA MIC BIAS3",
+-		"TX SWR_ADC1", "ADC2_OUTPUT";
++		"TX SWR_INPUT1", "ADC2_OUTPUT";
+ 
+ 	wcd-playback-dai-link {
+ 		link-name = "WCD Playback";
+-- 
+2.43.0
+

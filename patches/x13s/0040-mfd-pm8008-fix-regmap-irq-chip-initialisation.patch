@@ -1,0 +1,114 @@
+From fe2bd7018d4f33d6cb4d8a304e2e9c866dca2d17 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 5 Dec 2023 18:15:30 +0100
+Subject: [PATCH 040/173] mfd: pm8008: fix regmap irq chip initialisation
+
+The regmap irq array is potentially shared between multiple PMICs and
+should only contain static data.
+
+Use a custom macro to initialise also the type fields and drop the
+unnecessary updates on each probe.
+
+Fixes: 6b149f3310a4 ("mfd: pm8008: Add driver for QCOM PM8008 PMIC")
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/mfd/qcom-pm8008.c | 66 +++++++++++++++------------------------
+ 1 file changed, 25 insertions(+), 41 deletions(-)
+
+diff --git a/drivers/mfd/qcom-pm8008.c b/drivers/mfd/qcom-pm8008.c
+index 3ac3742f438b..d53c987b0d49 100644
+--- a/drivers/mfd/qcom-pm8008.c
++++ b/drivers/mfd/qcom-pm8008.c
+@@ -56,15 +56,27 @@ static unsigned int pm8008_config_regs[] = {
+ 	INT_POL_LOW_OFFSET,
+ };
+ 
+-static struct regmap_irq pm8008_irqs[] = {
+-	REGMAP_IRQ_REG(PM8008_IRQ_MISC_UVLO,	PM8008_MISC,	BIT(0)),
+-	REGMAP_IRQ_REG(PM8008_IRQ_MISC_OVLO,	PM8008_MISC,	BIT(1)),
+-	REGMAP_IRQ_REG(PM8008_IRQ_MISC_OTST2,	PM8008_MISC,	BIT(2)),
+-	REGMAP_IRQ_REG(PM8008_IRQ_MISC_OTST3,	PM8008_MISC,	BIT(3)),
+-	REGMAP_IRQ_REG(PM8008_IRQ_MISC_LDO_OCP,	PM8008_MISC,	BIT(4)),
+-	REGMAP_IRQ_REG(PM8008_IRQ_TEMP_ALARM,	PM8008_TEMP_ALARM, BIT(0)),
+-	REGMAP_IRQ_REG(PM8008_IRQ_GPIO1,	PM8008_GPIO1,	BIT(0)),
+-	REGMAP_IRQ_REG(PM8008_IRQ_GPIO2,	PM8008_GPIO2,	BIT(0)),
++#define _IRQ(_irq, _off, _mask, _types)			\
++	[_irq] = {					\
++		.reg_offset = (_off),			\
++		.mask = (_mask),			\
++		.type = {				\
++			.type_reg_offset = (_off),	\
++			.types_supported = (_types),	\
++		},					\
++	}
++
++#define _IRQ_TYPE_ALL (IRQ_TYPE_EDGE_BOTH | IRQ_TYPE_LEVEL_HIGH | IRQ_TYPE_LEVEL_LOW)
++
++static const struct regmap_irq pm8008_irqs[] = {
++	_IRQ(PM8008_IRQ_MISC_UVLO,    PM8008_MISC,	BIT(0), IRQ_TYPE_EDGE_RISING),
++	_IRQ(PM8008_IRQ_MISC_OVLO,    PM8008_MISC,	BIT(1), IRQ_TYPE_EDGE_RISING),
++	_IRQ(PM8008_IRQ_MISC_OTST2,   PM8008_MISC,	BIT(2), IRQ_TYPE_EDGE_RISING),
++	_IRQ(PM8008_IRQ_MISC_OTST3,   PM8008_MISC,	BIT(3), IRQ_TYPE_EDGE_RISING),
++	_IRQ(PM8008_IRQ_MISC_LDO_OCP, PM8008_MISC,	BIT(4), IRQ_TYPE_EDGE_RISING),
++	_IRQ(PM8008_IRQ_TEMP_ALARM,   PM8008_TEMP_ALARM,BIT(0), _IRQ_TYPE_ALL),
++	_IRQ(PM8008_IRQ_GPIO1,	      PM8008_GPIO1,	BIT(0), _IRQ_TYPE_ALL),
++	_IRQ(PM8008_IRQ_GPIO2,	      PM8008_GPIO2,	BIT(0), _IRQ_TYPE_ALL),
+ };
+ 
+ static const unsigned int pm8008_periph_base[] = {
+@@ -143,38 +155,9 @@ static struct regmap_config qcom_mfd_regmap_cfg = {
+ 	.max_register	= 0xFFFF,
+ };
+ 
+-static int pm8008_probe_irq_peripherals(struct device *dev,
+-					struct regmap *regmap,
+-					int client_irq)
+-{
+-	int rc, i;
+-	struct regmap_irq_type *type;
+-	struct regmap_irq_chip_data *irq_data;
+-
+-	for (i = 0; i < ARRAY_SIZE(pm8008_irqs); i++) {
+-		type = &pm8008_irqs[i].type;
+-
+-		type->type_reg_offset = pm8008_irqs[i].reg_offset;
+-
+-		if (type->type_reg_offset == PM8008_MISC)
+-			type->types_supported = IRQ_TYPE_EDGE_RISING;
+-		else
+-			type->types_supported = (IRQ_TYPE_EDGE_BOTH |
+-				IRQ_TYPE_LEVEL_HIGH | IRQ_TYPE_LEVEL_LOW);
+-	}
+-
+-	rc = devm_regmap_add_irq_chip(dev, regmap, client_irq,
+-			IRQF_SHARED, 0, &pm8008_irq_chip, &irq_data);
+-	if (rc) {
+-		dev_err(dev, "Failed to add IRQ chip: %d\n", rc);
+-		return rc;
+-	}
+-
+-	return 0;
+-}
+-
+ static int pm8008_probe(struct i2c_client *client)
+ {
++	struct regmap_irq_chip_data *irq_data;
+ 	int rc;
+ 	struct device *dev;
+ 	struct regmap *regmap;
+@@ -187,9 +170,10 @@ static int pm8008_probe(struct i2c_client *client)
+ 	i2c_set_clientdata(client, regmap);
+ 
+ 	if (of_property_read_bool(dev->of_node, "interrupt-controller")) {
+-		rc = pm8008_probe_irq_peripherals(dev, regmap, client->irq);
++		rc = devm_regmap_add_irq_chip(dev, regmap, client->irq,
++				IRQF_SHARED, 0, &pm8008_irq_chip, &irq_data);
+ 		if (rc)
+-			dev_err(dev, "Failed to probe irq periphs: %d\n", rc);
++			dev_err(dev, "failed to add IRQ chip: %d\n", rc);
+ 	}
+ 
+ 	return devm_of_platform_populate(dev);
+-- 
+2.43.0
+

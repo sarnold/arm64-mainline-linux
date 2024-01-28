@@ -1,0 +1,83 @@
+From 5f047b421892c56be2cb76b83953f53adf7f4fd3 Mon Sep 17 00:00:00 2001
+From: Krishna Kurapati <quic_kriskura@quicinc.com>
+Date: Mon, 28 Aug 2023 19:00:21 +0530
+Subject: [PATCH 026/173] dt-bindings: usb: qcom,dwc3: Add bindings for SC8280
+ Multiport
+
+Add the compatible string for SC8280 Multiport USB controller from
+Qualcomm.
+
+There are 4 power event irq interrupts supported by this controller
+(one for each port of multiport). Added all the 4 as non-optional
+interrupts for SC8280XP-MP
+
+Also each port of multiport has one DP and oen DM IRQ. Add all DP/DM
+IRQ's related to 4 ports of SC8280XP Teritiary controller.
+
+Also added ss phy irq for both SS Ports.
+
+Signed-off-by: Krishna Kurapati <quic_kriskura@quicinc.com>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Link: https://lore.kernel.org/r/20230828133033.11988-2-quic_kriskura@quicinc.com
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ .../devicetree/bindings/usb/qcom,dwc3.yaml    | 29 +++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/usb/qcom,dwc3.yaml b/Documentation/devicetree/bindings/usb/qcom,dwc3.yaml
+index 915c8205623b..6673018f17a8 100644
+--- a/Documentation/devicetree/bindings/usb/qcom,dwc3.yaml
++++ b/Documentation/devicetree/bindings/usb/qcom,dwc3.yaml
+@@ -30,6 +30,7 @@ properties:
+           - qcom,sc7180-dwc3
+           - qcom,sc7280-dwc3
+           - qcom,sc8280xp-dwc3
++          - qcom,sc8280xp-dwc3-mp
+           - qcom,sdm660-dwc3
+           - qcom,sdm670-dwc3
+           - qcom,sdm845-dwc3
+@@ -263,6 +264,7 @@ allOf:
+           contains:
+             enum:
+               - qcom,sc8280xp-dwc3
++              - qcom,sc8280xp-dwc3-mp
+     then:
+       properties:
+         clocks:
+@@ -486,6 +488,33 @@ allOf:
+             - const: dm_hs_phy_irq
+             - const: ss_phy_irq
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,sc8280xp-dwc3-mp
++    then:
++      properties:
++        interrupts:
++          maxItems: 14
++        interrupt-names:
++          items:
++            - const: pwr_event_1
++            - const: pwr_event_2
++            - const: pwr_event_3
++            - const: pwr_event_4
++            - const: dp_hs_phy_1
++            - const: dm_hs_phy_1
++            - const: dp_hs_phy_2
++            - const: dm_hs_phy_2
++            - const: dp_hs_phy_3
++            - const: dm_hs_phy_3
++            - const: dp_hs_phy_4
++            - const: dm_hs_phy_4
++            - const: ss_phy_1
++            - const: ss_phy_2
++
+ additionalProperties: false
+ 
+ examples:
+-- 
+2.43.0
+

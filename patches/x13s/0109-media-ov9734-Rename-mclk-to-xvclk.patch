@@ -1,0 +1,54 @@
+From db933bf55616f519561c7bb0dcaf9679ff081547 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Thu, 29 Jun 2023 11:12:40 +0100
+Subject: [PATCH 109/173] media: ov9734: Rename mclk to xvclk
+
+The data sheet calls the input clock signal XVCLK not MCLK.
+Change all upper and lower case instances of MCLK to XVCLK to align with
+the data-sheet and associated PCBs.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ drivers/media/i2c/ov9734.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/media/i2c/ov9734.c b/drivers/media/i2c/ov9734.c
+index ee3315299605..cac9e8d6bdbf 100644
+--- a/drivers/media/i2c/ov9734.c
++++ b/drivers/media/i2c/ov9734.c
+@@ -13,7 +13,7 @@
+ 
+ #define OV9734_LINK_FREQ_180MHZ		180000000ULL
+ #define OV9734_SCLK			36000000LL
+-#define OV9734_MCLK			19200000
++#define OV9734_XVCLK			19200000
+ /* ov9734 only support 1-lane mipi output */
+ #define OV9734_DATA_LANES		1
+ #define OV9734_RGB_DEPTH		10
+@@ -833,19 +833,19 @@ static int ov9734_check_hwcfg(struct device *dev)
+ 	struct v4l2_fwnode_endpoint bus_cfg = {
+ 		.bus_type = V4L2_MBUS_CSI2_DPHY
+ 	};
+-	u32 mclk;
++	u32 xvclk;
+ 	int ret;
+ 	unsigned int i, j;
+ 
+ 	if (!fwnode)
+ 		return -ENXIO;
+ 
+-	ret = fwnode_property_read_u32(fwnode, "clock-frequency", &mclk);
++	ret = fwnode_property_read_u32(fwnode, "clock-frequency", &xvclk);
+ 	if (ret)
+ 		return ret;
+ 
+-	if (mclk != OV9734_MCLK) {
+-		dev_err(dev, "external clock %d is not supported", mclk);
++	if (xvclk != OV9734_XVCLK) {
++		dev_err(dev, "external clock %d is not supported", xvclk);
+ 		return -EINVAL;
+ 	}
+ 
+-- 
+2.43.0
+

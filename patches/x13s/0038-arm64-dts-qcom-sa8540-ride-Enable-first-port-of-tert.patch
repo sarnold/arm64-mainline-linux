@@ -1,0 +1,67 @@
+From 0cd6812ddddf2c1bf45f7b88af89f37a1cbaad30 Mon Sep 17 00:00:00 2001
+From: Andrew Halaney <ahalaney@redhat.com>
+Date: Sat, 7 Oct 2023 21:18:06 +0530
+Subject: [PATCH 038/173] arm64: dts: qcom: sa8540-ride: Enable first port of
+ tertiary usb controller
+
+There is now support for the multiport USB controller this uses so
+enable it.
+
+The board only has a single port hooked up (despite it being wired up to
+the multiport IP on the SoC). There's also a USB 2.0 mux hooked up,
+which by default on boot is selected to mux properly. Grab the gpio
+controlling that and ensure it stays in the right position so USB 2.0
+continues to be routed from the external port to the SoC.
+
+Co-developed-by: Andrew Halaney <ahalaney@redhat.com>
+Signed-off-by: Andrew Halaney <ahalaney@redhat.com>
+[Krishna: Rebased on top of usb-next]
+Co-developed-by: Krishna Kurapati <quic_kriskura@quicinc.com>
+Signed-off-by: Krishna Kurapati <quic_kriskura@quicinc.com>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20231007154806.605-11-quic_kriskura@quicinc.com
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sa8540p-ride.dts | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sa8540p-ride.dts b/arch/arm64/boot/dts/qcom/sa8540p-ride.dts
+index b04f72ec097c..6904a4c201ff 100644
+--- a/arch/arm64/boot/dts/qcom/sa8540p-ride.dts
++++ b/arch/arm64/boot/dts/qcom/sa8540p-ride.dts
+@@ -503,6 +503,18 @@ &usb_2_qmpphy0 {
+ 	status = "okay";
+ };
+ 
++&usb_2 {
++	pinctrl-0 = <&usb2_en_state>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&usb_2_dwc3 {
++	phy-names = "usb2-port0", "usb3-port0";
++	phys = <&usb_2_hsphy0>, <&usb_2_qmpphy0>;
++};
++
+ &xo_board_clk {
+ 	clock-frequency = <38400000>;
+ };
+@@ -655,4 +667,13 @@ wake-pins {
+ 			bias-pull-up;
+ 		};
+ 	};
++
++	usb2_en_state: usb2-en-state {
++		/* TS3USB221A USB2.0 mux select */
++		pins = "gpio24";
++		function = "gpio";
++		drive-strength = <2>;
++		bias-disable;
++		output-low;
++	};
+ };
+-- 
+2.43.0
+

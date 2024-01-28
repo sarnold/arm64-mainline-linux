@@ -1,0 +1,51 @@
+From 0bc3c8eece87d26356311c244af23d26ac8973ac Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Sat, 6 May 2023 17:05:57 +0100
+Subject: [PATCH 081/173] arm64: dts: qcom: sc8280xp: Add in CAMCC for sc8280xp
+
+Add in CAMCC for sc8280xp. The sc8280xp Camera Clock Controller looks
+similar to most of the sdmX, smX and now scX controllers.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Suggested-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index 77ebbe604a53..63ac207dfb30 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -8,6 +8,7 @@
+ #include <dt-bindings/clock/qcom,gcc-sc8280xp.h>
+ #include <dt-bindings/clock/qcom,gpucc-sc8280xp.h>
+ #include <dt-bindings/clock/qcom,rpmh.h>
++#include <dt-bindings/clock/qcom,sc8280xp-camcc.h>
+ #include <dt-bindings/clock/qcom,sc8280xp-lpasscc.h>
+ #include <dt-bindings/clock/qcom,sm8350-videocc.h>
+ #include <dt-bindings/interconnect/qcom,osm-l3.h>
+@@ -3656,6 +3657,20 @@ videocc: clock-controller@abf0000 {
+ 			#power-domain-cells = <1>;
+ 		};
+ 
++		camcc: clock-controller@ad00000 {
++			compatible = "qcom,sc8280xp-camcc";
++			reg = <0 0x0ad00000 0 0x20000>;
++			clocks = <&gcc GCC_CAMERA_AHB_CLK>,
++				 <&rpmhcc RPMH_CXO_CLK>,
++				 <&rpmhcc RPMH_CXO_CLK_A>,
++				 <&sleep_clk>;
++			power-domains = <&rpmhpd SC8280XP_MMCX>;
++			required-opps = <&rpmhpd_opp_low_svs>;
++			#clock-cells = <1>;
++			#reset-cells = <1>;
++			#power-domain-cells = <1>;
++		};
++
+ 		mdss0: display-subsystem@ae00000 {
+ 			compatible = "qcom,sc8280xp-mdss";
+ 			reg = <0 0x0ae00000 0 0x1000>;
+-- 
+2.43.0
+

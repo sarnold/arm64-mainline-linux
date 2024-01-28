@@ -1,0 +1,34 @@
+From f9753c43450b8ac07d3421820ade80860abd2e7f Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Sat, 10 Jun 2023 17:43:50 +0100
+Subject: [PATCH 101/173] media: qcom: camss: Print VFE index in hw_version
+ dev_dbg
+
+The stream of VFE hardware identifiers has no index and thus little
+meaning when viewing the printed output.
+
+Add the index to provide context.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ drivers/media/platform/qcom/camss/camss-vfe-17x.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/platform/qcom/camss/camss-vfe-17x.c b/drivers/media/platform/qcom/camss/camss-vfe-17x.c
+index 795ac3815339..0a7ed947128c 100644
+--- a/drivers/media/platform/qcom/camss/camss-vfe-17x.c
++++ b/drivers/media/platform/qcom/camss/camss-vfe-17x.c
+@@ -184,8 +184,8 @@ static u32 vfe_hw_version(struct vfe_device *vfe)
+ 	u32 rev = (hw_version >> 16) & 0xFFF;
+ 	u32 step = hw_version & 0xFFFF;
+ 
+-	dev_dbg(vfe->camss->dev, "VFE HW Version = %u.%u.%u\n",
+-		gen, rev, step);
++	dev_dbg(vfe->camss->dev, "VFE%d HW Version = %u.%u.%u\n",
++		vfe->id, gen, rev, step);
+ 
+ 	return hw_version;
+ }
+-- 
+2.43.0
+

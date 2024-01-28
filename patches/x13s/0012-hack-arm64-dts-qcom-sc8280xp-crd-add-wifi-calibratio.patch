@@ -1,0 +1,50 @@
+From 14b9b2e8a1cfc0aff066e937f8ed0a699823aad0 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Fri, 17 Mar 2023 10:29:38 +0100
+Subject: [PATCH 012/173] hack: arm64: dts: qcom: sc8280xp-crd: add wifi
+ calibration variant
+
+Describe the bus topology for PCIe domain 6 and add the ath11k
+calibration variant so that the board file (calibration data) can be
+loaded.
+
+FIXME: Using the calibration data for the X13s while waiting for proper
+calibration data for the CRD.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=216036
+Not-signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-crd.dts | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+index ffc4406422ae..f34c572253f5 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+@@ -572,6 +572,23 @@ &pcie4 {
+ 	pinctrl-0 = <&pcie4_default>;
+ 
+ 	status = "okay";
++
++	pcie@0 {
++		device_type = "pci";
++		reg = <0x0 0x0 0x0 0x0 0x0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges;
++
++		bus-range = <0x01 0xff>;
++
++		wifi@0 {
++			compatible = "pci17cb,1103";
++			reg = <0x10000 0x0 0x0 0x0 0x0>;
++
++			qcom,ath11k-calibration-variant = "LE_X13S";
++		};
++	};
+ };
+ 
+ &pcie4_phy {
+-- 
+2.43.0
+

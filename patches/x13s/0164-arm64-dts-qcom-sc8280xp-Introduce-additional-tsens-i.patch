@@ -1,0 +1,75 @@
+From e0cab2ed7b6bb48cf2c519997369ce9c049561d6 Mon Sep 17 00:00:00 2001
+From: Bjorn Andersson <quic_bjorande@quicinc.com>
+Date: Thu, 18 Jan 2024 15:00:23 -0800
+Subject: [PATCH 164/173] arm64: dts: qcom: sc8280xp: Introduce additional
+ tsens instances
+
+The SC8280XP contains two additional tsens instances, providing among
+other things thermal measurements for the GPU.
+
+Add these and a GPU thermal-zone.
+
+Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Link: https://lore.kernel.org/r/20240118-sc8280xp-tsens2_3-v1-1-e86bce14f6bf@quicinc.com
+---
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 37 ++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index 3cb91ddd9571..8c4083b44a36 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -4642,6 +4642,28 @@ tsens1: thermal-sensor@c265000 {
+ 			#thermal-sensor-cells = <1>;
+ 		};
+ 
++		tsens2: thermal-sensor@c251000 {
++			compatible = "qcom,sc8280xp-tsens", "qcom,tsens-v2";
++			reg = <0 0x0c251000 0 0x1ff>, /* TM */
++			      <0 0x0c224000 0 0x8>; /* SROT */
++			#qcom,sensors = <11>;
++			interrupts-extended = <&pdc 122 IRQ_TYPE_LEVEL_HIGH>,
++					      <&pdc 124 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "uplow", "critical";
++			#thermal-sensor-cells = <1>;
++		};
++
++		tsens3: thermal-sensor@c252000 {
++			compatible = "qcom,sc8280xp-tsens", "qcom,tsens-v2";
++			reg = <0 0x0c252000 0 0x1ff>, /* TM */
++			      <0 0x0c225000 0 0x8>; /* SROT */
++			#qcom,sensors = <5>;
++			interrupts-extended = <&pdc 123 IRQ_TYPE_LEVEL_HIGH>,
++					      <&pdc 125 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "uplow", "critical";
++			#thermal-sensor-cells = <1>;
++		};
++
+ 		aoss_qmp: power-management@c300000 {
+ 			compatible = "qcom,sc8280xp-aoss-qmp", "qcom,aoss-qmp";
+ 			reg = <0 0x0c300000 0 0x400>;
+@@ -5996,6 +6018,21 @@ cpu-crit {
+ 			};
+ 		};
+ 
++		gpu-thermal {
++			polling-delay-passive = <250>;
++			polling-delay = <1000>;
++
++			thermal-sensors = <&tsens2 2>;
++
++			trips {
++				cpu-crit {
++					temperature = <110000>;
++					hysteresis = <1000>;
++					type = "critical";
++				};
++			};
++		};
++
+ 		mem-thermal {
+ 			polling-delay-passive = <250>;
+ 			polling-delay = <1000>;
+-- 
+2.43.0
+

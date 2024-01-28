@@ -1,0 +1,43 @@
+From efc7a1fc52f9bb7e4bcb856e8a396d16d9461c6e Mon Sep 17 00:00:00 2001
+From: Himanshu Bhavani <himanshu.bhavani@siliconsignals.io>
+Date: Tue, 2 Jan 2024 18:45:09 +0530
+Subject: [PATCH 142/173] media: venus: use div64_u64() instead of do_div()
+
+do_div() does a 64-by-32 division.
+When the divisor is u64, do_div() truncates it to 32 bits,
+this means it can test non-zero and be truncated to zero for
+division.
+
+fix do_div.cocci warning:
+do_div() does a 64-by-32 division, please consider using div64_u64
+instead.
+
+Signed-off-by: Himanshu Bhavani <himanshu.bhavani@siliconsignals.io>
+Link: https://lore.kernel.org/r/20240102131509.1733215-1-himanshu.bhavani@siliconsignals.io
+---
+ drivers/media/platform/qcom/venus/venc.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/platform/qcom/venus/venc.c b/drivers/media/platform/qcom/venus/venc.c
+index 44b13696cf82..ad6c31c272ac 100644
+--- a/drivers/media/platform/qcom/venus/venc.c
++++ b/drivers/media/platform/qcom/venus/venc.c
+@@ -409,13 +409,13 @@ static int venc_s_parm(struct file *file, void *fh, struct v4l2_streamparm *a)
+ 	out->capability = V4L2_CAP_TIMEPERFRAME;
+ 
+ 	us_per_frame = timeperframe->numerator * (u64)USEC_PER_SEC;
+-	do_div(us_per_frame, timeperframe->denominator);
++	us_per_frame = div64_u64(us_per_frame, timeperframe->denominator);
+ 
+ 	if (!us_per_frame)
+ 		return -EINVAL;
+ 
+ 	fps = (u64)USEC_PER_SEC;
+-	do_div(fps, us_per_frame);
++	fps = div64_u64(fps, us_per_frame);
+ 
+ 	inst->timeperframe = *timeperframe;
+ 	inst->fps = fps;
+-- 
+2.43.0
+

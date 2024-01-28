@@ -1,0 +1,245 @@
+From 20ce719df44f2972d0e1b26bf44cd0c1d8877d2d Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Sun, 27 Aug 2023 12:22:29 +0100
+Subject: [PATCH 078/173] dt-bindings: clock: Use gcc.yaml for common clock
+ properties
+
+Various of the camcc bindings are repeated serially. We can use
+qcom,gcc.yaml to encapsulate the generic repeated patterns.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+---
+ .../bindings/clock/qcom,camcc-sm8250.yaml      | 18 ++++--------------
+ .../bindings/clock/qcom,sc7180-camcc.yaml      | 18 ++++--------------
+ .../bindings/clock/qcom,sc7280-camcc.yaml      | 18 ++++--------------
+ .../bindings/clock/qcom,sdm845-camcc.yaml      | 18 ++++--------------
+ .../bindings/clock/qcom,sm8450-camcc.yaml      | 18 ++++--------------
+ 5 files changed, 20 insertions(+), 70 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/clock/qcom,camcc-sm8250.yaml b/Documentation/devicetree/bindings/clock/qcom,camcc-sm8250.yaml
+index 426335a2841c..3fd3dc1069fb 100644
+--- a/Documentation/devicetree/bindings/clock/qcom,camcc-sm8250.yaml
++++ b/Documentation/devicetree/bindings/clock/qcom,camcc-sm8250.yaml
+@@ -15,6 +15,9 @@ description: |
+ 
+   See also:: include/dt-bindings/clock/qcom,camcc-sm8250.h
+ 
++allOf:
++  - $ref: qcom,gcc.yaml#
++
+ properties:
+   compatible:
+     const: qcom,sm8250-camcc
+@@ -33,15 +36,6 @@ properties:
+       - const: bi_tcxo_ao
+       - const: sleep_clk
+ 
+-  '#clock-cells':
+-    const: 1
+-
+-  '#reset-cells':
+-    const: 1
+-
+-  '#power-domain-cells':
+-    const: 1
+-
+   power-domains:
+     items:
+       - description: MMCX power domain
+@@ -56,14 +50,10 @@ properties:
+ 
+ required:
+   - compatible
+-  - reg
+   - clocks
+   - clock-names
+-  - '#clock-cells'
+-  - '#reset-cells'
+-  - '#power-domain-cells'
+ 
+-additionalProperties: false
++unevaluatedProperties: false
+ 
+ examples:
+   - |
+diff --git a/Documentation/devicetree/bindings/clock/qcom,sc7180-camcc.yaml b/Documentation/devicetree/bindings/clock/qcom,sc7180-camcc.yaml
+index 2dfc2a4f1918..c7fe6400ea13 100644
+--- a/Documentation/devicetree/bindings/clock/qcom,sc7180-camcc.yaml
++++ b/Documentation/devicetree/bindings/clock/qcom,sc7180-camcc.yaml
+@@ -15,6 +15,9 @@ description: |
+ 
+   See also:: include/dt-bindings/clock/qcom,camcc-sc7180.h
+ 
++allOf:
++  - $ref: qcom,gcc.yaml#
++
+ properties:
+   compatible:
+     const: qcom,sc7180-camcc
+@@ -31,28 +34,15 @@ properties:
+       - const: iface
+       - const: xo
+ 
+-  '#clock-cells':
+-    const: 1
+-
+-  '#reset-cells':
+-    const: 1
+-
+-  '#power-domain-cells':
+-    const: 1
+-
+   reg:
+     maxItems: 1
+ 
+ required:
+   - compatible
+-  - reg
+   - clocks
+   - clock-names
+-  - '#clock-cells'
+-  - '#reset-cells'
+-  - '#power-domain-cells'
+ 
+-additionalProperties: false
++unevaluatedProperties: false
+ 
+ examples:
+   - |
+diff --git a/Documentation/devicetree/bindings/clock/qcom,sc7280-camcc.yaml b/Documentation/devicetree/bindings/clock/qcom,sc7280-camcc.yaml
+index 01feef1cab0a..dcef8de3a905 100644
+--- a/Documentation/devicetree/bindings/clock/qcom,sc7280-camcc.yaml
++++ b/Documentation/devicetree/bindings/clock/qcom,sc7280-camcc.yaml
+@@ -15,6 +15,9 @@ description: |
+ 
+   See also:: include/dt-bindings/clock/qcom,camcc-sc7280.h
+ 
++allOf:
++  - $ref: qcom,gcc.yaml#
++
+ properties:
+   compatible:
+     const: qcom,sc7280-camcc
+@@ -31,28 +34,15 @@ properties:
+       - const: bi_tcxo_ao
+       - const: sleep_clk
+ 
+-  '#clock-cells':
+-    const: 1
+-
+-  '#reset-cells':
+-    const: 1
+-
+-  '#power-domain-cells':
+-    const: 1
+-
+   reg:
+     maxItems: 1
+ 
+ required:
+   - compatible
+-  - reg
+   - clocks
+   - clock-names
+-  - '#clock-cells'
+-  - '#reset-cells'
+-  - '#power-domain-cells'
+ 
+-additionalProperties: false
++unevaluatedProperties: false
+ 
+ examples:
+   - |
+diff --git a/Documentation/devicetree/bindings/clock/qcom,sdm845-camcc.yaml b/Documentation/devicetree/bindings/clock/qcom,sdm845-camcc.yaml
+index 91d1f7918037..810b852ae371 100644
+--- a/Documentation/devicetree/bindings/clock/qcom,sdm845-camcc.yaml
++++ b/Documentation/devicetree/bindings/clock/qcom,sdm845-camcc.yaml
+@@ -15,6 +15,9 @@ description: |
+ 
+   See also:: include/dt-bindings/clock/qcom,camcc-sm845.h
+ 
++allOf:
++  - $ref: qcom,gcc.yaml#
++
+ properties:
+   compatible:
+     const: qcom,sdm845-camcc
+@@ -27,28 +30,15 @@ properties:
+     items:
+       - const: bi_tcxo
+ 
+-  '#clock-cells':
+-    const: 1
+-
+-  '#reset-cells':
+-    const: 1
+-
+-  '#power-domain-cells':
+-    const: 1
+-
+   reg:
+     maxItems: 1
+ 
+ required:
+   - compatible
+-  - reg
+   - clocks
+   - clock-names
+-  - '#clock-cells'
+-  - '#reset-cells'
+-  - '#power-domain-cells'
+ 
+-additionalProperties: false
++unevaluatedProperties: false
+ 
+ examples:
+   - |
+diff --git a/Documentation/devicetree/bindings/clock/qcom,sm8450-camcc.yaml b/Documentation/devicetree/bindings/clock/qcom,sm8450-camcc.yaml
+index dc3c18e4ead7..6915498deacf 100644
+--- a/Documentation/devicetree/bindings/clock/qcom,sm8450-camcc.yaml
++++ b/Documentation/devicetree/bindings/clock/qcom,sm8450-camcc.yaml
+@@ -17,6 +17,9 @@ description: |
+     include/dt-bindings/clock/qcom,sm8450-camcc.h
+     include/dt-bindings/clock/qcom,sm8550-camcc.h
+ 
++allOf:
++  - $ref: qcom,gcc.yaml#
++
+ properties:
+   compatible:
+     enum:
+@@ -40,29 +43,16 @@ properties:
+     description:
+       A phandle to an OPP node describing required MMCX performance point.
+ 
+-  '#clock-cells':
+-    const: 1
+-
+-  '#reset-cells':
+-    const: 1
+-
+-  '#power-domain-cells':
+-    const: 1
+-
+   reg:
+     maxItems: 1
+ 
+ required:
+   - compatible
+-  - reg
+   - clocks
+   - power-domains
+   - required-opps
+-  - '#clock-cells'
+-  - '#reset-cells'
+-  - '#power-domain-cells'
+ 
+-additionalProperties: false
++unevaluatedProperties: false
+ 
+ examples:
+   - |
+-- 
+2.43.0
+

@@ -1,0 +1,36 @@
+From 10ebdcbc2023a84acab619cea0aa466d7a4365b8 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Mon, 16 Oct 2023 09:47:20 +0200
+Subject: [PATCH 004/173] arm64: dts: qcom: sc8280xp-crd: fix eDP phy
+ compatible
+
+The sc8280xp Display Port PHYs can be used in either DP or eDP mode and
+this is configured using the devicetree compatible string which defaults
+to DP mode in the SoC dtsi.
+
+Override the default compatible string for the CRD eDP PHY node so that
+the eDP settings are used.
+
+Fixes: 4a883a8d80b5 ("arm64: dts: qcom: sc8280xp-crd: Enable EDP")
+Cc: stable@vger.kernel.org      # 6.3
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-crd.dts | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+index e4861c61a65b..ffc4406422ae 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+@@ -458,6 +458,8 @@ mdss0_dp3_out: endpoint {
+ };
+ 
+ &mdss0_dp3_phy {
++	compatible = "qcom,sc8280xp-edp-phy";
++
+ 	vdda-phy-supply = <&vreg_l6b>;
+ 	vdda-pll-supply = <&vreg_l3b>;
+ 
+-- 
+2.43.0
+

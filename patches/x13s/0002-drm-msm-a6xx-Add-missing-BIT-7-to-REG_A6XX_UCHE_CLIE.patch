@@ -1,0 +1,32 @@
+From 5d545d4e39120ef76f813f5885272a830552a300 Mon Sep 17 00:00:00 2001
+From: Danylo Piliaiev <dpiliaiev@igalia.com>
+Date: Sat, 25 Nov 2023 11:11:50 -0800
+Subject: [PATCH 002/173] drm/msm/a6xx: Add missing BIT(7) to
+ REG_A6XX_UCHE_CLIENT_PF
+
+Downstream always set BIT(7)
+
+Signed-off-by: Danylo Piliaiev <dpiliaiev@igalia.com>
+Signed-off-by: Rob Clark <robdclark@chromium.org>
+Link: https://lore.kernel.org/r/20231125191155.5375-1-robdclark@gmail.com
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/gpu/drm/msm/adreno/a6xx_gpu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/msm/adreno/a6xx_gpu.c b/drivers/gpu/drm/msm/adreno/a6xx_gpu.c
+index 7a0220d29a23..e5558d5e0aa2 100644
+--- a/drivers/gpu/drm/msm/adreno/a6xx_gpu.c
++++ b/drivers/gpu/drm/msm/adreno/a6xx_gpu.c
+@@ -1782,7 +1782,7 @@ static int hw_init(struct msm_gpu *gpu)
+ 	else
+ 		gpu_write(gpu, REG_A6XX_RBBM_INTERFACE_HANG_INT_CNTL, (1 << 30) | 0x1fffff);
+ 
+-	gpu_write(gpu, REG_A6XX_UCHE_CLIENT_PF, 1);
++	gpu_write(gpu, REG_A6XX_UCHE_CLIENT_PF, BIT(7) | 0x1);
+ 
+ 	/* Set weights for bicubic filtering */
+ 	if (adreno_is_a650_family(adreno_gpu)) {
+-- 
+2.43.0
+

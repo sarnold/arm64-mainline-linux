@@ -1,0 +1,52 @@
+From 17a3e72716fa15034bdc871f82c5bf196f60e938 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 26 Jun 2023 01:18:52 +0100
+Subject: [PATCH 111/173] arm64: dts: qcom: sdm845-db845c-navigation-mezzanine:
+ Switch on ov7251 sensor
+
+The 7251 sensor is a black and white Y10P sensor capable of delivering
+640x480 @ 90 fps.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ .../qcom/sdm845-db845c-navigation-mezzanine.dts   | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sdm845-db845c-navigation-mezzanine.dts b/arch/arm64/boot/dts/qcom/sdm845-db845c-navigation-mezzanine.dts
+index a21caa6f3fa2..4a612339908a 100644
+--- a/arch/arm64/boot/dts/qcom/sdm845-db845c-navigation-mezzanine.dts
++++ b/arch/arm64/boot/dts/qcom/sdm845-db845c-navigation-mezzanine.dts
+@@ -20,6 +20,13 @@ csiphy0_ep: endpoint {
+ 				remote-endpoint = <&ov8856_ep>;
+ 			};
+ 		};
++
++		port@3 {
++			csiphy3_ep: endpoint {
++				data-lanes = <0>;
++				remote-endpoint = <&ov7251_ep>;
++			};
++		};
+ 	};
+ };
+ 
+@@ -92,12 +99,12 @@ camera@60 {
+ 		vdddo-supply = <&vreg_lvs1a_1p8>;
+ 		vdda-supply = <&cam3_avdd_2v8>;
+ 
+-		status = "disabled";
+-
+ 		port {
+ 			ov7251_ep: endpoint {
+-				data-lanes = <0 1>;
+-/*				remote-endpoint = <&csiphy3_ep>; */
++				link-frequencies = /bits/ 64
++					<240000000 319200000>;
++				data-lanes = <1>;
++				remote-endpoint = <&csiphy3_ep>;
+ 			};
+ 		};
+ 	};
+-- 
+2.43.0
+

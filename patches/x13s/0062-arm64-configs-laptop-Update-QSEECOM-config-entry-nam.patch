@@ -1,0 +1,26 @@
+From 466d10fa8023df9c39fee47899e78dfeca064cc2 Mon Sep 17 00:00:00 2001
+From: Steev Klimaszewski <steev@kali.org>
+Date: Tue, 30 May 2023 10:34:49 -0500
+Subject: [PATCH 062/173] arm64: configs: laptop: Update QSEECOM config entry
+ name.
+
+---
+ arch/arm64/configs/laptop_defconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/configs/laptop_defconfig b/arch/arm64/configs/laptop_defconfig
+index 911cf8c69da7..854cb75f415f 100644
+--- a/arch/arm64/configs/laptop_defconfig
++++ b/arch/arm64/configs/laptop_defconfig
+@@ -634,7 +634,7 @@ CONFIG_ARM_SCMI_TRANSPORT_SMC_ATOMIC_ENABLE=y
+ CONFIG_ARM_SCPI_PROTOCOL=y
+ CONFIG_DMI_SYSFS=y
+ CONFIG_FW_CFG_SYSFS=m
+-CONFIG_QCOM_QSEECOM=y
++CONFIG_QCOM_SCM_QSEECOM=y
+ CONFIG_QCOM_QSEECOM_UEFISECAPP=y
+ CONFIG_GOOGLE_FIRMWARE=y
+ CONFIG_GOOGLE_COREBOOT_TABLE=m
+-- 
+2.43.0
+

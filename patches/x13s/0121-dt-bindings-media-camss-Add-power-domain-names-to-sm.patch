@@ -1,0 +1,39 @@
+From 2fd30e3bd4fed385beaf217ad62774666a28887a Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Sun, 22 Oct 2023 08:39:32 +0100
+Subject: [PATCH 121/173] dt-bindings: media: camss: Add power-domain-names to
+ sm8250
+
+Historically the CAMSS driver has relied upon and therefore imposed a
+defacto ordering of power-domain declarations in dtsi.
+
+Adding support for named-power domains means the ordering of the
+power-domain indexes doesn't matter.
+
+Add a set of named power-domains for sm8250 as a jumping-off point.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ .../devicetree/bindings/media/qcom,sm8250-camss.yaml        | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/media/qcom,sm8250-camss.yaml b/Documentation/devicetree/bindings/media/qcom,sm8250-camss.yaml
+index fa5073c0fd1e..ba0fbc6a20f2 100644
+--- a/Documentation/devicetree/bindings/media/qcom,sm8250-camss.yaml
++++ b/Documentation/devicetree/bindings/media/qcom,sm8250-camss.yaml
+@@ -103,6 +103,12 @@ properties:
+       - description: IFE1 GDSC - Image Front End, Global Distributed Switch Controller.
+       - description: Titan GDSC - Titan ISP Block, Global Distributed Switch Controller.
+ 
++  power-domain-names:
++    items:
++      - const: ife0
++      - const: ife1
++      - const: top
++
+   ports:
+     $ref: /schemas/graph.yaml#/properties/ports
+ 
+-- 
+2.43.0
+

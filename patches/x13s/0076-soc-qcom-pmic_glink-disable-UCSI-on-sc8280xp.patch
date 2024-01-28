@@ -1,0 +1,40 @@
+From d633de7555a3fd7f4cb0f1906bd981fc8ce1d2f7 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Fri, 8 Dec 2023 13:57:30 +0100
+Subject: [PATCH 076/173] soc: qcom: pmic_glink: disable UCSI on sc8280xp
+
+Enabling UCSI on sc8280xp and the Lenovo ThinkPad X13s in particular
+results in a number of errors and timeouts during boot:
+
+[    9.012421] ucsi_glink.pmic_glink_ucsi pmic_glink.ucsi.0: GET_CONNECTOR_STATUS failed (-95)
+[   14.047379] ucsi_glink.pmic_glink_ucsi pmic_glink.ucsi.0: timeout waiting for UCSI sync write response
+[   14.050708] ucsi_glink.pmic_glink_ucsi pmic_glink.ucsi.0: GET_CONNECTOR_STATUS failed (-110)
+[   20.192382] ucsi_glink.pmic_glink_ucsi pmic_glink.ucsi.0: timeout waiting for UCSI sync write response
+[   20.192542] ucsi_glink.pmic_glink_ucsi pmic_glink.ucsi.0: GET_CONNECTOR_STATUS failed (-110)
+
+Disable UCSI on sc8280xp until this has been resolved.
+
+Fixes: 4db09e7b967b ("soc: qcom: pmic_glink: enable UCSI by default)
+Link: https://lore.kernel.org/r/ZXL5jvDHr-MuxMoz@hovoldconsulting.com
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Link: https://lore.kernel.org/r/20231208125730.10323-1-johan+linaro@kernel.org
+---
+ drivers/soc/qcom/pmic_glink.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/soc/qcom/pmic_glink.c b/drivers/soc/qcom/pmic_glink.c
+index 71d8901a9389..511aa40842a1 100644
+--- a/drivers/soc/qcom/pmic_glink.c
++++ b/drivers/soc/qcom/pmic_glink.c
+@@ -342,6 +342,7 @@ static const unsigned long pmic_glink_sm8450_client_mask = BIT(PMIC_GLINK_CLIENT
+ 
+ static const struct of_device_id pmic_glink_of_match[] = {
+ 	{ .compatible = "qcom,sc8180x-pmic-glink", .data = &pmic_glink_sc8180x_client_mask },
++	{ .compatible = "qcom,sc8280xp-pmic-glink", .data = &pmic_glink_sc8180x_client_mask },
+ 	{ .compatible = "qcom,pmic-glink", .data = &pmic_glink_sm8450_client_mask },
+ 	{}
+ };
+-- 
+2.43.0
+

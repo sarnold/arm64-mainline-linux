@@ -1,0 +1,30 @@
+From e019c8774513adca7de7226c4ef0a40267d3096d Mon Sep 17 00:00:00 2001
+From: Konrad Dybcio <konrad.dybcio@linaro.org>
+Date: Mon, 8 Jan 2024 13:32:18 +0100
+Subject: [PATCH 144/173] clk: qcom: reset: Increase max reset delay
+
+u8 limits us to 255 microseconds of delay. Promote the delay variable to
+u16 to hold bigger values.
+
+Signed-off-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20240105-topic-venus_reset-v1-1-981c7a624855@linaro.org
+---
+ drivers/clk/qcom/reset.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/clk/qcom/reset.h b/drivers/clk/qcom/reset.h
+index 9a47c838d9b1..fe0561bf53d4 100644
+--- a/drivers/clk/qcom/reset.h
++++ b/drivers/clk/qcom/reset.h
+@@ -11,7 +11,7 @@
+ struct qcom_reset_map {
+ 	unsigned int reg;
+ 	u8 bit;
+-	u8 udelay;
++	u16 udelay;
+ 	u32 bitmask;
+ };
+ 
+-- 
+2.43.0
+

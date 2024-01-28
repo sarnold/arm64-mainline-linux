@@ -129,6 +129,10 @@ rt () {
 	dir 'external/rt'
 }
 
+x13s () {
+	dir 'x13s'
+}
+
 local_patch () {
 	echo "dir: dir"
 	${git} "${DIR}/patches/dir/0001-patch.patch"
@@ -137,6 +141,7 @@ local_patch () {
 #external_git
 #rt
 #local_patch
+x13s
 
 pre_backports () {
 	echo "dir: backports/${subsystem}"

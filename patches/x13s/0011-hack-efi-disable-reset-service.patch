@@ -1,0 +1,45 @@
+From 003ebe9ffad5c54b24592277270a40f2b9a35400 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 10 May 2022 17:00:45 +0200
+Subject: [PATCH 011/173] hack: efi: disable reset service
+
+The UEFI reset service hangs on reboot and power off on the CRD and
+X13s. Disable it so that we fall back to PSCI.
+
+This is needed until the boot firmware provides an RT_PROP table that
+describes the supported services. An alternative is to disable all
+runtime services by booting with 'efi=noruntime'.
+
+Not-signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/firmware/efi/efi.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/firmware/efi/efi.c b/drivers/firmware/efi/efi.c
+index 9d3910d1abe1..6dc010ea8ac5 100644
+--- a/drivers/firmware/efi/efi.c
++++ b/drivers/firmware/efi/efi.c
+@@ -376,11 +376,20 @@ static inline void efi_debugfs_init(void) {}
+  */
+ static int __init efisubsys_init(void)
+ {
++	unsigned int mask;
+ 	int error;
+ 
+ 	if (!efi_enabled(EFI_RUNTIME_SERVICES))
+ 		efi.runtime_supported_mask = 0;
+ 
++	/* HACK: disable unsupported reset service */
++	mask = EFI_RT_SUPPORTED_RESET_SYSTEM;
++	if (efi.runtime_supported_mask & mask) {
++		pr_warn(FW_BUG "Runtime services mask contains unsupported services (0x%02x)\n",
++			efi.runtime_supported_mask);
++		efi.runtime_supported_mask &= ~mask;
++	}
++
+ 	if (!efi_enabled(EFI_BOOT))
+ 		return 0;
+ 
+-- 
+2.43.0
+

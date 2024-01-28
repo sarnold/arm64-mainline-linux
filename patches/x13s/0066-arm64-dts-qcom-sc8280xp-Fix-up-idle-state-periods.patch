@@ -1,0 +1,60 @@
+From 57d0580f2d4322733c545ae6ff32786f09dfa290 Mon Sep 17 00:00:00 2001
+From: Konrad Dybcio <konrad.dybcio@linaro.org>
+Date: Wed, 20 Dec 2023 23:12:56 +0100
+Subject: [PATCH 066/173] arm64: dts: qcom: sc8280xp: Fix up idle state periods
+
+Some of the values were wrong, which may have painted a wrong picture
+to the scheduler. Fix it.
+
+Fixes: 152d1faf1e2f ("arm64: dts: qcom: add SC8280XP platform")
+Signed-off-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20230619-topic-sc8280xp-idle-v2-3-cde50bf02f3c@linaro.org
+---
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index eed8bcdad564..77ebbe604a53 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -278,9 +278,9 @@ LITTLE_CPU_SLEEP_1: cpu-sleep-0-1 {
+ 				compatible = "arm,idle-state";
+ 				idle-state-name = "little-rail-power-collapse";
+ 				arm,psci-suspend-param = <0x40000004>;
+-				entry-latency-us = <355>;
+-				exit-latency-us = <909>;
+-				min-residency-us = <3934>;
++				entry-latency-us = <702>;
++				exit-latency-us = <915>;
++				min-residency-us = <4001>;
+ 				local-timer-stop;
+ 			};
+ 
+@@ -298,9 +298,9 @@ BIG_CPU_SLEEP_1: cpu-sleep-1-1 {
+ 				compatible = "arm,idle-state";
+ 				idle-state-name = "big-rail-power-collapse";
+ 				arm,psci-suspend-param = <0x40000004>;
+-				entry-latency-us = <241>;
+-				exit-latency-us = <1461>;
+-				min-residency-us = <4488>;
++				entry-latency-us = <526>;
++				exit-latency-us = <1854>;
++				min-residency-us = <5555>;
+ 				local-timer-stop;
+ 			};
+ 		};
+@@ -325,9 +325,9 @@ CLUSTER_SLEEP_CX_OFF: cluster-sleep-1 {
+ 			CLUSTER_SLEEP_AOSS_SLEEP: cluster-sleep-2 {
+ 				compatible = "domain-idle-state";
+ 				arm,psci-suspend-param = <0x4100c344>;
+-				entry-latency-us = <3263>;
++				entry-latency-us = <3638>;
+ 				exit-latency-us = <6562>;
+-				min-residency-us = <9987>;
++				min-residency-us = <9826>;
+ 			};
+ 		};
+ 	};
+-- 
+2.43.0
+

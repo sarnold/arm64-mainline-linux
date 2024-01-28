@@ -1,0 +1,36 @@
+From abb47564c772e5a9fc5e603e8f33ab422c66e910 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Fri, 6 Oct 2023 09:12:02 +0200
+Subject: [PATCH 006/173] dt-bindings: mfd: pm8008: clean up example node names
+
+Devicetree node names should be generic; fix up the pm8008 binding
+example accordingly.
+
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ Documentation/devicetree/bindings/mfd/qcom,pm8008.yaml | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/mfd/qcom,pm8008.yaml b/Documentation/devicetree/bindings/mfd/qcom,pm8008.yaml
+index 9e4eed34dae8..0c75d8bde568 100644
+--- a/Documentation/devicetree/bindings/mfd/qcom,pm8008.yaml
++++ b/Documentation/devicetree/bindings/mfd/qcom,pm8008.yaml
+@@ -99,10 +99,12 @@ examples:
+   - |
+     #include <dt-bindings/mfd/qcom-pm8008.h>
+     #include <dt-bindings/interrupt-controller/irq.h>
+-    qupv3_se13_i2c {
++
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+-      pm8008i@8 {
++
++      pmic@8 {
+         compatible = "qcom,pm8008";
+         reg = <0x8>;
+         #address-cells = <1>;
+-- 
+2.43.0
+

@@ -1,0 +1,32 @@
+From ba3a2e13de832720910c6404b48deda74d5954ea Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 21 Aug 2023 15:09:17 +0100
+Subject: [PATCH 119/173] media: qcom: camss: Dirty hack to fix broken VC
+ pipeline checking
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ drivers/media/platform/qcom/camss/camss-video.c | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/drivers/media/platform/qcom/camss/camss-video.c b/drivers/media/platform/qcom/camss/camss-video.c
+index 54cd82f74115..7bbc883402ba 100644
+--- a/drivers/media/platform/qcom/camss/camss-video.c
++++ b/drivers/media/platform/qcom/camss/camss-video.c
+@@ -556,13 +556,6 @@ static void video_stop_streaming(struct vb2_queue *q)
+ 		subdev = media_entity_to_v4l2_subdev(entity);
+ 
+ 		ret = v4l2_subdev_call(subdev, video, s_stream, 0);
+-
+-		if (entity->use_count > 1) {
+-			/* Don't stop if other instances of the pipeline are still running */
+-			dev_dbg(video->camss->dev, "Video pipeline still used, don't stop streaming.\n");
+-			return;
+-		}
+-
+ 		if (ret) {
+ 			dev_err(video->camss->dev, "Video pipeline stop failed: %d\n", ret);
+ 			return;
+-- 
+2.43.0
+

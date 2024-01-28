@@ -1,0 +1,42 @@
+From 0c527ffd962810a9eaf6dff1c92e23098b379f8b Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Sat, 24 Jun 2023 13:50:42 +0100
+Subject: [PATCH 103/173] media: qcom: camss: Capture and store hardware VFE
+ version
+
+Capture the hardware VFE version when we read it.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ drivers/media/platform/qcom/camss/camss-vfe.c | 2 ++
+ drivers/media/platform/qcom/camss/camss-vfe.h | 1 +
+ 2 files changed, 3 insertions(+)
+
+diff --git a/drivers/media/platform/qcom/camss/camss-vfe.c b/drivers/media/platform/qcom/camss/camss-vfe.c
+index 28cf63af1ec0..e2b4461c5f2b 100644
+--- a/drivers/media/platform/qcom/camss/camss-vfe.c
++++ b/drivers/media/platform/qcom/camss/camss-vfe.c
+@@ -692,6 +692,8 @@ int vfe_get(struct vfe_device *vfe)
+ 		if (ret < 0)
+ 			goto error_pm_runtime_get;
+ 
++		vfe->hw_version = vfe->ops->hw_version(vfe);
++
+ 		ret = vfe_reset(vfe);
+ 		if (ret < 0)
+ 			goto error_reset;
+diff --git a/drivers/media/platform/qcom/camss/camss-vfe.h b/drivers/media/platform/qcom/camss/camss-vfe.h
+index e75d5cc0bf47..d570a8d0811e 100644
+--- a/drivers/media/platform/qcom/camss/camss-vfe.h
++++ b/drivers/media/platform/qcom/camss/camss-vfe.h
+@@ -150,6 +150,7 @@ struct vfe_device {
+ 	const struct vfe_hw_ops_gen1 *ops_gen1;
+ 	struct vfe_isr_ops isr_ops;
+ 	struct camss_video_ops video_ops;
++	u32 hw_version;
+ 	struct device *genpd;
+ 	struct device_link *genpd_link;
+ };
+-- 
+2.43.0
+

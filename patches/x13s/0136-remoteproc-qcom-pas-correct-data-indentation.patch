@@ -1,0 +1,184 @@
+From 9f348dd59e20707736d2feb0fa5d83ca9d4a95b7 Mon Sep 17 00:00:00 2001
+From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Date: Tue, 26 Dec 2023 02:34:44 +0200
+Subject: [PATCH 136/173] remoteproc: qcom: pas: correct data indentation
+
+Correct indentation of several struct adsp_data instances to always use
+a single TAB character instead of two.
+
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Link: https://lore.kernel.org/r/20231226003447.3044365-3-dmitry.baryshkov@linaro.org
+---
+ drivers/remoteproc/qcom_q6v5_pas.c | 126 +++++++++++++++--------------
+ 1 file changed, 64 insertions(+), 62 deletions(-)
+
+diff --git a/drivers/remoteproc/qcom_q6v5_pas.c b/drivers/remoteproc/qcom_q6v5_pas.c
+index a9dd58608052..c1f7c5ff8d93 100644
+--- a/drivers/remoteproc/qcom_q6v5_pas.c
++++ b/drivers/remoteproc/qcom_q6v5_pas.c
+@@ -777,24 +777,24 @@ static void adsp_remove(struct platform_device *pdev)
+ }
+ 
+ static const struct adsp_data adsp_resource_init = {
+-		.crash_reason_smem = 423,
+-		.firmware_name = "adsp.mdt",
+-		.pas_id = 1,
+-		.auto_boot = true,
+-		.ssr_name = "lpass",
+-		.sysmon_name = "adsp",
+-		.ssctl_id = 0x14,
++	.crash_reason_smem = 423,
++	.firmware_name = "adsp.mdt",
++	.pas_id = 1,
++	.auto_boot = true,
++	.ssr_name = "lpass",
++	.sysmon_name = "adsp",
++	.ssctl_id = 0x14,
+ };
+ 
+ static const struct adsp_data sdm845_adsp_resource_init = {
+-		.crash_reason_smem = 423,
+-		.firmware_name = "adsp.mdt",
+-		.pas_id = 1,
+-		.auto_boot = true,
+-		.load_state = "adsp",
+-		.ssr_name = "lpass",
+-		.sysmon_name = "adsp",
+-		.ssctl_id = 0x14,
++	.crash_reason_smem = 423,
++	.firmware_name = "adsp.mdt",
++	.pas_id = 1,
++	.auto_boot = true,
++	.load_state = "adsp",
++	.ssr_name = "lpass",
++	.sysmon_name = "adsp",
++	.ssctl_id = 0x14,
+ };
+ 
+ static const struct adsp_data sm6350_adsp_resource = {
+@@ -829,18 +829,18 @@ static const struct adsp_data sm6375_mpss_resource = {
+ };
+ 
+ static const struct adsp_data sm8150_adsp_resource = {
+-		.crash_reason_smem = 423,
+-		.firmware_name = "adsp.mdt",
+-		.pas_id = 1,
+-		.auto_boot = true,
+-		.proxy_pd_names = (char*[]){
+-			"cx",
+-			NULL
+-		},
+-		.load_state = "adsp",
+-		.ssr_name = "lpass",
+-		.sysmon_name = "adsp",
+-		.ssctl_id = 0x14,
++	.crash_reason_smem = 423,
++	.firmware_name = "adsp.mdt",
++	.pas_id = 1,
++	.auto_boot = true,
++	.proxy_pd_names = (char*[]){
++		"cx",
++		NULL
++	},
++	.load_state = "adsp",
++	.ssr_name = "lpass",
++	.sysmon_name = "adsp",
++	.ssctl_id = 0x14,
+ };
+ 
+ static const struct adsp_data sm8250_adsp_resource = {
+@@ -873,20 +873,22 @@ static const struct adsp_data sm8350_adsp_resource = {
+ 	.ssr_name = "lpass",
+ 	.sysmon_name = "adsp",
+ 	.ssctl_id = 0x14,
++	.num_domains = ARRAY_SIZE(sm8350_adsp_domains),
++	.domains = sm8350_adsp_domains,
+ };
+ 
+ static const struct adsp_data msm8996_adsp_resource = {
+-		.crash_reason_smem = 423,
+-		.firmware_name = "adsp.mdt",
+-		.pas_id = 1,
+-		.auto_boot = true,
+-		.proxy_pd_names = (char*[]){
+-			"cx",
+-			NULL
+-		},
+-		.ssr_name = "lpass",
+-		.sysmon_name = "adsp",
+-		.ssctl_id = 0x14,
++	.crash_reason_smem = 423,
++	.firmware_name = "adsp.mdt",
++	.pas_id = 1,
++	.auto_boot = true,
++	.proxy_pd_names = (char*[]){
++		"cx",
++		NULL
++	},
++	.ssr_name = "lpass",
++	.sysmon_name = "adsp",
++	.ssctl_id = 0x14,
+ };
+ 
+ static const struct adsp_data cdsp_resource_init = {
+@@ -1033,33 +1035,33 @@ static const struct adsp_data sc8180x_mpss_resource = {
+ };
+ 
+ static const struct adsp_data msm8996_slpi_resource_init = {
+-		.crash_reason_smem = 424,
+-		.firmware_name = "slpi.mdt",
+-		.pas_id = 12,
+-		.auto_boot = true,
+-		.proxy_pd_names = (char*[]){
+-			"ssc_cx",
+-			NULL
+-		},
+-		.ssr_name = "dsps",
+-		.sysmon_name = "slpi",
+-		.ssctl_id = 0x16,
++	.crash_reason_smem = 424,
++	.firmware_name = "slpi.mdt",
++	.pas_id = 12,
++	.auto_boot = true,
++	.proxy_pd_names = (char*[]){
++		"ssc_cx",
++		NULL
++	},
++	.ssr_name = "dsps",
++	.sysmon_name = "slpi",
++	.ssctl_id = 0x16,
+ };
+ 
+ static const struct adsp_data sdm845_slpi_resource_init = {
+-		.crash_reason_smem = 424,
+-		.firmware_name = "slpi.mdt",
+-		.pas_id = 12,
+-		.auto_boot = true,
+-		.proxy_pd_names = (char*[]){
+-			"lcx",
+-			"lmx",
+-			NULL
+-		},
+-		.load_state = "slpi",
+-		.ssr_name = "dsps",
+-		.sysmon_name = "slpi",
+-		.ssctl_id = 0x16,
++	.crash_reason_smem = 424,
++	.firmware_name = "slpi.mdt",
++	.pas_id = 12,
++	.auto_boot = true,
++	.proxy_pd_names = (char*[]){
++		"lcx",
++		"lmx",
++		NULL
++	},
++	.load_state = "slpi",
++	.ssr_name = "dsps",
++	.sysmon_name = "slpi",
++	.ssctl_id = 0x16,
+ };
+ 
+ static const struct adsp_data wcss_resource_init = {
+-- 
+2.43.0
+

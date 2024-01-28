@@ -1,0 +1,35 @@
+From bf113f5ea389fe8241b760c4c0d9294ccb830e1a Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Thu, 22 Jun 2023 21:15:26 +0100
+Subject: [PATCH 104/173] media: qcom: camss: Add additional CSID stats
+ register defintions
+
+Add in three additional stats registers which provide detail on packet
+RX stats.
+
+A subsequent patch will bring these stats out via debugfs.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ drivers/media/platform/qcom/camss/camss-csid-gen2.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/media/platform/qcom/camss/camss-csid-gen2.c b/drivers/media/platform/qcom/camss/camss-csid-gen2.c
+index b11de4797cca..981a441c4a8c 100644
+--- a/drivers/media/platform/qcom/camss/camss-csid-gen2.c
++++ b/drivers/media/platform/qcom/camss/camss-csid-gen2.c
+@@ -74,6 +74,11 @@
+ 
+ #define CSID_RDI_CFG0(rdi)			((csid_is_lite(csid) ? 0x200 : 0x300) \
+ 						 + 0x100 * (rdi))
++
++#define CSID_CSI2_RX_TOTAL_PKTS_RCVD		0x160
++#define CSID_CSI2_RX_STATS_ECC			0x164
++#define CSID_CSI2_RX_CRC_ERRORS			0x168
++
+ #define		RDI_CFG0_BYTE_CNTR_EN		0
+ #define		RDI_CFG0_FORMAT_MEASURE_EN	1
+ #define		RDI_CFG0_TIMESTAMP_EN		2
+-- 
+2.43.0
+

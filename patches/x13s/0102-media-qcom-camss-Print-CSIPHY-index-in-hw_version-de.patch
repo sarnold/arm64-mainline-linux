@@ -1,0 +1,48 @@
+From f6bc02b32e358a8fa3e160ce8a9963f11470f388 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Sat, 10 Jun 2023 17:49:40 +0100
+Subject: [PATCH 102/173] media: qcom: camss: Print CSIPHY index in hw_version
+ dev_dbg
+
+Print the CSIPHY index to keep the hw_version printout similar to the
+VFE printout.
+
+Process node geometery effectively disbarrs the PHY version being
+different on different interfaces for the same SoC however, we should
+align the output text between VFE and CSIPHY.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ drivers/media/platform/qcom/camss/camss-csiphy-2ph-1-0.c | 2 +-
+ drivers/media/platform/qcom/camss/camss-csiphy-3ph-1-0.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/platform/qcom/camss/camss-csiphy-2ph-1-0.c b/drivers/media/platform/qcom/camss/camss-csiphy-2ph-1-0.c
+index cd4a8c369234..e24618c8d988 100644
+--- a/drivers/media/platform/qcom/camss/camss-csiphy-2ph-1-0.c
++++ b/drivers/media/platform/qcom/camss/camss-csiphy-2ph-1-0.c
+@@ -46,7 +46,7 @@ static void csiphy_hw_version_read(struct csiphy_device *csiphy,
+ 	u8 hw_version = readl_relaxed(csiphy->base +
+ 				      CAMSS_CSI_PHY_HW_VERSION);
+ 
+-	dev_dbg(dev, "CSIPHY HW Version = 0x%02x\n", hw_version);
++	dev_dbg(dev, "CSIPHY%d HW Version = 0x%02x\n", csiphy->id, hw_version);
+ }
+ 
+ /*
+diff --git a/drivers/media/platform/qcom/camss/camss-csiphy-3ph-1-0.c b/drivers/media/platform/qcom/camss/camss-csiphy-3ph-1-0.c
+index df7e93a5a4f6..2dbfb722716b 100644
+--- a/drivers/media/platform/qcom/camss/camss-csiphy-3ph-1-0.c
++++ b/drivers/media/platform/qcom/camss/camss-csiphy-3ph-1-0.c
+@@ -365,7 +365,7 @@ static void csiphy_hw_version_read(struct csiphy_device *csiphy,
+ 	hw_version |= readl_relaxed(csiphy->base +
+ 				   CSIPHY_3PH_CMN_CSI_COMMON_STATUSn(15)) << 24;
+ 
+-	dev_dbg(dev, "CSIPHY 3PH HW Version = 0x%08x\n", hw_version);
++	dev_dbg(dev, "CSIPHY%d 3PH HW Version = 0x%08x\n", csiphy->id, hw_version);
+ }
+ 
+ /*
+-- 
+2.43.0
+

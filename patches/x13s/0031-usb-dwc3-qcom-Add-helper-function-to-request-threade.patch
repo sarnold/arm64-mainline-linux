@@ -1,0 +1,114 @@
+From 9865289b9573805fd559790d8110c0a0df678548 Mon Sep 17 00:00:00 2001
+From: Krishna Kurapati <quic_kriskura@quicinc.com>
+Date: Sat, 7 Oct 2023 21:18:00 +0530
+Subject: [PATCH 031/173] usb: dwc3: qcom: Add helper function to request
+ threaded IRQ
+
+Cleanup setup irq call by implementing a new prep_irq helper function
+and using it to request threaded IRQ's.
+
+Signed-off-by: Krishna Kurapati <quic_kriskura@quicinc.com>
+Reviewed-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Link: https://lore.kernel.org/r/20231007154806.605-5-quic_kriskura@quicinc.com
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/usb/dwc3/dwc3-qcom.c | 54 +++++++++++++++++-------------------
+ 1 file changed, 25 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/usb/dwc3/dwc3-qcom.c b/drivers/usb/dwc3/dwc3-qcom.c
+index fdf6d5d3c2ad..ffd92117eedc 100644
+--- a/drivers/usb/dwc3/dwc3-qcom.c
++++ b/drivers/usb/dwc3/dwc3-qcom.c
+@@ -535,6 +535,23 @@ static int dwc3_qcom_get_irq(struct platform_device *pdev,
+ 	return ret;
+ }
+ 
++static int dwc3_qcom_prep_irq(struct dwc3_qcom *qcom, char *irq_name,
++				char *disp_name, int irq)
++{
++	int ret;
++
++	/* Keep wakeup interrupts disabled until suspend */
++	ret = devm_request_threaded_irq(qcom->dev, irq, NULL,
++					qcom_dwc3_resume_irq,
++					IRQF_ONESHOT | IRQF_NO_AUTOEN,
++					disp_name, qcom);
++
++	if (ret)
++		dev_err(qcom->dev, "%s failed: %d\n", irq_name, ret);
++
++	return ret;
++}
++
+ static int dwc3_qcom_setup_irq(struct platform_device *pdev)
+ {
+ 	struct dwc3_qcom *qcom = platform_get_drvdata(pdev);
+@@ -545,57 +562,36 @@ static int dwc3_qcom_setup_irq(struct platform_device *pdev)
+ 	irq = dwc3_qcom_get_irq(pdev, "hs_phy_irq",
+ 				pdata ? pdata->hs_phy_irq_index : -1);
+ 	if (irq > 0) {
+-		/* Keep wakeup interrupts disabled until suspend */
+-		ret = devm_request_threaded_irq(qcom->dev, irq, NULL,
+-					qcom_dwc3_resume_irq,
+-					IRQF_ONESHOT | IRQF_NO_AUTOEN,
+-					"qcom_dwc3 HS", qcom);
+-		if (ret) {
+-			dev_err(qcom->dev, "hs_phy_irq failed: %d\n", ret);
++		ret = dwc3_qcom_prep_irq(qcom, "hs_phy_irq", "qcom_dwc3 HS", irq);
++		if (ret)
+ 			return ret;
+-		}
+ 		qcom->hs_phy_irq = irq;
+ 	}
+ 
+ 	irq = dwc3_qcom_get_irq(pdev, "dp_hs_phy_irq",
+ 				pdata ? pdata->dp_hs_phy_irq_index : -1);
+ 	if (irq > 0) {
+-		ret = devm_request_threaded_irq(qcom->dev, irq, NULL,
+-					qcom_dwc3_resume_irq,
+-					IRQF_ONESHOT | IRQF_NO_AUTOEN,
+-					"qcom_dwc3 DP_HS", qcom);
+-		if (ret) {
+-			dev_err(qcom->dev, "dp_hs_phy_irq failed: %d\n", ret);
++		ret = dwc3_qcom_prep_irq(qcom, "dp_hs_phy_irq", "qcom_dwc3 DP_HS", irq);
++		if (ret)
+ 			return ret;
+-		}
+ 		qcom->dp_hs_phy_irq = irq;
+ 	}
+ 
+ 	irq = dwc3_qcom_get_irq(pdev, "dm_hs_phy_irq",
+ 				pdata ? pdata->dm_hs_phy_irq_index : -1);
+ 	if (irq > 0) {
+-		ret = devm_request_threaded_irq(qcom->dev, irq, NULL,
+-					qcom_dwc3_resume_irq,
+-					IRQF_ONESHOT | IRQF_NO_AUTOEN,
+-					"qcom_dwc3 DM_HS", qcom);
+-		if (ret) {
+-			dev_err(qcom->dev, "dm_hs_phy_irq failed: %d\n", ret);
++		ret = dwc3_qcom_prep_irq(qcom, "dm_hs_phy_irq", "qcom_dwc3 DM_HS", irq);
++		if (ret)
+ 			return ret;
+-		}
+ 		qcom->dm_hs_phy_irq = irq;
+ 	}
+ 
+ 	irq = dwc3_qcom_get_irq(pdev, "ss_phy_irq",
+ 				pdata ? pdata->ss_phy_irq_index : -1);
+ 	if (irq > 0) {
+-		ret = devm_request_threaded_irq(qcom->dev, irq, NULL,
+-					qcom_dwc3_resume_irq,
+-					IRQF_ONESHOT | IRQF_NO_AUTOEN,
+-					"qcom_dwc3 SS", qcom);
+-		if (ret) {
+-			dev_err(qcom->dev, "ss_phy_irq failed: %d\n", ret);
++		ret = dwc3_qcom_prep_irq(qcom, "ss_phy_irq", "qcom_dwc3 SS", irq);
++		if (ret)
+ 			return ret;
+-		}
+ 		qcom->ss_phy_irq = irq;
+ 	}
+ 
+-- 
+2.43.0
+

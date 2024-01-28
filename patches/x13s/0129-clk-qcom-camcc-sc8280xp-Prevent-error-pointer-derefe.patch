@@ -1,0 +1,43 @@
+From 0557b080e8727ac507e60bae4f7ec6e1a263f2f7 Mon Sep 17 00:00:00 2001
+From: Dan Carpenter <dan.carpenter@linaro.org>
+Date: Tue, 12 Dec 2023 12:21:51 +0300
+Subject: [PATCH 129/173] clk: qcom: camcc-sc8280xp: Prevent error pointer
+ dereference
+
+If "regmap" is an error pointer then calling regmap_update_bits() will
+crash.  We only need to call regmap_update_bits() if we had written to
+it earlier.
+
+Fixes: ff93872a9c61 ("clk: qcom: camcc-sc8280xp: Add sc8280xp CAMCC")
+Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
+Reviewed-by: Abel Vesa <abel.vesa@linaro.org>
+Link: https://lore.kernel.org/r/210d48ce-6ebc-4a6b-b30f-866d10d41a16@moroto.mountain
+---
+ drivers/clk/qcom/camcc-sc8280xp.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/clk/qcom/camcc-sc8280xp.c b/drivers/clk/qcom/camcc-sc8280xp.c
+index 877341e7327e..3dcd79b01515 100644
+--- a/drivers/clk/qcom/camcc-sc8280xp.c
++++ b/drivers/clk/qcom/camcc-sc8280xp.c
+@@ -3017,14 +3017,15 @@ static int camcc_sc8280xp_probe(struct platform_device *pdev)
+ 
+ 	ret = qcom_cc_really_probe(pdev, &camcc_sc8280xp_desc, regmap);
+ 	if (ret)
+-		goto err_put_rpm;
++		goto err_disable;
+ 
+ 	pm_runtime_put(&pdev->dev);
+ 
+ 	return 0;
+ 
+-err_put_rpm:
++err_disable:
+ 	regmap_update_bits(regmap, 0xc1e4, BIT(0), 0);
++err_put_rpm:
+ 	pm_runtime_put_sync(&pdev->dev);
+ 
+ 	return ret;
+-- 
+2.43.0
+

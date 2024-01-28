@@ -1,0 +1,46 @@
+From 78f18e6c4c557a32f7c39bbc4750f5c893e78ba3 Mon Sep 17 00:00:00 2001
+From: Bjorn Andersson <quic_bjorande@quicinc.com>
+Date: Thu, 25 Jan 2024 19:55:14 -0800
+Subject: [PATCH 173/173] arm64: dts: qcom: sc8280xp-x13s: Fix/enable
+ touchscreen
+
+The failing read-test in __i2c_hid_core_probe() determines that there's
+nothing connected at the documented address of the touchscreen.
+
+Introduce the 5ms after-power and 200ms after-reset delays found in the
+ACPI tables. Also wire up the reset-gpio, for good measure.
+
+Fixes: 32c231385ed4 ("arm64: dts: qcom: sc8280xp: add Lenovo Thinkpad X13s devicetree")
+Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Link: https://lore.kernel.org/r/20240125-x13s-touchscreen-v1-2-ab8c882def9c@quicinc.com
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index 8e392d5edc50..ea17dd6717d4 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -725,7 +725,6 @@ &i2c4 {
+ 
+ 	status = "okay";
+ 
+-	/* FIXME: verify */
+ 	touchscreen@10 {
+ 		compatible = "hid-over-i2c";
+ 		reg = <0x10>;
+@@ -735,6 +734,11 @@ touchscreen@10 {
+ 		vdd-supply = <&vreg_misc_3p3>;
+ 		vddl-supply = <&vreg_s10b>;
+ 
++		reset-gpios = <&tlmm 99 GPIO_ACTIVE_LOW>;
++
++		post-power-on-delay-ms = <5>;
++		post-reset-deassert-delay-ms = <200>;
++
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&ts0_default>;
+ 	};
+-- 
+2.43.0
+

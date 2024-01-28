@@ -1,0 +1,25 @@
+From 527451654432929fd05a49d7572591ab21d30591 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Thu, 16 Nov 2023 17:07:13 +0000
+Subject: [PATCH 126/173] johan_defconfig: Switch on CONFIG_SC_CAMCC_8280XP
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ arch/arm64/configs/johan_defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/johan_defconfig b/arch/arm64/configs/johan_defconfig
+index fa411f864603..11071d4e744f 100644
+--- a/arch/arm64/configs/johan_defconfig
++++ b/arch/arm64/configs/johan_defconfig
+@@ -309,6 +309,7 @@ CONFIG_COMMON_CLK_SCPI=y
+ CONFIG_COMMON_CLK_QCOM=y
+ CONFIG_QCOM_CLK_SMD_RPM=y
+ CONFIG_QCOM_CLK_RPMH=y
++CONFIG_SC_CAMCC_8280XP=m
+ CONFIG_SC_DISPCC_8280XP=m
+ CONFIG_SC_GCC_8280XP=y
+ CONFIG_SC_GPUCC_8280XP=m
+-- 
+2.43.0
+

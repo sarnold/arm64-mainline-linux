@@ -1,0 +1,46 @@
+From 5100f638e3be81f85cb04410b78715bb0077bb50 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Wed, 6 Dec 2023 12:08:34 +0100
+Subject: [PATCH 042/173] dt-bindings: mfd: pm8008: add reset gpio
+
+Add a property for the optional reset gpio (which may not be wired up).
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ Documentation/devicetree/bindings/mfd/qcom,pm8008.yaml | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/mfd/qcom,pm8008.yaml b/Documentation/devicetree/bindings/mfd/qcom,pm8008.yaml
+index 0c75d8bde568..e1e05921afb4 100644
+--- a/Documentation/devicetree/bindings/mfd/qcom,pm8008.yaml
++++ b/Documentation/devicetree/bindings/mfd/qcom,pm8008.yaml
+@@ -29,6 +29,9 @@ properties:
+ 
+     description: Parent interrupt.
+ 
++  reset-gpios:
++    maxItems: 1
++
+   "#interrupt-cells":
+     const: 2
+ 
+@@ -97,6 +100,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
++    #include <dt-bindings/gpio/gpio.h>
+     #include <dt-bindings/mfd/qcom-pm8008.h>
+     #include <dt-bindings/interrupt-controller/irq.h>
+ 
+@@ -115,6 +119,8 @@ examples:
+         interrupt-parent = <&tlmm>;
+         interrupts = <32 IRQ_TYPE_EDGE_RISING>;
+ 
++        reset-gpios = <&tlmm 42 GPIO_ACTIVE_LOW>;
++
+         pm8008_gpios: gpio@c000 {
+           compatible = "qcom,pm8008-gpio", "qcom,spmi-gpio";
+           reg = <0xc000>;
+-- 
+2.43.0
+

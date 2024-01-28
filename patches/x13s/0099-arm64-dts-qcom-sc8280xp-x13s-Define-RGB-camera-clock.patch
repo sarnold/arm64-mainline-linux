@@ -1,0 +1,44 @@
+From 4698f52dbccd262933e11d89255c566f723c25ed Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Tue, 30 May 2023 02:11:46 +0100
+Subject: [PATCH 099/173] arm64: dts: qcom: sc8280xp-x13s: Define RGB camera
+ clock and reset pinout
+
+The RGB camera sensor uses MCLK3/gpio17 as clock with SC_RGB_XSHUT_N/gpio15
+as reset.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ .../dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts   | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index 921e86a14eb2..22d4dd410dfc 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -1463,6 +1463,22 @@ sc-ir-xshut-n-pins {
+ 		};
+ 	};
+ 
++	cam_rgb_default: cam-rgb-default-state {
++		mclk-pins {
++			pins = "gpio17";
++			function = "cam_mclk";
++			drive-strength = <16>;
++			bias-disable;
++		};
++
++		sc-rgb-xshut-n-pins {
++			pins = "gpio15";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-disable;
++		};
++	};
++
+ 	edp_reg_en: edp-reg-en-state {
+ 		pins = "gpio25";
+ 		function = "gpio";
+-- 
+2.43.0
+

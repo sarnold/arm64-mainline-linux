@@ -1,0 +1,31 @@
+From b36b2661c290b7a96f2c1eddcab9e4e969e520fd Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 12 Oct 2023 09:44:39 +0200
+Subject: [PATCH 009/173] arm64: defconfig: enable Qualcomm UEFI Secure App
+ driver
+
+Enable the Qualcomm QSEECOM interface driver and the UEFI Secure
+Application client driver which are needed to access EFI variables on
+machines like the Lenovo ThinkPad X13s.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/configs/defconfig | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 6e606b4f72ce..f2408525e996 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -252,6 +252,8 @@ CONFIG_ARM_SCPI_PROTOCOL=y
+ CONFIG_RASPBERRYPI_FIRMWARE=y
+ CONFIG_INTEL_STRATIX10_SERVICE=y
+ CONFIG_INTEL_STRATIX10_RSU=m
++CONFIG_QCOM_QSEECOM=y
++CONFIG_QCOM_QSEECOM_UEFISECAPP=y
+ CONFIG_EFI_CAPSULE_LOADER=y
+ CONFIG_IMX_SCU=y
+ CONFIG_IMX_SCU_PD=y
+-- 
+2.43.0
+

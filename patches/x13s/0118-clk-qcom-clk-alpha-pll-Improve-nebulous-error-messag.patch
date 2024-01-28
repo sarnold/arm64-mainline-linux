@@ -1,0 +1,33 @@
+From 8ef562e37051e00dfaad39f0113f4219dc885b9b Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Sat, 10 Jun 2023 23:27:39 +0100
+Subject: [PATCH 118/173] clk: qcom: clk-alpha-pll: Improve nebulous error
+ message
+
+The error message given when failing to latch a PLL gives no description
+of the PLL nor the rate requested.
+
+Change the error text to give more of a hint.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ drivers/clk/qcom/clk-alpha-pll.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/clk/qcom/clk-alpha-pll.c b/drivers/clk/qcom/clk-alpha-pll.c
+index 05898d2a8b22..94b3f7e12690 100644
+--- a/drivers/clk/qcom/clk-alpha-pll.c
++++ b/drivers/clk/qcom/clk-alpha-pll.c
+@@ -1652,7 +1652,8 @@ static int __alpha_pll_trion_set_rate(struct clk_hw *hw, unsigned long rate,
+ 	udelay(1);
+ 	regmap_read(pll->clkr.regmap, PLL_MODE(pll), &val);
+ 	if (!(val & latch_ack)) {
+-		pr_err("Lucid PLL latch failed. Output may be unstable!\n");
++		pr_err("Lucid PLL %s latch failed rate %lu Hz\n",
++		       clk_hw_get_name(&pll->clkr.hw), rate);
+ 		return -EINVAL;
+ 	}
+ 
+-- 
+2.43.0
+

@@ -1,0 +1,41 @@
+From 5b68e26e3ecd9dc2507b73726b73895f19ad404a Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 12 Oct 2023 09:09:22 +0200
+Subject: [PATCH 008/173] arm64: defconfig: enable Qualcomm sc8280xp sound
+ drivers
+
+Enable the Qualcomm sc8280xp machine driver and the wsa833x speaker
+codec driver that are needed for sound on machines like the Lenovo
+ThinkPad X13s.
+
+Note that the wcd938x headphone codec driver is currently implicitly
+enabled as it is selected by the sc7280 machine driver.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/configs/defconfig | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index b60aa1f89343..6e606b4f72ce 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -920,6 +920,7 @@ CONFIG_SND_SOC_APQ8016_SBC=m
+ CONFIG_SND_SOC_MSM8996=m
+ CONFIG_SND_SOC_SDM845=m
+ CONFIG_SND_SOC_SM8250=m
++CONFIG_SND_SOC_SC8280XP=m
+ CONFIG_SND_SOC_SC7180=m
+ CONFIG_SND_SOC_SC7280=m
+ CONFIG_SND_SOC_ROCKCHIP=m
+@@ -977,6 +978,7 @@ CONFIG_SND_SOC_WM8960=m
+ CONFIG_SND_SOC_WM8962=m
+ CONFIG_SND_SOC_WM8978=m
+ CONFIG_SND_SOC_WSA881X=m
++CONFIG_SND_SOC_WSA883X=m
+ CONFIG_SND_SOC_NAU8822=m
+ CONFIG_SND_SOC_LPASS_WSA_MACRO=m
+ CONFIG_SND_SOC_LPASS_VA_MACRO=m
+-- 
+2.43.0
+
