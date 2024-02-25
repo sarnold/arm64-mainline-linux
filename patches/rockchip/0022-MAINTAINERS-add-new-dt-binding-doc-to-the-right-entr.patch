@@ -1,0 +1,27 @@
+From 5250ba06c37885cb847e09572f8af9b27c7cb4b8 Mon Sep 17 00:00:00 2001
+From: Corentin Labbe <clabbe@baylibre.com>
+Date: Tue, 7 Nov 2023 15:55:28 +0000
+Subject: [PATCH 22/55] MAINTAINERS: add new dt-binding doc to the right entry
+
+Rockchip crypto driver have a new file to be added.
+
+Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
+---
+ MAINTAINERS | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index a7c4cf8201e0..898a18de6097 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -18645,6 +18645,7 @@ M:	Corentin Labbe <clabbe@baylibre.com>
+ L:	linux-crypto@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/crypto/rockchip,rk3288-crypto.yaml
++F:	Documentation/devicetree/bindings/crypto/rockchip,rk3588-crypto.yaml
+ F:	drivers/crypto/rockchip/
+ 
+ ROCKCHIP I2S TDM DRIVER
+-- 
+2.43.2
+

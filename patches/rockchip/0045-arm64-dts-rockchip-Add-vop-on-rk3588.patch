@@ -1,0 +1,134 @@
+From 4034b7543aabaa88d826c8a297c8874ab6524ddd Mon Sep 17 00:00:00 2001
+From: Andy Yan <andy.yan@rock-chips.com>
+Date: Fri, 10 Nov 2023 18:55:02 +0800
+Subject: [PATCH 45/55] arm64: dts: rockchip: Add vop on rk3588
+
+Signed-off-by: Andy Yan <andy.yan@rock-chips.com>
+---
+ arch/arm64/boot/dts/rockchip/rk3588s.dtsi | 96 +++++++++++++++++++++++
+ 1 file changed, 96 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s.dtsi b/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
+index 508b035c0a7f..670d367fc6fc 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
+@@ -804,6 +804,11 @@ trip-point-2 {
+ 		};
+ 	};
+ 
++	display_subsystem: display-subsystem {
++		compatible = "rockchip,display-subsystem";
++		ports = <&vop_out>;
++	};
++
+ 	timer {
+ 		compatible = "arm,armv8-timer";
+ 		interrupts = <GIC_PPI 13 IRQ_TYPE_LEVEL_HIGH 0>,
+@@ -948,6 +953,16 @@ bigcore1_grf: syscon@fd592000 {
+ 		reg = <0x0 0xfd592000 0x0 0x100>;
+ 	};
+ 
++	vop_grf: syscon@fd5a4000 {
++		compatible = "rockchip,rk3588-vop-grf", "syscon";
++		reg = <0x0 0xfd5a4000 0x0 0x2000>;
++	};
++
++	vo1_grf: syscon@fd5a8000 {
++		compatible = "rockchip,rk3588-vo-grf", "syscon";
++		reg = <0x0 0xfd5a8000 0x0 0x100>;
++	};
++
+ 	php_grf: syscon@fd5b0000 {
+ 		compatible = "rockchip,rk3588-php-grf", "syscon";
+ 		reg = <0x0 0xfd5b0000 0x0 0x1000>;
+@@ -1109,6 +1124,87 @@ i2c0: i2c@fd880000 {
+ 		status = "disabled";
+ 	};
+ 
++	vop: vop@fdd90000 {
++		compatible = "rockchip,rk3588-vop";
++		reg = <0x0 0xfdd90000 0x0 0x4200>, <0x0 0xfdd95000 0x0 0x1000>;
++		reg-names = "vop", "gamma_lut";
++		interrupts = <GIC_SPI 156 IRQ_TYPE_LEVEL_HIGH 0>;
++		clocks = <&cru ACLK_VOP>,
++			 <&cru HCLK_VOP>,
++			 <&cru DCLK_VOP0>,
++			 <&cru DCLK_VOP1>,
++			 <&cru DCLK_VOP2>,
++			 <&cru DCLK_VOP3>,
++			 <&cru PCLK_VOP_ROOT>;
++		clock-names = "aclk",
++			      "hclk",
++			      "dclk_vp0",
++			      "dclk_vp1",
++			      "dclk_vp2",
++			      "dclk_vp3",
++			      "pclk_vop";
++		resets = <&cru SRST_A_VOP>,
++			 <&cru SRST_H_VOP>,
++			 <&cru SRST_D_VOP0>,
++			 <&cru SRST_D_VOP1>,
++			 <&cru SRST_D_VOP2>,
++			 <&cru SRST_D_VOP3>;
++		reset-names = "axi",
++			      "ahb",
++			      "dclk_vp0",
++			      "dclk_vp1",
++			      "dclk_vp2",
++			      "dclk_vp3";
++		iommus = <&vop_mmu>;
++		power-domains = <&power RK3588_PD_VOP>;
++		rockchip,grf = <&sys_grf>;
++		rockchip,vop-grf = <&vop_grf>;
++		rockchip,vo1-grf = <&vo1_grf>;
++		rockchip,pmu = <&pmu>;
++
++		status = "disabled";
++		vop_out: ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			vp0: port@0 {
++				#address-cells = <1>;
++				#size-cells = <0>;
++				reg = <0>;
++			};
++
++			vp1: port@1 {
++				#address-cells = <1>;
++				#size-cells = <0>;
++				reg = <1>;
++			};
++
++			vp2: port@2 {
++				#address-cells = <1>;
++				#size-cells = <0>;
++				reg = <2>;
++			};
++
++			vp3: port@3 {
++				#address-cells = <1>;
++				#size-cells = <0>;
++				reg = <3>;
++			};
++		};
++	};
++
++	vop_mmu: iommu@fdd97e00 {
++		compatible = "rockchip,rk3568-iommu";
++		reg = <0x0 0xfdd97e00 0x0 0x100>, <0x0 0xfdd97f00 0x0 0x100>;
++		interrupts = <GIC_SPI 156 IRQ_TYPE_LEVEL_HIGH 0>;
++		interrupt-names = "vop_mmu";
++		clocks = <&cru ACLK_VOP>, <&cru HCLK_VOP>;
++		clock-names = "aclk", "iface";
++		#iommu-cells = <0>;
++		power-domains = <&power RK3588_PD_VOP>;
++		status = "disabled";
++	};
++
+ 	uart0: serial@fd890000 {
+ 		compatible = "rockchip,rk3588-uart", "snps,dw-apb-uart";
+ 		reg = <0x0 0xfd890000 0x0 0x100>;
+-- 
+2.43.2
+
