@@ -2,8 +2,8 @@ name: Linux arm64 Release
 
 on:
   push:
-    tags:
-      - "*"
+#    tags:
+#      - "*"
 
 jobs:
   release:
@@ -36,14 +36,14 @@ jobs:
           git config --global --add safe.directory ../linux-stable
           ./build_kernel.sh
 
-      #- name: Upload kernel artifacts
-        #uses: actions/upload-artifact@v3
-        #with:
-          #name: kernel-arm64
-          #path: ./main/deploy/*
+      - name: Upload kernel artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: kernel-arm64
+          path: ./main/deploy/*
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@master
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
