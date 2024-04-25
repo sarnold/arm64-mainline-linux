@@ -1,0 +1,38 @@
+From 1813409fb856909d745a465ebe43d0ffda9b0b18 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Fri, 1 Mar 2024 16:59:51 +0100
+Subject: [PATCH 49/92] fixup: usb: dwc3: qcom: fix bogus interrupt error
+ messages
+
+The kernel is not a devicetree validator and we should in any case not
+be printing errors for interrupts that are required by the binding.
+
+Demote the bogus error messages to debug level for now.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/usb/dwc3/dwc3-qcom.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/usb/dwc3/dwc3-qcom.c b/drivers/usb/dwc3/dwc3-qcom.c
+index e789745a9468..825845b62e49 100644
+--- a/drivers/usb/dwc3/dwc3-qcom.c
++++ b/drivers/usb/dwc3/dwc3-qcom.c
+@@ -681,12 +681,12 @@ static int dwc3_qcom_setup_irq(struct platform_device *pdev)
+ 	for (i = 0; i < irq_count; i++) {
+ 		irq_index = dwc3_qcom_get_irq_index(irq_names[i]);
+ 		if (irq_index == -1) {
+-			dev_err(&pdev->dev, "Unknown interrupt-name \"%s\" found\n", irq_names[i]);
++			dev_dbg(&pdev->dev, "Unknown interrupt-name \"%s\" found\n", irq_names[i]);
+ 			continue;
+ 		}
+ 		port_index = dwc3_qcom_get_port_index(irq_names[i], irq_index);
+ 		if (port_index == -1) {
+-			dev_err(&pdev->dev, "Invalid interrupt-name suffix \"%s\"\n", irq_names[i]);
++			dev_dbg(&pdev->dev, "Invalid interrupt-name suffix \"%s\"\n", irq_names[i]);
+ 			continue;
+ 		}
+ 
+-- 
+2.44.0
+

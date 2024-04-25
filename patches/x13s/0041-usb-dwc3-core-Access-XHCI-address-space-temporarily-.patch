@@ -1,0 +1,159 @@
+From 6a6ae401841e4cc5be1ef1ba702a39139ff7c36b Mon Sep 17 00:00:00 2001
+From: Krishna Kurapati <quic_kriskura@quicinc.com>
+Date: Fri, 16 Feb 2024 06:27:49 +0530
+Subject: [PATCH 41/92] usb: dwc3: core: Access XHCI address space temporarily
+ to read port info
+
+Currently Multiport DWC3 controllers are host-only capable.
+Temporarily map XHCI address space for host-only controllers and parse
+XHCI Extended Capabilities registers to read number of usb2 ports and
+usb3 ports present on multiport controller. Each USB Port is at least HS
+capable.
+
+The port info for usb2 and usb3 phy are identified as num_usb2_ports
+and num_usb3_ports. The intention is as follows:
+
+Wherever we need to perform phy operations like:
+
+LOOP_OVER_NUMBER_OF_AVAILABLE_PORTS()
+{
+	phy_set_mode(dwc->usb2_generic_phy[i], PHY_MODE_USB_HOST);
+	phy_set_mode(dwc->usb3_generic_phy[i], PHY_MODE_USB_HOST);
+}
+
+If number of usb2 ports is 3, loop can go from index 0-2 for
+usb2_generic_phy. If number of usb3-ports is 2, we don't know for sure,
+if the first 2 ports are SS capable or some other ports like (2 and 3)
+are SS capable. So instead, num_usb2_ports is used to loop around all
+phy's (both hs and ss) for performing phy operations. If any
+usb3_generic_phy turns out to be NULL, phy operation just bails out.
+num_usb3_ports is used to modify GUSB3PIPECTL registers while setting up
+phy's as we need to know how many SS capable ports are there for this.
+
+Signed-off-by: Krishna Kurapati <quic_kriskura@quicinc.com>
+Reviewed-by: Bjorn Andersson <andersson@kernel.org>
+Acked-by: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
+Link: https://lore.kernel.org/r/20240216005756.762712-3-quic_kriskura@quicinc.com
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/usb/dwc3/core.c | 62 +++++++++++++++++++++++++++++++++++++++++
+ drivers/usb/dwc3/core.h |  5 ++++
+ 2 files changed, 67 insertions(+)
+
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index 31684cdaaae3..585dab1f28ea 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -39,6 +39,7 @@
+ #include "io.h"
+ 
+ #include "debug.h"
++#include "../host/xhci-ext-caps.h"
+ 
+ #define DWC3_DEFAULT_AUTOSUSPEND_DELAY	5000 /* ms */
+ 
+@@ -1881,10 +1882,57 @@ static int dwc3_get_clocks(struct dwc3 *dwc)
+ 	return 0;
+ }
+ 
++static int dwc3_read_port_info(struct dwc3 *dwc)
++{
++	void __iomem *base;
++	u8 major_revision;
++	u32 offset;
++	u32 val;
++
++	/*
++	 * Remap xHCI address space to access XHCI ext cap regs since it is
++	 * needed to get information on number of ports present.
++	 */
++	base = ioremap(dwc->xhci_resources[0].start,
++		       resource_size(&dwc->xhci_resources[0]));
++	if (IS_ERR(base))
++		return PTR_ERR(base);
++
++	offset = 0;
++	do {
++		offset = xhci_find_next_ext_cap(base, offset,
++						XHCI_EXT_CAPS_PROTOCOL);
++		if (!offset)
++			break;
++
++		val = readl(base + offset);
++		major_revision = XHCI_EXT_PORT_MAJOR(val);
++
++		val = readl(base + offset + 0x08);
++		if (major_revision == 0x03) {
++			dwc->num_usb3_ports += XHCI_EXT_PORT_COUNT(val);
++		} else if (major_revision <= 0x02) {
++			dwc->num_usb2_ports += XHCI_EXT_PORT_COUNT(val);
++		} else {
++			dev_warn(dwc->dev,
++				 "unrecognized port major revision %d\n",
++							major_revision);
++		}
++	} while (1);
++
++	dev_dbg(dwc->dev, "hs-ports: %u ss-ports: %u\n",
++		dwc->num_usb2_ports, dwc->num_usb3_ports);
++
++	iounmap(base);
++
++	return 0;
++}
++
+ static int dwc3_probe(struct platform_device *pdev)
+ {
+ 	struct device		*dev = &pdev->dev;
+ 	struct resource		*res, dwc_res;
++	unsigned int		hw_mode;
+ 	void __iomem		*regs;
+ 	struct dwc3		*dwc;
+ 	int			ret;
+@@ -1968,6 +2016,20 @@ static int dwc3_probe(struct platform_device *pdev)
+ 			goto err_disable_clks;
+ 	}
+ 
++	/*
++	 * Currently only DWC3 controllers that are host-only capable
++	 * support Multiport.
++	 */
++	hw_mode = DWC3_GHWPARAMS0_MODE(dwc->hwparams.hwparams0);
++	if (hw_mode == DWC3_GHWPARAMS0_MODE_HOST) {
++		ret = dwc3_read_port_info(dwc);
++		if (ret)
++			goto err_disable_clks;
++	} else {
++		dwc->num_usb2_ports = 1;
++		dwc->num_usb3_ports = 1;
++	}
++
+ 	spin_lock_init(&dwc->lock);
+ 	mutex_init(&dwc->mutex);
+ 
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index 893b1e694efe..6498ea502281 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -1038,6 +1038,8 @@ struct dwc3_scratchpad_array {
+  * @usb3_phy: pointer to USB3 PHY
+  * @usb2_generic_phy: pointer to USB2 PHY
+  * @usb3_generic_phy: pointer to USB3 PHY
++ * @num_usb2_ports: number of USB2 ports
++ * @num_usb3_ports: number of USB3 ports
+  * @phys_ready: flag to indicate that PHYs are ready
+  * @ulpi: pointer to ulpi interface
+  * @ulpi_ready: flag to indicate that ULPI is initialized
+@@ -1186,6 +1188,9 @@ struct dwc3 {
+ 	struct phy		*usb2_generic_phy;
+ 	struct phy		*usb3_generic_phy;
+ 
++	u8			num_usb2_ports;
++	u8			num_usb3_ports;
++
+ 	bool			phys_ready;
+ 
+ 	struct ulpi		*ulpi;
+-- 
+2.44.0
+

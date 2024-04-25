@@ -1,0 +1,37 @@
+From c6eb84ba643bb9ebf9f77d76e38b403825a9bcfa Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 5 Dec 2023 18:22:58 +0100
+Subject: [PATCH 24/92] mfd: pm8008: mark regmap structures as const
+
+The regmap irq chip structures can be const so mark them as such.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/mfd/qcom-pm8008.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/mfd/qcom-pm8008.c b/drivers/mfd/qcom-pm8008.c
+index d53c987b0d49..abdb63002be9 100644
+--- a/drivers/mfd/qcom-pm8008.c
++++ b/drivers/mfd/qcom-pm8008.c
+@@ -50,7 +50,7 @@ enum {
+ 	POLARITY_LO_INDEX,
+ };
+ 
+-static unsigned int pm8008_config_regs[] = {
++static const unsigned int pm8008_config_regs[] = {
+ 	INT_SET_TYPE_OFFSET,
+ 	INT_POL_HIGH_OFFSET,
+ 	INT_POL_LOW_OFFSET,
+@@ -130,7 +130,7 @@ static int pm8008_set_type_config(unsigned int **buf, unsigned int type,
+ 	return 0;
+ }
+ 
+-static struct regmap_irq_chip pm8008_irq_chip = {
++static const struct regmap_irq_chip pm8008_irq_chip = {
+ 	.name			= "pm8008_irq",
+ 	.main_status		= I2C_INTR_STATUS_BASE,
+ 	.num_main_regs		= 1,
+-- 
+2.44.0
+

@@ -1,0 +1,43 @@
+From a27e609e3cb0c6a562a75174cbf82bee40def380 Mon Sep 17 00:00:00 2001
+From: Konrad Dybcio <konrad.dybcio@linaro.org>
+Date: Wed, 3 Jan 2024 13:36:08 +0100
+Subject: [PATCH 59/92] power: supply: qcom_battmgr: Ignore notifications
+ before initialization
+
+Commit b43f7ddc2b7a ("power: supply: qcom_battmgr: Register the power
+supplies after PDR is up") moved the devm_power_supply_register() calls
+so that the power supply devices are not registered before we go through
+the entire initialization sequence (power up the ADSP remote processor,
+wait for it to come online, coordinate with userspace..).
+
+Some firmware versions (e.g. on SM8550) seem to leave battmgr at least
+partly initialized when exiting the bootloader and loading Linux. Check
+if the power supply devices are registered before consuming the battmgr
+notifications.
+
+Fixes: b43f7ddc2b7a ("power: supply: qcom_battmgr: Register the power supplies after PDR is up")
+Reported-by: Xilin Wu <wuxilin123@gmail.com>
+Signed-off-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20240103-topic-battmgr2-v2-1-c07b9206a2a5@linaro.org
+---
+ drivers/power/supply/qcom_battmgr.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/power/supply/qcom_battmgr.c b/drivers/power/supply/qcom_battmgr.c
+index ec163d1bcd18..5224bd6191e8 100644
+--- a/drivers/power/supply/qcom_battmgr.c
++++ b/drivers/power/supply/qcom_battmgr.c
+@@ -1270,6 +1270,10 @@ static void qcom_battmgr_callback(const void *data, size_t len, void *priv)
+ 	struct qcom_battmgr *battmgr = priv;
+ 	unsigned int opcode = le32_to_cpu(hdr->opcode);
+ 
++	/* Ignore the pings that come before Linux cleanly initializes the battmgr stack */
++	if (!battmgr->bat_psy)
++		return;
++
+ 	if (opcode == BATTMGR_NOTIFICATION)
+ 		qcom_battmgr_notification(battmgr, data, len);
+ 	else if (battmgr->variant == QCOM_BATTMGR_SC8280XP)
+-- 
+2.44.0
+

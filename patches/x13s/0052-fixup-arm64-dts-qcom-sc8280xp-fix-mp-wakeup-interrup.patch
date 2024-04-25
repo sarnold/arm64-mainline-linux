@@ -1,0 +1,43 @@
+From fd8f2d267a29ec70e44300e9dde2dda715ea0845 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 21 Nov 2023 11:47:28 +0100
+Subject: [PATCH 52/92] fixup: arm64: dts: qcom: sc8280xp: fix mp wakeup
+ interrupt types
+
+The DP/DM HS PHY interrupts need to trigger also on falling edges.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index 1fff2c15e724..2fc8d3308844 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -3368,14 +3368,14 @@ usb_2: usb@a4f8800 {
+ 					      <&intc GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH>,
+ 					      <&intc GIC_SPI 860 IRQ_TYPE_LEVEL_HIGH>,
+ 					      <&intc GIC_SPI 859 IRQ_TYPE_LEVEL_HIGH>,
+-					      <&pdc 127 IRQ_TYPE_EDGE_RISING>,
+-					      <&pdc 126 IRQ_TYPE_EDGE_RISING>,
+-					      <&pdc 129 IRQ_TYPE_EDGE_RISING>,
+-					      <&pdc 128 IRQ_TYPE_EDGE_RISING>,
+-					      <&pdc 131 IRQ_TYPE_EDGE_RISING>,
+-					      <&pdc 130 IRQ_TYPE_EDGE_RISING>,
+-					      <&pdc 133 IRQ_TYPE_EDGE_RISING>,
+-					      <&pdc 132 IRQ_TYPE_EDGE_RISING>,
++					      <&pdc 127 IRQ_TYPE_EDGE_BOTH>,
++					      <&pdc 126 IRQ_TYPE_EDGE_BOTH>,
++					      <&pdc 129 IRQ_TYPE_EDGE_BOTH>,
++					      <&pdc 128 IRQ_TYPE_EDGE_BOTH>,
++					      <&pdc 131 IRQ_TYPE_EDGE_BOTH>,
++					      <&pdc 130 IRQ_TYPE_EDGE_BOTH>,
++					      <&pdc 133 IRQ_TYPE_EDGE_BOTH>,
++					      <&pdc 132 IRQ_TYPE_EDGE_BOTH>,
+ 					      <&pdc 16 IRQ_TYPE_LEVEL_HIGH>,
+ 					      <&pdc 17 IRQ_TYPE_LEVEL_HIGH>;
+ 
+-- 
+2.44.0
+

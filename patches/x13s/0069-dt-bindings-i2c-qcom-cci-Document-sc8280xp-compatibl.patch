@@ -1,0 +1,55 @@
+From 41450bbcdae68613d9c16b3f3c19fb1af4562098 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Thu, 11 Jan 2024 17:15:54 +0000
+Subject: [PATCH 69/92] dt-bindings: i2c: qcom-cci: Document sc8280xp
+ compatible
+
+Add sc8280xp compatible consistent with recent CAMSS CCI interfaces.
+
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Link: https://lore.kernel.org/r/20240111-linux-next-24-01-02-sc8280xp-camss-core-dtsi-v4-1-cdd5c57ff1dc@linaro.org
+---
+ .../devicetree/bindings/i2c/qcom,i2c-cci.yaml | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/i2c/qcom,i2c-cci.yaml b/Documentation/devicetree/bindings/i2c/qcom,i2c-cci.yaml
+index 8386cfe21532..369d72882874 100644
+--- a/Documentation/devicetree/bindings/i2c/qcom,i2c-cci.yaml
++++ b/Documentation/devicetree/bindings/i2c/qcom,i2c-cci.yaml
+@@ -26,6 +26,7 @@ properties:
+       - items:
+           - enum:
+               - qcom,sc7280-cci
++              - qcom,sc8280xp-cci
+               - qcom,sdm845-cci
+               - qcom,sm6350-cci
+               - qcom,sm8250-cci
+@@ -176,6 +177,24 @@ allOf:
+             - const: cci
+             - const: cci_src
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,sc8280xp-cci
++    then:
++      properties:
++        clocks:
++          minItems: 4
++          maxItems: 4
++        clock-names:
++          items:
++            - const: camnoc_axi
++            - const: slow_ahb_src
++            - const: cpas_ahb
++            - const: cci
++
+ additionalProperties: false
+ 
+ examples:
+-- 
+2.44.0
+

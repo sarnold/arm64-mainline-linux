@@ -1,0 +1,30 @@
+From 7f187cc0d0e81dfb95915256022a80a247af4498 Mon Sep 17 00:00:00 2001
+From: Konrad Dybcio <konrad.dybcio@linaro.org>
+Date: Thu, 7 Mar 2024 21:25:57 +0100
+Subject: [PATCH 84/92] arm64: dts: qcom: sc8280xp: Describe TCSR download mode
+ register
+
+To allow for swift EDL reboots, describe the respective register under
+the scm node.
+
+Signed-off-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20240307-topic-8280_nodes-v1-4-4eba20e08902@linaro.org
+---
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index f32dba23c734..f660c4201b24 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -337,6 +337,7 @@ firmware {
+ 		scm: scm {
+ 			compatible = "qcom,scm-sc8280xp", "qcom,scm";
+ 			interconnects = <&aggre2_noc MASTER_CRYPTO 0 &mc_virt SLAVE_EBI1 0>;
++			qcom,dload-mode = <&tcsr 0x13000>;
+ 		};
+ 	};
+ 
+-- 
+2.44.0
+

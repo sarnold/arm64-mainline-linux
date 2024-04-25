@@ -1,0 +1,102 @@
+From a35ab155c4ab84c02bd4ae246c47e0956030f984 Mon Sep 17 00:00:00 2001
+From: Satya Priya <quic_c_skakit@quicinc.com>
+Date: Tue, 14 Jun 2022 15:18:25 +0530
+Subject: [PATCH 28/92] dt-bindings: mfd: pm8008: Add regulators for pm8008
+
+Add regulators and their parent supplies along with example.
+
+Signed-off-by: Satya Priya <quic_c_skakit@quicinc.com>
+Reviewed-by: Stephen Boyd <swboyd@chromium.org>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Acked-for-MFD-by: Lee Jones <lee.jones@linaro.org>
+Link: https://lore.kernel.org/r/1655200111-18357-4-git-send-email-quic_c_skakit@quicinc.com
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ .../devicetree/bindings/mfd/qcom,pm8008.yaml  | 50 +++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/mfd/qcom,pm8008.yaml b/Documentation/devicetree/bindings/mfd/qcom,pm8008.yaml
+index b1f48754f74e..11b1facc0210 100644
+--- a/Documentation/devicetree/bindings/mfd/qcom,pm8008.yaml
++++ b/Documentation/devicetree/bindings/mfd/qcom,pm8008.yaml
+@@ -47,6 +47,21 @@ properties:
+   "#size-cells":
+     const: 0
+ 
++  vdd_l1_l2-supply:
++    description: Input supply phandle of ldo1 and ldo2 regulators.
++
++  vdd_l3_l4-supply:
++    description: Input supply phandle of ldo3 and ldo4 regulators.
++
++  vdd_l5-supply:
++    description: Input supply phandle of ldo5 regulator.
++
++  vdd_l6-supply:
++    description: Input supply phandle of ldo6 regulator.
++
++  vdd_l7-supply:
++    description: Input supply phandle of ldo7 regulator.
++
+ patternProperties:
+   "^gpio@0,[0-9a-f]+$":
+     type: object
+@@ -88,6 +103,27 @@ patternProperties:
+ 
+     additionalProperties: false
+ 
++  "^ldo[1-7]@[1],[0-9a-f]+$":
++    type: object
++
++    $ref: "/schemas/regulator/regulator.yaml#"
++
++    description: PM8008 regulator peripherals of PM8008 regulator device.
++
++    properties:
++      compatible:
++        const: qcom,pm8008-regulator
++
++      reg:
++        description: Peripheral offset and address of the ldo regulator.
++        maxItems: 1
++
++    required:
++      - compatible
++      - reg
++
++    unevaluatedProperties: false
++
+ required:
+   - compatible
+   - reg
+@@ -121,6 +157,12 @@ examples:
+ 
+         reset-gpios = <&tlmm 42 GPIO_ACTIVE_LOW>;
+ 
++        vdd_l1_l2-supply = <&vreg_s8b_1p2>;
++        vdd_l3_l4-supply = <&vreg_s1b_1p8>;
++        vdd_l5-supply = <&vreg_bob>;
++        vdd_l6-supply = <&vreg_bob>;
++        vdd_l7-supply = <&vreg_bob>;
++
+         pm8008_gpios: gpio@0,c000 {
+           compatible = "qcom,pm8008-gpio", "qcom,spmi-gpio";
+           reg = <0x0 0xc000>;
+@@ -130,6 +172,14 @@ examples:
+           interrupt-controller;
+           #interrupt-cells = <2>;
+         };
++
++        ldo1@1,4000 {
++          compatible = "qcom,pm8008-regulator";
++          reg = <0x1 0x4000>;
++          regulator-name = "pm8008_ldo1";
++          regulator-min-microvolt = <950000>;
++          regulator-max-microvolt = <1300000>;
++        };
+       };
+     };
+ 
+-- 
+2.44.0
+

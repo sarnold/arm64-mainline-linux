@@ -1,0 +1,47 @@
+From 0df947fae5b2a7e9f4a6e7edd6b4de3319d84184 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Fri, 9 Feb 2024 11:15:57 +0100
+Subject: [PATCH 11/92] dt-bindings: PCI: qcom: Do not require 'msi-map-mask'
+
+Whether the 'msi-map-mask' property is needed or not depends on how the
+MSI interrupts are mapped and it should therefore not be described as
+required.
+
+Note that the current schema fails to detect omissions of the mask
+property if the internal MSI controller properties are also present.
+
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml | 1 -
+ Documentation/devicetree/bindings/pci/qcom,pcie.yaml        | 1 -
+ 2 files changed, 2 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
+index 8d570669650a..0d1b23523f62 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
+@@ -93,7 +93,6 @@ anyOf:
+       - "#interrupt-cells"
+   - required:
+       - msi-map
+-      - msi-map-mask
+ 
+ allOf:
+   - $ref: /schemas/pci/pci-bus.yaml#
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index 1d7a6a520fef..efaab5f82b47 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -134,7 +134,6 @@ anyOf:
+       - "#interrupt-cells"
+   - required:
+       - msi-map
+-      - msi-map-mask
+ 
+ allOf:
+   - $ref: /schemas/pci/pci-bus.yaml#
+-- 
+2.44.0
+

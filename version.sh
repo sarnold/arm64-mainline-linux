@@ -2,9 +2,9 @@
 #
 ARCH=$(uname -m)
 
-config="defconfig"
+config="laptop_defconfig"
 
-build_prefix="-arm64-r"
+build_prefix="-x13s-r"
 branch_prefix="v"
 branch_postfix=".x"
 
@@ -44,10 +44,10 @@ toolchain="gcc_13_aarch64"
 
 #Kernel
 KERNEL_REL=6.8
-KERNEL_TAG=${KERNEL_REL}
+KERNEL_TAG=${KERNEL_REL}.5
 kernel_rt=".X-rtY"
 #Kernel Build
-BUILD=${build_prefix}0
+BUILD=${build_prefix}2
 
 #v6.X-rcX + upto SHA
 #prev_KERNEL_SHA=""

@@ -1,0 +1,40 @@
+From be6fcad31a2ffdb96ebe08219d33a361c0044d91 Mon Sep 17 00:00:00 2001
+From: Konrad Dybcio <konrad.dybcio@linaro.org>
+Date: Thu, 7 Mar 2024 21:25:55 +0100
+Subject: [PATCH 82/92] arm64: dts: qcom: sc8280xp: Add QFPROM node
+
+Describe the QFPROM NVMEM block. Also, add a subnode to represent the
+GPU speed bin region within it.
+
+Signed-off-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20240307-topic-8280_nodes-v1-2-4eba20e08902@linaro.org
+---
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index 2b1d69cb485e..1688b65042de 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -904,6 +904,18 @@ ipcc: mailbox@408000 {
+ 			#mbox-cells = <2>;
+ 		};
+ 
++		qfprom: efuse@784000 {
++			compatible = "qcom,sc8280xp-qfprom", "qcom,qfprom";
++			reg = <0 0x00784000 0 0x3000>;
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			gpu_speed_bin: gpu-speed-bin@18b {
++				reg = <0x18b 0x1>;
++				bits = <5 3>;
++			};
++		};
++
+ 		qup2: geniqup@8c0000 {
+ 			compatible = "qcom,geni-se-qup";
+ 			reg = <0 0x008c0000 0 0x2000>;
+-- 
+2.44.0
+

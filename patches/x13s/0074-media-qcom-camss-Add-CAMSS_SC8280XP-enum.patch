@@ -1,0 +1,28 @@
+From a9b8e6f15b0f39c99f0c75d74a6e90c1a7569334 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Thu, 11 Jan 2024 19:57:03 +0000
+Subject: [PATCH 74/92] media: qcom: camss: Add CAMSS_SC8280XP enum
+
+Adds a CAMSS SoC identifier for the SC8280XP.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Link: https://lore.kernel.org/r/20240111-linux-next-24-01-09-sc8280xp-camss-changes-v1-2-b92a650121ba@linaro.org
+---
+ drivers/media/platform/qcom/camss/camss.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/media/platform/qcom/camss/camss.h b/drivers/media/platform/qcom/camss/camss.h
+index a0c2dcc779f0..ac15fe23a702 100644
+--- a/drivers/media/platform/qcom/camss/camss.h
++++ b/drivers/media/platform/qcom/camss/camss.h
+@@ -77,6 +77,7 @@ enum camss_version {
+ 	CAMSS_660,
+ 	CAMSS_845,
+ 	CAMSS_8250,
++	CAMSS_8280XP,
+ };
+ 
+ enum icc_count {
+-- 
+2.44.0
+

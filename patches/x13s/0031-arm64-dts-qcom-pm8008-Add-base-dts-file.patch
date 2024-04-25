@@ -1,0 +1,79 @@
+From 77fd1aae5a4cdd30df7a706de8d08e58919584fb Mon Sep 17 00:00:00 2001
+From: Satya Priya <quic_c_skakit@quicinc.com>
+Date: Tue, 14 Jun 2022 15:18:30 +0530
+Subject: [PATCH 31/92] arm64: dts: qcom: pm8008: Add base dts file
+
+Add base DTS file for pm8008.
+
+Signed-off-by: Satya Priya <quic_c_skakit@quicinc.com>
+Reviewed-by: Stephen Boyd <swboyd@chromium.org>
+Link: https://lore.kernel.org/r/1655200111-18357-9-git-send-email-quic_c_skakit@quicinc.com
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/pm8008.dtsi | 54 ++++++++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/qcom/pm8008.dtsi
+
+diff --git a/arch/arm64/boot/dts/qcom/pm8008.dtsi b/arch/arm64/boot/dts/qcom/pm8008.dtsi
+new file mode 100644
+index 000000000000..0ffef2f8f52d
+--- /dev/null
++++ b/arch/arm64/boot/dts/qcom/pm8008.dtsi
+@@ -0,0 +1,54 @@
++// SPDX-License-Identifier: BSD-3-Clause
++// Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
++
++&pm8008_bus {
++	pm8008: pmic@8 {
++		compatible = "qcom,pm8008";
++		reg = <0x8>;
++		#address-cells = <2>;
++		#size-cells = <0>;
++		#interrupt-cells = <2>;
++
++		pm8008_l1: ldo1@1,4000 {
++			compatible = "qcom,pm8008-regulator";
++			reg = <0x1 0x4000>;
++			regulator-name = "pm8008_ldo1";
++		};
++
++		pm8008_l2: ldo2@1,4100 {
++			compatible = "qcom,pm8008-regulator";
++			reg = <0x1 0x4100>;
++			regulator-name = "pm8008_ldo2";
++		};
++
++		pm8008_l3: ldo3@1,4200 {
++			compatible = "qcom,pm8008-regulator";
++			reg = <0x1 0x4200>;
++			regulator-name = "pm8008_ldo3";
++		};
++
++		pm8008_l4: ldo4@1,4300 {
++			compatible = "qcom,pm8008-regulator";
++			reg = <0x1 0x4300>;
++			regulator-name = "pm8008_ldo4";
++		};
++
++		pm8008_l5: ldo5@1,4400 {
++			compatible = "qcom,pm8008-regulator";
++			reg = <0x1 0x4400>;
++			regulator-name = "pm8008_ldo5";
++		};
++
++		pm8008_l6: ldo6@1,4500 {
++			compatible = "qcom,pm8008-regulator";
++			reg = <0x1 0x4500>;
++			regulator-name = "pm8008_ldo6";
++		};
++
++		pm8008_l7: ldo7@1,4600 {
++			compatible = "qcom,pm8008-regulator";
++			reg = <0x1 0x4600>;
++			regulator-name = "pm8008_ldo7";
++		};
++	};
++};
+-- 
+2.44.0
+

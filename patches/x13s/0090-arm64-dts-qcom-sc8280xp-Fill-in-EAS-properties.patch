@@ -1,0 +1,143 @@
+From be9d176072d86b66130cbc067bc1480b1510a081 Mon Sep 17 00:00:00 2001
+From: Konrad Dybcio <konrad.dybcio@linaro.org>
+Date: Tue, 19 Mar 2024 16:23:33 +0100
+Subject: [PATCH 90/92] arm64: dts: qcom: sc8280xp: Fill in EAS properties
+
+Replace the bogus capacity-dmips-mhz values and add the measured
+dynamic-power-coefficient values.
+
+The power numbers were measured by matters much more precise than the
+laggy and cache-y pmic_glink battery data, though the reported values
+were only accurate to 10mA. But that shouldn't be an issue, especially
+for the fat and power-hungry X1Cs and given that *each SoC unit* has
+somewhat different frequency-voltage maps.
+
+X1C cluster:
+940 kHz, 596 mV, 434 mW, 663 Cx
+1056 kHz, 612 mV, 463 mW, 565 Cx
+1171 kHz, 628 mV, 502 mW, 574 Cx
+1286 kHz, 644 mV, 534 mW, 540 Cx
+1401 kHz, 660 mV, 580 mW, 550 Cx
+1516 kHz, 688 mV, 630 mW, 529 Cx
+1632 kHz, 712 mV, 690 mW, 533 Cx
+1747 kHz, 728 mV, 722 mW, 503 Cx
+1862 kHz, 752 mV, 787 mW, 504 Cx
+1977 kHz, 776 mV, 855 mW, 503 Cx
+2073 kHz, 792 mV, 913 mW, 504 Cx
+2169 kHz, 812 mV, 989 mW, 514 Cx
+2284 kHz, 856 mV, 1250 mW, 611 Cx
+2400 kHz, 900 mV, 1441 mW, 626 Cx
+2496 kHz, 932 mV, 1600 mW, 636 Cx
+2592 kHz, 964 mV, 1790 mW, 653 Cx
+2688 kHz, 1000 mV, 2020 mW, 673 Cx
+2803 kHz, 1040 mV, 2292 mW, 687 Cx
+2899 kHz, 1076 mV, 2572 mW, 706 Cx
+2995 kHz, 1108 mV, 2850 mW, 721 Cx
+
+A78C cluster:
+403 kHz, 576 mV, 180 mW, 584 Cx
+499 kHz, 576 mV, 200 mW, 605 Cx
+595 kHz, 576 mV, 220 mW, 612 Cx
+691 kHz, 576 mV, 230 mW, 541 Cx
+806 kHz, 600 mV, 250 mW, 471 Cx
+902 kHz, 620 mV, 270 mW, 444 Cx
+1017 kHz, 640 mV, 290 mW, 409 Cx
+1113 kHz, 652 mV, 310 mW, 401 Cx
+1209 kHz, 668 mV, 320 mW, 363 Cx
+1324 kHz, 700 mV, 490 mW, 600 Cx
+1440 kHz, 724 mV, 523 mW, 554 Cx
+1555 kHz, 800 mV, 660 mW, 558 Cx
+1670 kHz, 800 mV, 780 mW, 639 Cx
+1785 kHz, 804 mV, 910 mW, 711 Cx
+1881 kHz, 824 mV, 941 mW, 663 Cx
+1996 kHz, 856 mV, 980 mW, 601 Cx
+2112 kHz, 880 mV, 1020 mW, 559 Cx
+2227 kHz, 908 mV, 1090 mW, 535 Cx
+2342 kHz, 932 mV, 1230 mW, 552 Cx
+2438 kHz, 956 mV, 1351 mW, 559 Cx
+
+Signed-off-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20240319-topic-8280_eas-v1-1-c605b4ea063d@linaro.org
+---
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index 8b49538652a6..caf85b94d6cf 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -51,7 +51,8 @@ CPU0: cpu@0 {
+ 			reg = <0x0 0x0>;
+ 			clocks = <&cpufreq_hw 0>;
+ 			enable-method = "psci";
+-			capacity-dmips-mhz = <602>;
++			capacity-dmips-mhz = <981>;
++			dynamic-power-coefficient = <549>;
+ 			next-level-cache = <&L2_0>;
+ 			power-domains = <&CPU_PD0>;
+ 			power-domain-names = "psci";
+@@ -78,7 +79,8 @@ CPU1: cpu@100 {
+ 			reg = <0x0 0x100>;
+ 			clocks = <&cpufreq_hw 0>;
+ 			enable-method = "psci";
+-			capacity-dmips-mhz = <602>;
++			capacity-dmips-mhz = <981>;
++			dynamic-power-coefficient = <549>;
+ 			next-level-cache = <&L2_100>;
+ 			power-domains = <&CPU_PD1>;
+ 			power-domain-names = "psci";
+@@ -100,7 +102,8 @@ CPU2: cpu@200 {
+ 			reg = <0x0 0x200>;
+ 			clocks = <&cpufreq_hw 0>;
+ 			enable-method = "psci";
+-			capacity-dmips-mhz = <602>;
++			capacity-dmips-mhz = <981>;
++			dynamic-power-coefficient = <549>;
+ 			next-level-cache = <&L2_200>;
+ 			power-domains = <&CPU_PD2>;
+ 			power-domain-names = "psci";
+@@ -122,7 +125,8 @@ CPU3: cpu@300 {
+ 			reg = <0x0 0x300>;
+ 			clocks = <&cpufreq_hw 0>;
+ 			enable-method = "psci";
+-			capacity-dmips-mhz = <602>;
++			capacity-dmips-mhz = <981>;
++			dynamic-power-coefficient = <549>;
+ 			next-level-cache = <&L2_300>;
+ 			power-domains = <&CPU_PD3>;
+ 			power-domain-names = "psci";
+@@ -145,6 +149,7 @@ CPU4: cpu@400 {
+ 			clocks = <&cpufreq_hw 1>;
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <1024>;
++			dynamic-power-coefficient = <590>;
+ 			next-level-cache = <&L2_400>;
+ 			power-domains = <&CPU_PD4>;
+ 			power-domain-names = "psci";
+@@ -167,6 +172,7 @@ CPU5: cpu@500 {
+ 			clocks = <&cpufreq_hw 1>;
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <1024>;
++			dynamic-power-coefficient = <590>;
+ 			next-level-cache = <&L2_500>;
+ 			power-domains = <&CPU_PD5>;
+ 			power-domain-names = "psci";
+@@ -189,6 +195,7 @@ CPU6: cpu@600 {
+ 			clocks = <&cpufreq_hw 1>;
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <1024>;
++			dynamic-power-coefficient = <590>;
+ 			next-level-cache = <&L2_600>;
+ 			power-domains = <&CPU_PD6>;
+ 			power-domain-names = "psci";
+@@ -211,6 +218,7 @@ CPU7: cpu@700 {
+ 			clocks = <&cpufreq_hw 1>;
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <1024>;
++			dynamic-power-coefficient = <590>;
+ 			next-level-cache = <&L2_700>;
+ 			power-domains = <&CPU_PD7>;
+ 			power-domain-names = "psci";
+-- 
+2.44.0
+

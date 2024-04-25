@@ -1,0 +1,84 @@
+From c5dfed7ecfedcce77e447bb7b2c2418ac2d2950d Mon Sep 17 00:00:00 2001
+From: Krishna Kurapati <quic_kriskura@quicinc.com>
+Date: Fri, 16 Feb 2024 06:27:56 +0530
+Subject: [PATCH 48/92] usb: dwc3: qcom: Add multiport suspend/resume support
+ for wrapper
+
+Power event IRQ stat registers are present for each port
+connected to controller. Add support for modifying all power event
+irq stat registers present in wrapper.
+
+Signed-off-by: Krishna Kurapati <quic_kriskura@quicinc.com>
+Reviewed-by: Bjorn Andersson <andersson@kernel.org>
+Acked-by: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
+Link: https://lore.kernel.org/r/20240216005756.762712-10-quic_kriskura@quicinc.com
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/usb/dwc3/dwc3-qcom.c | 30 +++++++++++++++++++++++-------
+ 1 file changed, 23 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/usb/dwc3/dwc3-qcom.c b/drivers/usb/dwc3/dwc3-qcom.c
+index 572dc3fdae12..e789745a9468 100644
+--- a/drivers/usb/dwc3/dwc3-qcom.c
++++ b/drivers/usb/dwc3/dwc3-qcom.c
+@@ -37,7 +37,11 @@
+ #define PIPE3_PHYSTATUS_SW			BIT(3)
+ #define PIPE_UTMI_CLK_DIS			BIT(8)
+ 
+-#define PWR_EVNT_IRQ_STAT_REG			0x58
++#define PWR_EVNT_IRQ1_STAT_REG			0x58
++#define PWR_EVNT_IRQ2_STAT_REG			0x1dc
++#define PWR_EVNT_IRQ3_STAT_REG			0x228
++#define PWR_EVNT_IRQ4_STAT_REG			0x238
++
+ #define PWR_EVNT_LPM_IN_L2_MASK			BIT(4)
+ #define PWR_EVNT_LPM_OUT_L2_MASK		BIT(5)
+ 
+@@ -109,6 +113,13 @@ struct dwc3_qcom {
+ 	u8			num_ports;
+ };
+ 
++static const u32 pwr_evnt_irq_stat_reg_offset[DWC3_MAX_PORTS] = {
++	PWR_EVNT_IRQ1_STAT_REG,
++	PWR_EVNT_IRQ2_STAT_REG,
++	PWR_EVNT_IRQ3_STAT_REG,
++	PWR_EVNT_IRQ4_STAT_REG,
++};
++
+ static inline void dwc3_qcom_setbits(void __iomem *base, u32 offset, u32 val)
+ {
+ 	u32 reg;
+@@ -444,9 +455,11 @@ static int dwc3_qcom_suspend(struct dwc3_qcom *qcom, bool wakeup)
+ 	if (qcom->is_suspended)
+ 		return 0;
+ 
+-	val = readl(qcom->qscratch_base + PWR_EVNT_IRQ_STAT_REG);
+-	if (!(val & PWR_EVNT_LPM_IN_L2_MASK))
+-		dev_err(qcom->dev, "HS-PHY not in L2\n");
++	for (i = 0; i < qcom->num_ports; i++) {
++		val = readl(qcom->qscratch_base + pwr_evnt_irq_stat_reg_offset[i]);
++		if (!(val & PWR_EVNT_LPM_IN_L2_MASK))
++			dev_err(qcom->dev, "Port-%d HS-PHY not in L2\n", i + 1);
++	}
+ 
+ 	for (i = qcom->num_clocks - 1; i >= 0; i--)
+ 		clk_disable_unprepare(qcom->clks[i]);
+@@ -491,9 +504,12 @@ static int dwc3_qcom_resume(struct dwc3_qcom *qcom, bool wakeup)
+ 	if (ret)
+ 		dev_warn(qcom->dev, "failed to enable interconnect: %d\n", ret);
+ 
+-	/* Clear existing events from PHY related to L2 in/out */
+-	dwc3_qcom_setbits(qcom->qscratch_base, PWR_EVNT_IRQ_STAT_REG,
+-			  PWR_EVNT_LPM_IN_L2_MASK | PWR_EVNT_LPM_OUT_L2_MASK);
++	for (i = 0; i < qcom->num_ports; i++) {
++		/* Clear existing events from PHY related to L2 in/out */
++		dwc3_qcom_setbits(qcom->qscratch_base,
++				  pwr_evnt_irq_stat_reg_offset[i],
++				  PWR_EVNT_LPM_IN_L2_MASK | PWR_EVNT_LPM_OUT_L2_MASK);
++	}
+ 
+ 	qcom->is_suspended = false;
+ 
+-- 
+2.44.0
+

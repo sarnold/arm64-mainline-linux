@@ -1,0 +1,26 @@
+From a7762b8745547c473aff0640b1f210aa7c72fe22 Mon Sep 17 00:00:00 2001
+From: Steev Klimaszewski <steev@kali.org>
+Date: Mon, 25 Mar 2024 22:26:53 -0500
+Subject: [PATCH 91/92] arm64: config: laptop_defconfig: build in interconnect
+
+As Bjorn said, it's y in the defconfig, it should be y.
+---
+ arch/arm64/configs/laptop_defconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/configs/laptop_defconfig b/arch/arm64/configs/laptop_defconfig
+index 493f2ee05b39..dd16df99a6d0 100644
+--- a/arch/arm64/configs/laptop_defconfig
++++ b/arch/arm64/configs/laptop_defconfig
+@@ -3259,7 +3259,7 @@ CONFIG_INTERCONNECT_IMX=m
+ CONFIG_INTERCONNECT_IMX8MQ=m
+ CONFIG_INTERCONNECT_QCOM=y
+ CONFIG_INTERCONNECT_QCOM_OSM_L3=m
+-CONFIG_INTERCONNECT_QCOM_SC8280XP=m
++CONFIG_INTERCONNECT_QCOM_SC8280XP=y
+ CONFIG_INTERCONNECT_QCOM_SDM845=y
+ CONFIG_EXT4_FS=m
+ CONFIG_EXT4_FS_POSIX_ACL=y
+-- 
+2.44.0
+

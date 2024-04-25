@@ -1,0 +1,26 @@
+From b6825d571719f2e0a08ae842b30f31ce0b7bebdd Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 25 May 2023 13:56:30 +0200
+Subject: [PATCH 33/92] fixup: mfd: pm8008: use devres for dummy i2c device
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/mfd/qcom-pm8008.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/mfd/qcom-pm8008.c b/drivers/mfd/qcom-pm8008.c
+index 3cd984389b49..fcf29844b00b 100644
+--- a/drivers/mfd/qcom-pm8008.c
++++ b/drivers/mfd/qcom-pm8008.c
+@@ -199,7 +199,7 @@ static int pm8008_probe(struct i2c_client *client)
+ 	if (IS_ERR(regmap))
+ 		return PTR_ERR(regmap);
+ 
+-	regulators_client = i2c_new_dummy_device(client->adapter, client->addr + 1);
++	regulators_client = devm_i2c_new_dummy_device(dev, client->adapter, client->addr + 1);
+ 	if (IS_ERR(regulators_client)) {
+ 		dev_err(&client->dev, "can't attach client\n");
+ 		return PTR_ERR(regulators_client);
+-- 
+2.44.0
+

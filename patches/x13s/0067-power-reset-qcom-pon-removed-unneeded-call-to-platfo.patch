@@ -1,0 +1,34 @@
+From 5e630352da4c538a57562a680d181b86de7b89cd Mon Sep 17 00:00:00 2001
+From: Andrei Coardos <aboutphysycs@gmail.com>
+Date: Mon, 14 Aug 2023 21:18:23 +0300
+Subject: [PATCH 67/92] power: reset: qcom-pon: removed unneeded call to
+ platform_set_drvdata()
+
+This function call was found to be unnecessary as there is no equivalent
+platform_get_drvdata() call to access the private data of the driver. Also,
+the private data is defined in this driver, so there is no risk of it being
+accessed outside of this driver file.
+
+Signed-off-by: Andrei Coardos <aboutphysycs@gmail.com>
+Reviewed-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Link: https://lore.kernel.org/r/20230814181823.3662-1-aboutphysycs@gmail.com
+---
+ drivers/power/reset/qcom-pon.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/power/reset/qcom-pon.c b/drivers/power/reset/qcom-pon.c
+index 1344b361a475..34478d60e2c1 100644
+--- a/drivers/power/reset/qcom-pon.c
++++ b/drivers/power/reset/qcom-pon.c
+@@ -80,8 +80,6 @@ static int pm8916_pon_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	platform_set_drvdata(pdev, pon);
+-
+ 	return devm_of_platform_populate(&pdev->dev);
+ }
+ 
+-- 
+2.44.0
+

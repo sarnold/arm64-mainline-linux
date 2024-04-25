@@ -1,0 +1,47 @@
+From a23a8a00a946064339d21a84d733927af894f902 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Fri, 9 Feb 2024 11:24:09 +0100
+Subject: [PATCH 10/92] dt-bindings: PCI: qcom: Allow 'required-opps'
+
+Some Qualcomm SoCs require a minimum performance level for the power
+domain so add 'required-opps' to the binding.
+
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml | 3 +++
+ Documentation/devicetree/bindings/pci/qcom,pcie.yaml        | 3 +++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
+index 125136176f93..8d570669650a 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
+@@ -59,6 +59,9 @@ properties:
+   power-domains:
+     maxItems: 1
+ 
++  required-opps:
++    maxItems: 1
++
+   resets:
+     minItems: 1
+     maxItems: 12
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index c8f36978a94c..1d7a6a520fef 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -111,6 +111,9 @@ properties:
+     description: GPIO controlled connection to PERST# signal
+     maxItems: 1
+ 
++  required-opps:
++    maxItems: 1
++
+   wake-gpios:
+     description: GPIO controlled connection to WAKE# signal
+     maxItems: 1
+-- 
+2.44.0
+

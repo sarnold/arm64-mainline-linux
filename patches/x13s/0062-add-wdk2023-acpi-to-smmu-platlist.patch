@@ -1,0 +1,24 @@
+From b68bcb1108657c34e08d1c3173d38dc63d04e31c Mon Sep 17 00:00:00 2001
+From: Nick Depinet <depinetnick@gmail.com>
+Date: Thu, 10 Nov 2022 08:34:51 +0000
+Subject: [PATCH 62/92] add wdk2023 acpi to smmu platlist
+
+---
+ drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c b/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
+index 8b04ece00420..7c71c08b9168 100644
+--- a/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
++++ b/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
+@@ -548,6 +548,7 @@ static const struct of_device_id __maybe_unused qcom_smmu_impl_of_match[] = {
+ static struct acpi_platform_list qcom_acpi_platlist[] = {
+ 	{ "LENOVO", "CB-01   ", 0x8180, ACPI_SIG_IORT, equal, "QCOM SMMU" },
+ 	{ "QCOM  ", "QCOMEDK2", 0x8180, ACPI_SIG_IORT, equal, "QCOM SMMU" },
++	{ "QCOM  ", "QCOMEDK2", 0x8280, ACPI_SIG_IORT, equal, "QCOM SMMU" },
+ 	{ }
+ };
+ #endif
+-- 
+2.44.0
+

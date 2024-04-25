@@ -1,0 +1,89 @@
+From f4e648185f3f095e88069db01b28d83669fabd6a Mon Sep 17 00:00:00 2001
+From: Bjorn Andersson <quic_bjorande@quicinc.com>
+Date: Sat, 10 Feb 2024 20:42:00 -0800
+Subject: [PATCH 03/92] arm64: dts: qcom: sc8280xp-pmics: Define adc for
+ temp-alarms
+
+sc8280xp-pmics define the two thermal zones "pm8280-1-thermal" and
+"pm8280-2-thermal", but the related temp-alarm instances are not tied to
+any adc channels, and as such continuously report the bogus temperature
+of 37C.
+
+After previously defining these adc channels across all boards using
+sc8280xp-pmics.dtsi, we can now add these references.
+
+This does however mean that we have a non-disabled node referencing
+default-disabled nodes, requiring each board to enable the pmk8280_vadc.
+Avoid this by marking pmk8280_vadc okay.
+
+Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20240210-sc8280xp-pmic-thermal-v1-2-a1c215a17d10@quicinc.com
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-crd.dts                  | 4 ----
+ arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts | 2 --
+ arch/arm64/boot/dts/qcom/sc8280xp-pmics.dtsi               | 5 ++++-
+ 3 files changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+index 9bd81885dbf5..41215567b3ae 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+@@ -606,10 +606,6 @@ rtc_offset: rtc-offset@bc {
+ 	};
+ };
+ 
+-&pmk8280_vadc {
+-	status = "okay";
+-};
+-
+ &qup0 {
+ 	status = "okay";
+ };
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index e111bd4e9465..45540f61ecc3 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -853,8 +853,6 @@ rtc_offset: rtc-offset@bc {
+ };
+ 
+ &pmk8280_vadc {
+-	status = "okay";
+-
+ 	channel@144 {
+ 		reg = <PM8350_ADC7_AMUX_THM1_100K_PU(1)>;
+ 		qcom,hw-settle-time = <200>;
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-pmics.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp-pmics.dtsi
+index 58fea376f0e2..945de77911de 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-pmics.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-pmics.dtsi
+@@ -87,7 +87,6 @@ pmk8280_vadc: adc@3100 {
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+ 			#io-channel-cells = <1>;
+-			status = "disabled";
+ 
+ 			channel@3 {
+ 				reg = <PMK8350_ADC7_DIE_TEMP>;
+@@ -160,6 +159,8 @@ pm8280_1_temp_alarm: temp-alarm@a00 {
+ 			compatible = "qcom,spmi-temp-alarm";
+ 			reg = <0xa00>;
+ 			interrupts-extended = <&spmi_bus 0x1 0xa 0x0 IRQ_TYPE_EDGE_BOTH>;
++			io-channels = <&pmk8280_vadc PM8350_ADC7_DIE_TEMP(1)>;
++			io-channel-names = "thermal";
+ 			#thermal-sensor-cells = <0>;
+ 		};
+ 
+@@ -212,6 +213,8 @@ pm8280_2_temp_alarm: temp-alarm@a00 {
+ 			compatible = "qcom,spmi-temp-alarm";
+ 			reg = <0xa00>;
+ 			interrupts-extended = <&spmi_bus 0x2 0xa 0x0 IRQ_TYPE_EDGE_BOTH>;
++			io-channels = <&pmk8280_vadc PM8350_ADC7_DIE_TEMP(3)>;
++			io-channel-names = "thermal";
+ 			#thermal-sensor-cells = <0>;
+ 		};
+ 
+-- 
+2.44.0
+

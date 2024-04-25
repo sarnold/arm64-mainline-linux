@@ -1,0 +1,50 @@
+From 4d4775b6d844b493cb23fd2b883f87a3620f22fd Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Wed, 6 Dec 2023 12:31:37 +0100
+Subject: [PATCH 26/92] mfd: pm8008: deassert reset on probe
+
+Request and deassert any (optional) reset gpio during probe in case it
+has been left asserted by boot firmware.
+
+Note the reset line is not asserted to avoid reverting to the default
+i2c address in case firmware has configured an alternate address.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/mfd/qcom-pm8008.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/mfd/qcom-pm8008.c b/drivers/mfd/qcom-pm8008.c
+index abdb63002be9..42dd4bf039c9 100644
+--- a/drivers/mfd/qcom-pm8008.c
++++ b/drivers/mfd/qcom-pm8008.c
+@@ -4,6 +4,7 @@
+  */
+ 
+ #include <linux/bitops.h>
++#include <linux/gpio/consumer.h>
+ #include <linux/i2c.h>
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
+@@ -158,6 +159,7 @@ static struct regmap_config qcom_mfd_regmap_cfg = {
+ static int pm8008_probe(struct i2c_client *client)
+ {
+ 	struct regmap_irq_chip_data *irq_data;
++	struct gpio_desc *reset;
+ 	int rc;
+ 	struct device *dev;
+ 	struct regmap *regmap;
+@@ -169,6 +171,10 @@ static int pm8008_probe(struct i2c_client *client)
+ 
+ 	i2c_set_clientdata(client, regmap);
+ 
++	reset = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
++	if (IS_ERR(reset))
++		return PTR_ERR(reset);
++
+ 	if (of_property_read_bool(dev->of_node, "interrupt-controller")) {
+ 		rc = devm_regmap_add_irq_chip(dev, regmap, client->irq,
+ 				IRQF_SHARED, 0, &pm8008_irq_chip, &irq_data);
+-- 
+2.44.0
+

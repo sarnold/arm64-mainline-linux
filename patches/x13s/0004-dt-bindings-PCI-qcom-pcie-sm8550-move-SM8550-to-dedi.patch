@@ -1,0 +1,388 @@
+From 3f83c26d199c4988b71e79161f9ccbce12fdcb6a Mon Sep 17 00:00:00 2001
+From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Date: Fri, 26 Jan 2024 09:56:42 +0100
+Subject: [PATCH 04/92] dt-bindings: PCI: qcom,pcie-sm8550: move SM8550 to
+ dedicated schema
+
+The qcom,pcie.yaml binding file containing all possible Qualcomm SoC
+PCIe root complexes gets quite complicated with numerous if:then:
+conditions customizing clocks, interrupts, regs and resets.  Adding and
+reviewing new devices is difficult, so simplify it by having shared
+common binding and file with only one group of compatible devices:
+
+1. Copy all common qcom,pcie.yaml properties (so everything except
+   supplies) to a new shared qcom,pcie-common.yaml schema.
+2. Move SM8550 PCIe compatible devices to dedicated binding file.
+
+This creates equivalent SM8550 schema file, except:
+ - Missing required compatible which is actually redundant.
+ - Expecting eight MSI interrupts, instead of only one, which was
+   incomplete hardware description.
+
+Reviewed-by: Rob Herring <robh@kernel.org>
+Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Link: https://lore.kernel.org/r/20240126-dt-bindings-pci-qcom-split-v3-1-f23cda4d74c0@linaro.org
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ .../bindings/pci/qcom,pcie-common.yaml        |  98 ++++++++++
+ .../bindings/pci/qcom,pcie-sm8550.yaml        | 171 ++++++++++++++++++
+ .../devicetree/bindings/pci/qcom,pcie.yaml    |  38 ----
+ 3 files changed, 269 insertions(+), 38 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie-sm8550.yaml
+
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
+new file mode 100644
+index 000000000000..125136176f93
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
+@@ -0,0 +1,98 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/qcom,pcie-common.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Qualcomm PCI Express Root Complex Common Properties
++
++maintainers:
++  - Bjorn Andersson <andersson@kernel.org>
++  - Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
++
++properties:
++  reg:
++    minItems: 4
++    maxItems: 6
++
++  reg-names:
++    minItems: 4
++    maxItems: 6
++
++  interrupts:
++    minItems: 1
++    maxItems: 8
++
++  interrupt-names:
++    minItems: 1
++    maxItems: 8
++
++  iommu-map:
++    minItems: 1
++    maxItems: 16
++
++  clocks:
++    minItems: 3
++    maxItems: 13
++
++  clock-names:
++    minItems: 3
++    maxItems: 13
++
++  dma-coherent: true
++
++  interconnects:
++    maxItems: 2
++
++  interconnect-names:
++    items:
++      - const: pcie-mem
++      - const: cpu-pcie
++
++  phys:
++    maxItems: 1
++
++  phy-names:
++    items:
++      - const: pciephy
++
++  power-domains:
++    maxItems: 1
++
++  resets:
++    minItems: 1
++    maxItems: 12
++
++  reset-names:
++    minItems: 1
++    maxItems: 12
++
++  perst-gpios:
++    description: GPIO controlled connection to PERST# signal
++    maxItems: 1
++
++  wake-gpios:
++    description: GPIO controlled connection to WAKE# signal
++    maxItems: 1
++
++required:
++  - reg
++  - reg-names
++  - interrupt-map-mask
++  - interrupt-map
++  - clocks
++  - clock-names
++
++anyOf:
++  - required:
++      - interrupts
++      - interrupt-names
++      - "#interrupt-cells"
++  - required:
++      - msi-map
++      - msi-map-mask
++
++allOf:
++  - $ref: /schemas/pci/pci-bus.yaml#
++
++additionalProperties: true
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-sm8550.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-sm8550.yaml
+new file mode 100644
+index 000000000000..24cb38673581
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie-sm8550.yaml
+@@ -0,0 +1,171 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/qcom,pcie-sm8550.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Qualcomm SM8550 PCI Express Root Complex
++
++maintainers:
++  - Bjorn Andersson <andersson@kernel.org>
++  - Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
++
++description:
++  Qualcomm SM8550 SoC (and compatible) PCIe root complex controller is based on
++  the Synopsys DesignWare PCIe IP.
++
++properties:
++  compatible:
++    oneOf:
++      - const: qcom,pcie-sm8550
++      - items:
++          - enum:
++              - qcom,pcie-sm8650
++          - const: qcom,pcie-sm8550
++
++  reg:
++    minItems: 5
++    maxItems: 6
++
++  reg-names:
++    minItems: 5
++    items:
++      - const: parf # Qualcomm specific registers
++      - const: dbi # DesignWare PCIe registers
++      - const: elbi # External local bus interface registers
++      - const: atu # ATU address space
++      - const: config # PCIe configuration space
++      - const: mhi # MHI registers
++
++  clocks:
++    minItems: 7
++    maxItems: 8
++
++  clock-names:
++    minItems: 7
++    items:
++      - const: aux # Auxiliary clock
++      - const: cfg # Configuration clock
++      - const: bus_master # Master AXI clock
++      - const: bus_slave # Slave AXI clock
++      - const: slave_q2a # Slave Q2A clock
++      - const: ddrss_sf_tbu # PCIe SF TBU clock
++      - const: noc_aggr # Aggre NoC PCIe AXI clock
++      - const: cnoc_sf_axi # Config NoC PCIe1 AXI clock
++
++  interrupts:
++    minItems: 8
++    maxItems: 8
++
++  interrupt-names:
++    items:
++      - const: msi0
++      - const: msi1
++      - const: msi2
++      - const: msi3
++      - const: msi4
++      - const: msi5
++      - const: msi6
++      - const: msi7
++
++  resets:
++    minItems: 1
++    maxItems: 2
++
++  reset-names:
++    minItems: 1
++    items:
++      - const: pci # PCIe core reset
++      - const: link_down # PCIe link down reset
++
++allOf:
++  - $ref: qcom,pcie-common.yaml#
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/qcom,sm8550-gcc.h>
++    #include <dt-bindings/gpio/gpio.h>
++    #include <dt-bindings/interconnect/qcom,sm8550-rpmh.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++
++    soc {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        pcie@1c00000 {
++            compatible = "qcom,pcie-sm8550";
++            reg = <0 0x01c00000 0 0x3000>,
++                  <0 0x60000000 0 0xf1d>,
++                  <0 0x60000f20 0 0xa8>,
++                  <0 0x60001000 0 0x1000>,
++                  <0 0x60100000 0 0x100000>;
++            reg-names = "parf", "dbi", "elbi", "atu", "config";
++            ranges = <0x01000000 0x0 0x00000000 0x0 0x60200000 0x0 0x100000>,
++                     <0x02000000 0x0 0x60300000 0x0 0x60300000 0x0 0x3d00000>;
++
++            bus-range = <0x00 0xff>;
++            device_type = "pci";
++            linux,pci-domain = <0>;
++            num-lanes = <2>;
++
++            #address-cells = <3>;
++            #size-cells = <2>;
++
++            clocks = <&gcc GCC_PCIE_0_AUX_CLK>,
++                     <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
++                     <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
++                     <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
++                     <&gcc GCC_PCIE_0_SLV_Q2A_AXI_CLK>,
++                     <&gcc GCC_DDRSS_PCIE_SF_QTB_CLK>,
++                     <&gcc GCC_AGGRE_NOC_PCIE_AXI_CLK>;
++            clock-names = "aux",
++                          "cfg",
++                          "bus_master",
++                          "bus_slave",
++                          "slave_q2a",
++                          "ddrss_sf_tbu",
++                          "noc_aggr";
++
++            dma-coherent;
++
++            interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
++            interrupt-names = "msi0", "msi1", "msi2", "msi3",
++                              "msi4", "msi5", "msi6", "msi7";
++            #interrupt-cells = <1>;
++            interrupt-map-mask = <0 0 0 0x7>;
++            interrupt-map = <0 0 0 1 &intc 0 0 0 149 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
++                            <0 0 0 2 &intc 0 0 0 150 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
++                            <0 0 0 3 &intc 0 0 0 151 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
++                            <0 0 0 4 &intc 0 0 0 152 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
++
++            interconnects = <&pcie_noc MASTER_PCIE_0 0 &mc_virt SLAVE_EBI1 0>,
++                            <&gem_noc MASTER_APPSS_PROC 0 &cnoc_main SLAVE_PCIE_0 0>;
++            interconnect-names = "pcie-mem", "cpu-pcie";
++
++            iommu-map = <0x0 &apps_smmu 0x1400 0x1>,
++                        <0x100 &apps_smmu 0x1401 0x1>;
++
++            phys = <&pcie0_phy>;
++            phy-names = "pciephy";
++
++            pinctrl-0 = <&pcie0_default_state>;
++            pinctrl-names = "default";
++
++            power-domains = <&gcc PCIE_0_GDSC>;
++
++            resets = <&gcc GCC_PCIE_0_BCR>;
++            reset-names = "pci";
++
++            perst-gpios = <&tlmm 94 GPIO_ACTIVE_LOW>;
++            wake-gpios = <&tlmm 96 GPIO_ACTIVE_HIGH>;
++        };
++    };
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index a93ab3b54066..3b7dd9a4ef60 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -40,11 +40,6 @@ properties:
+           - qcom,pcie-sm8350
+           - qcom,pcie-sm8450-pcie0
+           - qcom,pcie-sm8450-pcie1
+-          - qcom,pcie-sm8550
+-      - items:
+-          - enum:
+-              - qcom,pcie-sm8650
+-          - const: qcom,pcie-sm8550
+       - items:
+           - const: qcom,pcie-msm8998
+           - const: qcom,pcie-msm8996
+@@ -226,7 +221,6 @@ allOf:
+               - qcom,pcie-sm8350
+               - qcom,pcie-sm8450-pcie0
+               - qcom,pcie-sm8450-pcie1
+-              - qcom,pcie-sm8550
+     then:
+       properties:
+         reg:
+@@ -715,37 +709,6 @@ allOf:
+           items:
+             - const: pci # PCIe core reset
+ 
+-  - if:
+-      properties:
+-        compatible:
+-          contains:
+-            enum:
+-              - qcom,pcie-sm8550
+-    then:
+-      properties:
+-        clocks:
+-          minItems: 7
+-          maxItems: 8
+-        clock-names:
+-          minItems: 7
+-          items:
+-            - const: aux # Auxiliary clock
+-            - const: cfg # Configuration clock
+-            - const: bus_master # Master AXI clock
+-            - const: bus_slave # Slave AXI clock
+-            - const: slave_q2a # Slave Q2A clock
+-            - const: ddrss_sf_tbu # PCIe SF TBU clock
+-            - const: noc_aggr # Aggre NoC PCIe AXI clock
+-            - const: cnoc_sf_axi # Config NoC PCIe1 AXI clock
+-        resets:
+-          minItems: 1
+-          maxItems: 2
+-        reset-names:
+-          minItems: 1
+-          items:
+-            - const: pci # PCIe core reset
+-            - const: link_down # PCIe link down reset
+-
+   - if:
+       properties:
+         compatible:
+@@ -883,7 +846,6 @@ allOf:
+               - qcom,pcie-sm8350
+               - qcom,pcie-sm8450-pcie0
+               - qcom,pcie-sm8450-pcie1
+-              - qcom,pcie-sm8550
+     then:
+       oneOf:
+         - properties:
+-- 
+2.44.0
+

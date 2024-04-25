@@ -1,0 +1,60 @@
+From 3c0f91c9f54a73ff22ea266d280be0d7c681f152 Mon Sep 17 00:00:00 2001
+From: wangkaiyuan <wangkaiyuan@inspur.com>
+Date: Sat, 9 Mar 2024 15:28:25 +0800
+Subject: [PATCH 80/92] soc: qcom: icc-bwmon: Convert to use maple tree
+ register cache
+
+The maple tree register cache is based on a much more modern data structure
+than the rbtree cache and makes optimisation choices which are probably
+more appropriate for modern systems than those made by the rbtree cache.
+
+Signed-off-by: wangkaiyuan <wangkaiyuan@inspur.com>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Link: https://lore.kernel.org/r/20240309072825.45385-1-wangkaiyuan@inspur.com
+---
+ drivers/soc/qcom/icc-bwmon.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/soc/qcom/icc-bwmon.c b/drivers/soc/qcom/icc-bwmon.c
+index 656706259353..fb323b3364db 100644
+--- a/drivers/soc/qcom/icc-bwmon.c
++++ b/drivers/soc/qcom/icc-bwmon.c
+@@ -282,7 +282,7 @@ static const struct regmap_config msm8998_bwmon_regmap_cfg = {
+ 	 * Cache is necessary for using regmap fields with non-readable
+ 	 * registers.
+ 	 */
+-	.cache_type		= REGCACHE_RBTREE,
++	.cache_type		= REGCACHE_MAPLE,
+ };
+ 
+ static const struct regmap_config msm8998_bwmon_global_regmap_cfg = {
+@@ -301,7 +301,7 @@ static const struct regmap_config msm8998_bwmon_global_regmap_cfg = {
+ 	 * Cache is necessary for using regmap fields with non-readable
+ 	 * registers.
+ 	 */
+-	.cache_type		= REGCACHE_RBTREE,
++	.cache_type		= REGCACHE_MAPLE,
+ };
+ 
+ static const struct reg_field sdm845_cpu_bwmon_reg_fields[] = {
+@@ -369,7 +369,7 @@ static const struct regmap_config sdm845_cpu_bwmon_regmap_cfg = {
+ 	 * Cache is necessary for using regmap fields with non-readable
+ 	 * registers.
+ 	 */
+-	.cache_type		= REGCACHE_RBTREE,
++	.cache_type		= REGCACHE_MAPLE,
+ };
+ 
+ /* BWMON v5 */
+@@ -446,7 +446,7 @@ static const struct regmap_config sdm845_llcc_bwmon_regmap_cfg = {
+ 	 * Cache is necessary for using regmap fields with non-readable
+ 	 * registers.
+ 	 */
+-	.cache_type		= REGCACHE_RBTREE,
++	.cache_type		= REGCACHE_MAPLE,
+ };
+ 
+ static void bwmon_clear_counters(struct icc_bwmon *bwmon, bool clear_all)
+-- 
+2.44.0
+

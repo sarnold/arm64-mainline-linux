@@ -1,0 +1,43 @@
+From 4dac321dc987957571a680f218da159336081c08 Mon Sep 17 00:00:00 2001
+From: Bjorn Andersson <quic_bjorande@quicinc.com>
+Date: Wed, 31 Jan 2024 19:07:26 -0800
+Subject: [PATCH 35/92] dt-bindings: HID: i2c-hid: Document reset-related
+ properties
+
+Some I2C HID devices has a reset pin and requires that some specified
+time elapses after this reset pin is deasserted, before communication
+with the device is attempted.
+
+The Linux implementation is looking for these in the "reset-gpios" and
+"post-reset-deassert-delay-ms" properties already, so use these property
+names.
+
+Reviewed-by: Johan Hovold <johan+linaro@kernel.org>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Link: https://lore.kernel.org/r/20240131-x13s-touchscreen-v4-1-39c0f9925d3c@quicinc.com
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ Documentation/devicetree/bindings/input/hid-over-i2c.yaml | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/input/hid-over-i2c.yaml b/Documentation/devicetree/bindings/input/hid-over-i2c.yaml
+index 138caad96a29..f07ff4cb3d26 100644
+--- a/Documentation/devicetree/bindings/input/hid-over-i2c.yaml
++++ b/Documentation/devicetree/bindings/input/hid-over-i2c.yaml
+@@ -50,6 +50,12 @@ properties:
+     description: Time required by the device after enabling its regulators
+       or powering it on, before it is ready for communication.
+ 
++  post-reset-deassert-delay-ms:
++    description: Time required by the device after reset has been deasserted,
++      before it is ready for communication.
++
++  reset-gpios: true
++
+   touchscreen-inverted-x: true
+ 
+   touchscreen-inverted-y: true
+-- 
+2.44.0
+

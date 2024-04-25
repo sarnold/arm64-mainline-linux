@@ -1,0 +1,75 @@
+From cd308f2b922fb63ce4a103bf126dd409910e7db9 Mon Sep 17 00:00:00 2001
+From: Bjorn Andersson <quic_bjorande@quicinc.com>
+Date: Wed, 31 Jan 2024 19:07:28 -0800
+Subject: [PATCH 37/92] arm64: dts: qcom: sc8280xp-x13s: Fix/enable touchscreen
+
+The touchscreen present on some SKUs of Lenovo Thinkpad X13s is never
+detected by Linux. Power is applied and the device is brought out of
+reset using the pinconfig in DeviceTree, but the read-test in
+__i2c_hid_core_probe() fails to access the device, which result in probe
+being aborted.
+
+Some users have reported success after rebinding the device.
+
+Looking to the ACPI tables, there's a 5ms after-power and a 200ms
+after-reset delay. The power-supply is shared with other components, so
+this is active all the way through boot. The reset GPIO, on the other
+hand, is low (reset asserted) at boot, so this is first deasserted by
+the implicit application of the pinconf state.
+
+This means the time between reset deassert and __i2c_hid_core_probe() is
+significantly below the value documented in the ACPI tables.
+
+As the I2C HID binding and driver support specifying a reset gpio,
+replace the pinconf-based scheme to pull the device out of reset. Then
+specify the after-reset time.
+
+The shared power rail is currently always on, but in case this ever
+change, the after-power delay is added as well, to not violate the
+power-on to reset-deassert timing requirement.
+
+Fixes: 32c231385ed4 ("arm64: dts: qcom: sc8280xp: add Lenovo Thinkpad X13s devicetree")
+Tested-by: Daniel Thompson <daniel.thompson@linaro.org>
+Reviewed-by: Johan Hovold <johan+linaro@kernel.org>
+Signed-off-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Link: https://lore.kernel.org/r/20240131-x13s-touchscreen-v4-3-39c0f9925d3c@quicinc.com
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index ce30a7c0f414..eb8a16aa233e 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -618,7 +618,6 @@ &i2c4 {
+ 
+ 	status = "okay";
+ 
+-	/* FIXME: verify */
+ 	touchscreen@10 {
+ 		compatible = "hid-over-i2c";
+ 		reg = <0x10>;
+@@ -628,6 +627,11 @@ touchscreen@10 {
+ 		vdd-supply = <&vreg_misc_3p3>;
+ 		vddl-supply = <&vreg_s10b>;
+ 
++		reset-gpios = <&tlmm 99 GPIO_ACTIVE_LOW>;
++
++		post-power-on-delay-ms = <5>;
++		post-reset-deassert-delay-ms = <200>;
++
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&ts0_default>;
+ 	};
+@@ -1506,7 +1510,6 @@ int-n-pins {
+ 		reset-n-pins {
+ 			pins = "gpio99";
+ 			function = "gpio";
+-			output-high;
+ 			drive-strength = <16>;
+ 		};
+ 	};
+-- 
+2.44.0
+
