@@ -60,8 +60,9 @@ make_menuconfig () {
 	if [ -e "$DIR"/patches/fragments ] ; then
 		for file in "${DIR}/patches/fragments"/*.cfg; do
 			[ -e "$file" ] || continue
-			scripts/kconfig/merge_config.sh -m "arch/${KERNEL_ARCH}/configs/${config}" "$file"
+			fragments+="$file "
 		done
+		scripts/kconfig/merge_config.sh -m "arch/${KERNEL_ARCH}/configs/${config}" "$fragments"
 		make ARCH=${KERNEL_ARCH} CROSS_COMPILE="${CC}" olddefconfig
 	else
 		make ARCH=${KERNEL_ARCH} CROSS_COMPILE="${CC}" "${config}"
