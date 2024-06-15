@@ -1,0 +1,61 @@
+From 7b8222f3f314197c3d73ebd400ed76577865cd73 Mon Sep 17 00:00:00 2001
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Date: Mon, 22 Apr 2024 14:43:51 +0100
+Subject: [PATCH 55/98] ASoC: qcom: q6dsp: parse Display port tokens
+
+DP Module needs to know the data format type which is specified in the
+tplg file, parse that info before setting up the module.
+
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Link: https://lore.kernel.org/r/20240422134354.89291-2-srinivas.kandagatla@linaro.org
+---
+ sound/soc/qcom/qdsp6/topology.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/sound/soc/qcom/qdsp6/topology.c b/sound/soc/qcom/qdsp6/topology.c
+index 70572c83e10..27a5adb201c 100644
+--- a/sound/soc/qcom/qdsp6/topology.c
++++ b/sound/soc/qcom/qdsp6/topology.c
+@@ -730,6 +730,29 @@ static int audioreach_widget_i2s_module_load(struct audioreach_module *mod,
+ 	return 0;
+ }
+ 
++static int audioreach_widget_dp_module_load(struct audioreach_module *mod,
++					struct snd_soc_tplg_vendor_array *mod_array)
++{
++	struct snd_soc_tplg_vendor_value_elem *mod_elem;
++	int tkn_count = 0;
++
++	mod_elem = mod_array->value;
++
++	while (tkn_count <= (le32_to_cpu(mod_array->num_elems) - 1)) {
++		switch (le32_to_cpu(mod_elem->token)) {
++		case AR_TKN_U32_MODULE_FMT_DATA:
++			mod->data_format = le32_to_cpu(mod_elem->value);
++			break;
++		default:
++			break;
++		}
++		tkn_count++;
++		mod_elem++;
++	}
++
++	return 0;
++}
++
+ static int audioreach_widget_load_buffer(struct snd_soc_component *component,
+ 					 int index, struct snd_soc_dapm_widget *w,
+ 					 struct snd_soc_tplg_dapm_widget *tplg_w)
+@@ -760,6 +783,9 @@ static int audioreach_widget_load_buffer(struct snd_soc_component *component,
+ 	case MODULE_ID_I2S_SOURCE:
+ 		audioreach_widget_i2s_module_load(mod, mod_array);
+ 		break;
++	case MODULE_ID_DISPLAY_PORT_SINK:
++		audioreach_widget_dp_module_load(mod, mod_array);
++		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
+-- 
+2.45.2
+

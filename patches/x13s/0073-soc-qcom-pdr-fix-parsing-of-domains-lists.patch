@@ -1,0 +1,35 @@
+From b51a0a646262f5bc0ed65080eaab2954ec166893 Mon Sep 17 00:00:00 2001
+From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Date: Sun, 12 May 2024 00:56:04 +0300
+Subject: [PATCH 73/98] soc: qcom: pdr: fix parsing of domains lists
+
+While parsing the domains list, start offsets from 0 rather than from
+domains_read. The domains_read is equal to the total count of the
+domains we have seen, while the domains list in the message starts from
+offset 0.
+
+Fixes: fbe639b44a82 ("soc: qcom: Introduce Protection Domain Restart helpers")
+Tested-by: Steev Klimaszewski <steev@kali.org>
+Tested-by: Alexey Minnekhanov <alexeymin@postmarketos.org>
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Link: https://lore.kernel.org/r/20240512-qcom-pd-mapper-v8-2-5ecbb276fcc0@linaro.org
+---
+ drivers/soc/qcom/pdr_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/soc/qcom/pdr_interface.c b/drivers/soc/qcom/pdr_interface.c
+index e014dd2d8ab..d495ee73651 100644
+--- a/drivers/soc/qcom/pdr_interface.c
++++ b/drivers/soc/qcom/pdr_interface.c
+@@ -422,7 +422,7 @@ static int pdr_locate_service(struct pdr_handle *pdr, struct pdr_service *pds)
+ 		if (ret < 0)
+ 			goto out;
+ 
+-		for (i = domains_read; i < resp->domain_list_len; i++) {
++		for (i = 0; i < resp->domain_list_len; i++) {
+ 			entry = &resp->domain_list[i];
+ 
+ 			if (strnlen(entry->name, sizeof(entry->name)) == sizeof(entry->name))
+-- 
+2.45.2
+

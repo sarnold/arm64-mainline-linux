@@ -1,0 +1,92 @@
+From 2535e9dd4cccfa1a84afa1312b92ce99ebb26d21 Mon Sep 17 00:00:00 2001
+From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Date: Sun, 12 May 2024 00:56:03 +0300
+Subject: [PATCH 72/98] soc: qcom: pdr: protect locator_addr with the main
+ mutex
+
+If the service locator server is restarted fast enough, the PDR can
+rewrite locator_addr fields concurrently. Protect them by placing
+modification of those fields under the main pdr->lock.
+
+Fixes: fbe639b44a82 ("soc: qcom: Introduce Protection Domain Restart helpers")
+Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on SM8550-QRD
+Tested-by: Steev Klimaszewski <steev@kali.org>
+Tested-by: Alexey Minnekhanov <alexeymin@postmarketos.org>
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Link: https://lore.kernel.org/r/20240512-qcom-pd-mapper-v8-1-5ecbb276fcc0@linaro.org
+---
+ drivers/soc/qcom/pdr_interface.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/soc/qcom/pdr_interface.c b/drivers/soc/qcom/pdr_interface.c
+index a1b6a4081de..e014dd2d8ab 100644
+--- a/drivers/soc/qcom/pdr_interface.c
++++ b/drivers/soc/qcom/pdr_interface.c
+@@ -76,12 +76,12 @@ static int pdr_locator_new_server(struct qmi_handle *qmi,
+ 					      locator_hdl);
+ 	struct pdr_service *pds;
+ 
++	mutex_lock(&pdr->lock);
+ 	/* Create a local client port for QMI communication */
+ 	pdr->locator_addr.sq_family = AF_QIPCRTR;
+ 	pdr->locator_addr.sq_node = svc->node;
+ 	pdr->locator_addr.sq_port = svc->port;
+ 
+-	mutex_lock(&pdr->lock);
+ 	pdr->locator_init_complete = true;
+ 	mutex_unlock(&pdr->lock);
+ 
+@@ -104,10 +104,10 @@ static void pdr_locator_del_server(struct qmi_handle *qmi,
+ 
+ 	mutex_lock(&pdr->lock);
+ 	pdr->locator_init_complete = false;
+-	mutex_unlock(&pdr->lock);
+ 
+ 	pdr->locator_addr.sq_node = 0;
+ 	pdr->locator_addr.sq_port = 0;
++	mutex_unlock(&pdr->lock);
+ }
+ 
+ static const struct qmi_ops pdr_locator_ops = {
+@@ -365,6 +365,7 @@ static int pdr_get_domain_list(struct servreg_get_domain_list_req *req,
+ 	if (ret < 0)
+ 		return ret;
+ 
++	mutex_lock(&pdr->lock);
+ 	ret = qmi_send_request(&pdr->locator_hdl,
+ 			       &pdr->locator_addr,
+ 			       &txn, SERVREG_GET_DOMAIN_LIST_REQ,
+@@ -373,15 +374,16 @@ static int pdr_get_domain_list(struct servreg_get_domain_list_req *req,
+ 			       req);
+ 	if (ret < 0) {
+ 		qmi_txn_cancel(&txn);
+-		return ret;
++		goto err_unlock;
+ 	}
+ 
+ 	ret = qmi_txn_wait(&txn, 5 * HZ);
+ 	if (ret < 0) {
+ 		pr_err("PDR: %s get domain list txn wait failed: %d\n",
+ 		       req->service_name, ret);
+-		return ret;
++		goto err_unlock;
+ 	}
++	mutex_unlock(&pdr->lock);
+ 
+ 	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
+ 		pr_err("PDR: %s get domain list failed: 0x%x\n",
+@@ -390,6 +392,11 @@ static int pdr_get_domain_list(struct servreg_get_domain_list_req *req,
+ 	}
+ 
+ 	return 0;
++
++err_unlock:
++	mutex_unlock(&pdr->lock);
++
++	return ret;
+ }
+ 
+ static int pdr_locate_service(struct pdr_handle *pdr, struct pdr_service *pds)
+-- 
+2.45.2
+

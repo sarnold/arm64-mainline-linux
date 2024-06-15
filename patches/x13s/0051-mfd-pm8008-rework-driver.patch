@@ -1,0 +1,237 @@
+From 385d865a064a93f8022e29316e6b9294858eece5 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Mon, 9 Oct 2023 08:35:51 +0200
+Subject: [PATCH 51/98] mfd: pm8008: rework driver
+
+Rework the pm8008 driver to match the new binding which no longer
+describes internal details like interrupts and register offsets
+(including which of the two consecutive I2C addresses the registers
+belong two).
+
+Instead make the interrupt controller implementation internal and pass
+interrupts to the subdrivers using MFD cell resources.
+
+Note that subdrivers may either get their resources, like register block
+offsets, from the parent MFD or this can be included in the subdrivers
+directly.
+
+In the current implementation, the temperature alarm driver is generic
+enough to just get its base address and alarm interrupt from the parent
+driver, which already uses this information to implement the interrupt
+controller.
+
+The regulator driver, however, needs additional information like parent
+supplies and regulator characteristics so in that case it is easier to
+just augment its table with the regulator register base addresses.
+
+Similarly, the current GPIO driver already holds the number of pins and
+that lookup table can therefore also be extended with register offsets.
+
+Note that subdrivers can now access the two regmaps by name, even if the
+primary regmap is registered last so that it's returned by default when
+no name is provided in lookups.
+
+Finally, note that the current QPNP GPIO and temperature alarm
+subdrivers need some minor rework before they can be used with non-SPMI
+devices like the PM8008. The MFD cell names therefore use a "qpnp"
+rather than "spmi" prefix to prevent binding until the drivers have been
+updated.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/mfd/Kconfig                   |  1 +
+ drivers/mfd/qcom-pm8008.c             | 95 +++++++++++++++++++++++----
+ include/dt-bindings/mfd/qcom-pm8008.h | 19 ------
+ 3 files changed, 85 insertions(+), 30 deletions(-)
+ delete mode 100644 include/dt-bindings/mfd/qcom-pm8008.h
+
+diff --git a/drivers/mfd/Kconfig b/drivers/mfd/Kconfig
+index 4b023ee229c..bfcb68c62b0 100644
+--- a/drivers/mfd/Kconfig
++++ b/drivers/mfd/Kconfig
+@@ -2208,6 +2208,7 @@ config MFD_ACER_A500_EC
+ config MFD_QCOM_PM8008
+ 	tristate "QCOM PM8008 Power Management IC"
+ 	depends on I2C && OF
++	select MFD_CORE
+ 	select REGMAP_I2C
+ 	select REGMAP_IRQ
+ 	help
+diff --git a/drivers/mfd/qcom-pm8008.c b/drivers/mfd/qcom-pm8008.c
+index 426d2888605..c9d7c1f3fda 100644
+--- a/drivers/mfd/qcom-pm8008.c
++++ b/drivers/mfd/qcom-pm8008.c
+@@ -7,8 +7,10 @@
+ #include <linux/gpio/consumer.h>
+ #include <linux/i2c.h>
+ #include <linux/interrupt.h>
++#include <linux/ioport.h>
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
++#include <linux/mfd/core.h>
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/of_platform.h>
+@@ -16,8 +18,6 @@
+ #include <linux/regmap.h>
+ #include <linux/slab.h>
+ 
+-#include <dt-bindings/mfd/qcom-pm8008.h>
+-
+ #define I2C_INTR_STATUS_BASE		0x0550
+ #define INT_RT_STS_OFFSET		0x10
+ #define INT_SET_TYPE_OFFSET		0x11
+@@ -45,6 +45,16 @@ enum {
+ #define PM8008_GPIO1_ADDR	PM8008_PERIPH_2_BASE
+ #define PM8008_GPIO2_ADDR	PM8008_PERIPH_3_BASE
+ 
++/* PM8008 IRQ numbers */
++#define PM8008_IRQ_MISC_UVLO	0
++#define PM8008_IRQ_MISC_OVLO	1
++#define PM8008_IRQ_MISC_OTST2	2
++#define PM8008_IRQ_MISC_OTST3	3
++#define PM8008_IRQ_MISC_LDO_OCP	4
++#define PM8008_IRQ_TEMP_ALARM	5
++#define PM8008_IRQ_GPIO1	6
++#define PM8008_IRQ_GPIO2	7
++
+ enum {
+ 	SET_TYPE_INDEX,
+ 	POLARITY_HI_INDEX,
+@@ -148,21 +158,65 @@ static const struct regmap_irq_chip pm8008_irq_chip = {
+ 	.get_irq_reg		= pm8008_get_irq_reg,
+ };
+ 
+-static struct regmap_config qcom_mfd_regmap_cfg = {
++static const struct regmap_config qcom_mfd_regmap_cfg = {
++	.name		= "primary",
++	.reg_bits	= 16,
++	.val_bits	= 8,
++	.max_register	= 0xffff,
++};
++
++static const struct regmap_config pm8008_regmap_cfg_2 = {
++	.name		= "secondary",
+ 	.reg_bits	= 16,
+ 	.val_bits	= 8,
+ 	.max_register	= 0xffff,
+ };
+ 
++static const struct resource pm8008_temp_res[] = {
++	DEFINE_RES_MEM(PM8008_TEMP_ALARM_ADDR, 0x100),
++	DEFINE_RES_IRQ(PM8008_IRQ_TEMP_ALARM),
++};
++
++static const struct mfd_cell pm8008_cells[] = {
++	MFD_CELL_NAME("qcom-pm8008-regulator"),
++	MFD_CELL_RES("qpnp-temp-alarm", pm8008_temp_res),
++	MFD_CELL_NAME("qpnp-gpio"),
++};
++
++static void devm_irq_domain_fwnode_release(void *res)
++{
++	struct fwnode_handle *fwnode = res;
++
++	irq_domain_free_fwnode(fwnode);
++}
++
+ static int pm8008_probe(struct i2c_client *client)
+ {
+ 	struct regmap_irq_chip_data *irq_data;
++	struct device *dev = &client->dev;
++	struct regmap *regmap, *regmap2;
++	struct fwnode_handle *fwnode;
++	struct i2c_client *dummy;
+ 	struct gpio_desc *reset;
++	char *name;
+ 	int rc;
+-	struct device *dev;
+-	struct regmap *regmap;
+ 
+-	dev = &client->dev;
++	dummy = devm_i2c_new_dummy_device(dev, client->adapter, client->addr + 1);
++	if (IS_ERR(dummy)) {
++		rc = PTR_ERR(dummy);
++		dev_err(&client->dev, "failed to claim second address: %d\n", rc);
++		return rc;
++	}
++
++	regmap2 = devm_regmap_init_i2c(dummy, &qcom_mfd_regmap_cfg);
++	if (IS_ERR(regmap2))
++		return PTR_ERR(regmap2);
++
++	rc = regmap_attach_dev(dev, regmap2, &pm8008_regmap_cfg_2);
++	if (rc)
++		return rc;
++
++	/* Default regmap must be attached last. */
+ 	regmap = devm_regmap_init_i2c(client, &qcom_mfd_regmap_cfg);
+ 	if (IS_ERR(regmap))
+ 		return PTR_ERR(regmap);
+@@ -171,14 +225,33 @@ static int pm8008_probe(struct i2c_client *client)
+ 	if (IS_ERR(reset))
+ 		return PTR_ERR(reset);
+ 
+-	if (of_property_read_bool(dev->of_node, "interrupt-controller")) {
+-		rc = devm_regmap_add_irq_chip(dev, regmap, client->irq,
++	name = devm_kasprintf(dev, GFP_KERNEL, "%pOF-internal", dev->of_node);
++	if (!name)
++		return -ENOMEM;
++
++	name = strreplace(name, '/', ':');
++
++	fwnode = irq_domain_alloc_named_fwnode(name);
++	if (!fwnode)
++		return -ENOMEM;
++
++	rc = devm_add_action_or_reset(dev, devm_irq_domain_fwnode_release, fwnode);
++	if (rc)
++		return rc;
++
++	rc = devm_regmap_add_irq_chip_fwnode(dev, fwnode, regmap, client->irq,
+ 				IRQF_SHARED, 0, &pm8008_irq_chip, &irq_data);
+-		if (rc)
+-			dev_err(dev, "failed to add IRQ chip: %d\n", rc);
++	if (rc) {
++		dev_err(dev, "failed to add IRQ chip: %d\n", rc);
++		return rc;
+ 	}
+ 
+-	return devm_of_platform_populate(dev);
++	/* Needed by GPIO driver. */
++	dev_set_drvdata(dev, regmap_irq_get_domain(irq_data));
++
++	return devm_mfd_add_devices(dev, PLATFORM_DEVID_AUTO, pm8008_cells,
++				ARRAY_SIZE(pm8008_cells), NULL, 0,
++				regmap_irq_get_domain(irq_data));
+ }
+ 
+ static const struct of_device_id pm8008_match[] = {
+diff --git a/include/dt-bindings/mfd/qcom-pm8008.h b/include/dt-bindings/mfd/qcom-pm8008.h
+deleted file mode 100644
+index eca9448df22..00000000000
+--- a/include/dt-bindings/mfd/qcom-pm8008.h
++++ /dev/null
+@@ -1,19 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0-only */
+-/*
+- * Copyright (c) 2021 The Linux Foundation. All rights reserved.
+- */
+-
+-#ifndef __DT_BINDINGS_MFD_QCOM_PM8008_H
+-#define __DT_BINDINGS_MFD_QCOM_PM8008_H
+-
+-/* PM8008 IRQ numbers */
+-#define PM8008_IRQ_MISC_UVLO	0
+-#define PM8008_IRQ_MISC_OVLO	1
+-#define PM8008_IRQ_MISC_OTST2	2
+-#define PM8008_IRQ_MISC_OTST3	3
+-#define PM8008_IRQ_MISC_LDO_OCP	4
+-#define PM8008_IRQ_TEMP_ALARM	5
+-#define PM8008_IRQ_GPIO1	6
+-#define PM8008_IRQ_GPIO2	7
+-
+-#endif
+-- 
+2.45.2
+

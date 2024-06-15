@@ -1,0 +1,30 @@
+From 28dd4ddbdc99814a6bc42dec1ddc18d432953023 Mon Sep 17 00:00:00 2001
+From: Rob Clark <robdclark@chromium.org>
+Date: Fri, 17 May 2024 12:50:19 -0700
+Subject: [PATCH 88/98] drm/msm/adreno: Check for zap node availability
+
+This should allow disabling the zap node via an overlay, for slbounce.
+
+Suggested-by: Nikita Travkin <nikita@trvn.ru>
+Signed-off-by: Rob Clark <robdclark@chromium.org>
+Link: https://lore.kernel.org/r/20240517195021.8873-1-robdclark@gmail.com
+---
+ drivers/gpu/drm/msm/adreno/adreno_gpu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/msm/adreno/adreno_gpu.c b/drivers/gpu/drm/msm/adreno/adreno_gpu.c
+index 074fb498706..631f7f4d2ca 100644
+--- a/drivers/gpu/drm/msm/adreno/adreno_gpu.c
++++ b/drivers/gpu/drm/msm/adreno/adreno_gpu.c
+@@ -46,7 +46,7 @@ static int zap_shader_load_mdt(struct msm_gpu *gpu, const char *fwname,
+ 	}
+ 
+ 	np = of_get_child_by_name(dev->of_node, "zap-shader");
+-	if (!np) {
++	if (!np || !of_device_is_available(np)) {
+ 		zap_available = false;
+ 		return -ENODEV;
+ 	}
+-- 
+2.45.2
+

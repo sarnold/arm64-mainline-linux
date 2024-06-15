@@ -1,0 +1,64 @@
+From 25fc2822cdaf5ec241a85ff3ae3d09ed282ec7e5 Mon Sep 17 00:00:00 2001
+From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Date: Sun, 12 May 2024 01:04:08 +0300
+Subject: [PATCH 78/98] arm64: dts: qcom: sc8180x: correct dispcc clocks
+
+Correct the clocks being used by the display clock controller on the
+SC8180X platform (to match the schema):
+- Drop the sleep clock
+- Add DSI clocks
+- Reorder eDP / DP clocks
+
+This changes the order of clocks, however it should be noted that the
+clock list was neither correct nor followed the schema beforehand.
+
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20240512-typec-fix-sm8250-v4-2-ad153c747a97@linaro.org
+---
+ arch/arm64/boot/dts/qcom/sc8180x.dtsi | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8180x.dtsi b/arch/arm64/boot/dts/qcom/sc8180x.dtsi
+index 053f7861c3c..1aa7c900858 100644
+--- a/arch/arm64/boot/dts/qcom/sc8180x.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8180x.dtsi
+@@ -3267,21 +3267,27 @@ dispcc: clock-controller@af00000 {
+ 			compatible = "qcom,sc8180x-dispcc";
+ 			reg = <0 0x0af00000 0 0x20000>;
+ 			clocks = <&rpmhcc RPMH_CXO_CLK>,
+-				 <&sleep_clk>,
++				 <&mdss_dsi0_phy 0>,
++				 <&mdss_dsi0_phy 1>,
++				 <&mdss_dsi1_phy 0>,
++				 <&mdss_dsi1_phy 1>,
+ 				 <&usb_prim_dpphy 0>,
+ 				 <&usb_prim_dpphy 1>,
+-				 <&usb_sec_dpphy 0>,
+-				 <&usb_sec_dpphy 1>,
+ 				 <&edp_phy 0>,
+-				 <&edp_phy 1>;
++				 <&edp_phy 1>,
++				 <&usb_sec_dpphy 0>,
++				 <&usb_sec_dpphy 1>;
+ 			clock-names = "bi_tcxo",
+-				      "sleep_clk",
++				      "dsi0_phy_pll_out_byteclk",
++				      "dsi0_phy_pll_out_dsiclk",
++				      "dsi1_phy_pll_out_byteclk",
++				      "dsi1_phy_pll_out_dsiclk",
+ 				      "dp_phy_pll_link_clk",
+ 				      "dp_phy_pll_vco_div_clk",
+-				      "dptx1_phy_pll_link_clk",
+-				      "dptx1_phy_pll_vco_div_clk",
+ 				      "edp_phy_pll_link_clk",
+-				      "edp_phy_pll_vco_div_clk";
++				      "edp_phy_pll_vco_div_clk",
++				      "dptx1_phy_pll_link_clk",
++				      "dptx1_phy_pll_vco_div_clk";
+ 			power-domains = <&rpmhpd SC8180X_MMCX>;
+ 			required-opps = <&rpmhpd_opp_low_svs>;
+ 			#clock-cells = <1>;
+-- 
+2.45.2
+

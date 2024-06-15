@@ -1,0 +1,34 @@
+From aef7f4953b958dd812195ce8ffe5bfd2565a82ef Mon Sep 17 00:00:00 2001
+From: Konrad Dybcio <konrad.dybcio@linaro.org>
+Date: Fri, 10 May 2024 15:39:59 +0200
+Subject: [PATCH 71/98] arm64: dts: qcom: sc8280xp: Set status = "reserved" on
+ PSHOLD
+
+On most devices, TZ seems to be blocking access to the PSHOLD reboot
+register. This seems to be TZ, as even kicking the hypervisor doesn't
+seem to make it writable.
+
+Fixes: 865ff2e6f5da ("arm64: dts: qcom: sc8280xp: Add PS_HOLD restart")
+Reported-by: Steev Klimaszewski <steev@kali.org>
+Signed-off-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20240510-topic-8280_off-v1-1-bcc70cda449e@linaro.org
+---
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index cc69ee1d612..f8789d43e20 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -4647,6 +4647,8 @@ tsens0: thermal-sensor@c263000 {
+ 		restart@c264000 {
+ 			compatible = "qcom,pshold";
+ 			reg = <0 0x0c264000 0 0x4>;
++			/* TZ seems to block access */
++			status = "reserved";
+ 		};
+ 
+ 		tsens1: thermal-sensor@c265000 {
+-- 
+2.45.2
+

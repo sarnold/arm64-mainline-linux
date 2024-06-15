@@ -1,0 +1,60 @@
+From 69b32e00365cf06cd6a996aff81a88762be2438b Mon Sep 17 00:00:00 2001
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Date: Mon, 22 Apr 2024 14:43:53 +0100
+Subject: [PATCH 57/98] ASoC: qcom: sc8280xp: add Display port Jack
+
+Add support to Display Port Jack events, by making use of common helper
+function.
+
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Link: https://lore.kernel.org/r/20240422134354.89291-4-srinivas.kandagatla@linaro.org
+---
+ sound/soc/qcom/sc8280xp.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/sound/soc/qcom/sc8280xp.c b/sound/soc/qcom/sc8280xp.c
+index b7fd503a166..c2562841fbf 100644
+--- a/sound/soc/qcom/sc8280xp.c
++++ b/sound/soc/qcom/sc8280xp.c
+@@ -19,6 +19,7 @@ struct sc8280xp_snd_data {
+ 	struct snd_soc_card *card;
+ 	struct sdw_stream_runtime *sruntime[AFE_PORT_MAX];
+ 	struct snd_soc_jack jack;
++	struct snd_soc_jack hdmi_jack[8];
+ 	bool jack_setup;
+ };
+ 
+@@ -27,6 +28,8 @@ static int sc8280xp_snd_init(struct snd_soc_pcm_runtime *rtd)
+ 	struct sc8280xp_snd_data *data = snd_soc_card_get_drvdata(rtd->card);
+ 	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
+ 	struct snd_soc_card *card = rtd->card;
++	struct snd_soc_jack *hdmi_jack  = NULL;
++	int hdmi_pcm_id = 0;
+ 
+ 	switch (cpu_dai->id) {
+ 	case WSA_CODEC_DMA_RX_0:
+@@ -41,10 +44,21 @@ static int sc8280xp_snd_init(struct snd_soc_pcm_runtime *rtd)
+ 		snd_soc_limit_volume(card, "SpkrLeft PA Volume", 17);
+ 		snd_soc_limit_volume(card, "SpkrRight PA Volume", 17);
+ 		break;
++	case DISPLAY_PORT_RX_0:
++		hdmi_pcm_id = 0;
++		hdmi_jack = &data->hdmi_jack[hdmi_pcm_id];
++		break;
++	case DISPLAY_PORT_RX_1 ... DISPLAY_PORT_RX_7:
++		hdmi_pcm_id = cpu_dai->id - DISPLAY_PORT_RX_1 + 1;
++		hdmi_jack = &data->hdmi_jack[hdmi_pcm_id];
++		break;
+ 	default:
+ 		break;
+ 	}
+ 
++	if (hdmi_jack)
++		return qcom_snd_dp_jack_setup(rtd, hdmi_jack, hdmi_pcm_id);
++
+ 	return qcom_snd_wcd_jack_setup(rtd, &data->jack, &data->jack_setup);
+ }
+ 
+-- 
+2.45.2
+

@@ -1,0 +1,28 @@
+From 9ae99efc346ea18971406ad5e06aa66c34bcf461 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 28 Mar 2024 15:06:31 +0100
+Subject: [PATCH 46/98] mfd: pm8008: rename irq chip
+
+Drop the redundant "irq" suffix from the irq chip name.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/mfd/qcom-pm8008.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/mfd/qcom-pm8008.c b/drivers/mfd/qcom-pm8008.c
+index 673fd268e63..617cca6436f 100644
+--- a/drivers/mfd/qcom-pm8008.c
++++ b/drivers/mfd/qcom-pm8008.c
+@@ -130,7 +130,7 @@ static int pm8008_set_type_config(unsigned int **buf, unsigned int type,
+ }
+ 
+ static const struct regmap_irq_chip pm8008_irq_chip = {
+-	.name			= "pm8008_irq",
++	.name			= "pm8008",
+ 	.main_status		= I2C_INTR_STATUS_BASE,
+ 	.num_main_regs		= 1,
+ 	.irqs			= pm8008_irqs,
+-- 
+2.45.2
+

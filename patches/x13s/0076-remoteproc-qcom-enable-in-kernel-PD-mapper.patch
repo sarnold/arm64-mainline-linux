@@ -1,0 +1,274 @@
+From ed1da428db39cf40082623f05451fd0b737dcf93 Mon Sep 17 00:00:00 2001
+From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Date: Sun, 12 May 2024 00:56:07 +0300
+Subject: [PATCH 76/98] remoteproc: qcom: enable in-kernel PD mapper
+
+Request in-kernel protection domain mapper to be started before starting
+Qualcomm DSP and release it once DSP is stopped. Once all DSPs are
+stopped, the PD mapper will be stopped too.
+
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Link: https://lore.kernel.org/r/20240512-qcom-pd-mapper-v8-5-5ecbb276fcc0@linaro.org
+---
+ drivers/remoteproc/qcom_common.c    | 87 +++++++++++++++++++++++++++++
+ drivers/remoteproc/qcom_common.h    | 10 ++++
+ drivers/remoteproc/qcom_q6v5_adsp.c |  3 +
+ drivers/remoteproc/qcom_q6v5_mss.c  |  3 +
+ drivers/remoteproc/qcom_q6v5_pas.c  |  3 +
+ drivers/remoteproc/qcom_q6v5_wcss.c |  3 +
+ 6 files changed, 109 insertions(+)
+
+diff --git a/drivers/remoteproc/qcom_common.c b/drivers/remoteproc/qcom_common.c
+index 03e5f5d533e..8c8688f99f0 100644
+--- a/drivers/remoteproc/qcom_common.c
++++ b/drivers/remoteproc/qcom_common.c
+@@ -13,6 +13,7 @@
+ #include <linux/notifier.h>
+ #include <linux/remoteproc.h>
+ #include <linux/remoteproc/qcom_rproc.h>
++#include <linux/auxiliary_bus.h>
+ #include <linux/rpmsg/qcom_glink.h>
+ #include <linux/rpmsg/qcom_smd.h>
+ #include <linux/slab.h>
+@@ -25,6 +26,7 @@
+ #define to_glink_subdev(d) container_of(d, struct qcom_rproc_glink, subdev)
+ #define to_smd_subdev(d) container_of(d, struct qcom_rproc_subdev, subdev)
+ #define to_ssr_subdev(d) container_of(d, struct qcom_rproc_ssr, subdev)
++#define to_pdm_subdev(d) container_of(d, struct qcom_rproc_pdm, subdev)
+ 
+ #define MAX_NUM_OF_SS           10
+ #define MAX_REGION_NAME_LENGTH  16
+@@ -519,5 +521,90 @@ void qcom_remove_ssr_subdev(struct rproc *rproc, struct qcom_rproc_ssr *ssr)
+ }
+ EXPORT_SYMBOL_GPL(qcom_remove_ssr_subdev);
+ 
++static void pdm_dev_release(struct device *dev)
++{
++	struct auxiliary_device *adev = to_auxiliary_dev(dev);
++
++	kfree(adev);
++}
++
++static int pdm_notify_prepare(struct rproc_subdev *subdev)
++{
++	struct qcom_rproc_pdm *pdm = to_pdm_subdev(subdev);
++	struct auxiliary_device *adev;
++	int ret;
++
++	adev = kzalloc(sizeof(*adev), GFP_KERNEL);
++	if (!adev)
++		return -ENOMEM;
++
++	adev->dev.parent = pdm->dev;
++	adev->dev.release = pdm_dev_release;
++	adev->name = "pd-mapper";
++	adev->id = pdm->index;
++
++	ret = auxiliary_device_init(adev);
++	if (ret) {
++		kfree(adev);
++		return ret;
++	}
++
++	ret = auxiliary_device_add(adev);
++	if (ret) {
++		auxiliary_device_uninit(adev);
++		return ret;
++	}
++
++	pdm->adev = adev;
++
++	return 0;
++}
++
++
++static void pdm_notify_unprepare(struct rproc_subdev *subdev)
++{
++	struct qcom_rproc_pdm *pdm = to_pdm_subdev(subdev);
++
++	if (!pdm->adev)
++		return;
++
++	auxiliary_device_delete(pdm->adev);
++	auxiliary_device_uninit(pdm->adev);
++	pdm->adev = NULL;
++}
++
++/**
++ * qcom_add_pdm_subdev() - register PD Mapper subdevice
++ * @rproc:	rproc handle
++ * @pdm:	PDM subdevice handle
++ *
++ * Register @pdm so that Protection Device mapper service is started when the
++ * DSP is started too.
++ */
++void qcom_add_pdm_subdev(struct rproc *rproc, struct qcom_rproc_pdm *pdm)
++{
++	pdm->dev = &rproc->dev;
++	pdm->index = rproc->index;
++
++	pdm->subdev.prepare = pdm_notify_prepare;
++	pdm->subdev.unprepare = pdm_notify_unprepare;
++
++	rproc_add_subdev(rproc, &pdm->subdev);
++}
++EXPORT_SYMBOL_GPL(qcom_add_pdm_subdev);
++
++/**
++ * qcom_remove_pdm_subdev() - remove PD Mapper subdevice
++ * @rproc:	rproc handle
++ * @pdm:	PDM subdevice handle
++ *
++ * Remove the PD Mapper subdevice.
++ */
++void qcom_remove_pdm_subdev(struct rproc *rproc, struct qcom_rproc_pdm *pdm)
++{
++	rproc_remove_subdev(rproc, &pdm->subdev);
++}
++EXPORT_SYMBOL_GPL(qcom_remove_pdm_subdev);
++
+ MODULE_DESCRIPTION("Qualcomm Remoteproc helper driver");
+ MODULE_LICENSE("GPL v2");
+diff --git a/drivers/remoteproc/qcom_common.h b/drivers/remoteproc/qcom_common.h
+index 9ef4449052a..b07fbaa091a 100644
+--- a/drivers/remoteproc/qcom_common.h
++++ b/drivers/remoteproc/qcom_common.h
+@@ -34,6 +34,13 @@ struct qcom_rproc_ssr {
+ 	struct qcom_ssr_subsystem *info;
+ };
+ 
++struct qcom_rproc_pdm {
++	struct rproc_subdev subdev;
++	struct device *dev;
++	int index;
++	struct auxiliary_device *adev;
++};
++
+ void qcom_minidump(struct rproc *rproc, unsigned int minidump_id,
+ 			void (*rproc_dumpfn_t)(struct rproc *rproc,
+ 				struct rproc_dump_segment *segment, void *dest, size_t offset,
+@@ -52,6 +59,9 @@ void qcom_add_ssr_subdev(struct rproc *rproc, struct qcom_rproc_ssr *ssr,
+ 			 const char *ssr_name);
+ void qcom_remove_ssr_subdev(struct rproc *rproc, struct qcom_rproc_ssr *ssr);
+ 
++void qcom_add_pdm_subdev(struct rproc *rproc, struct qcom_rproc_pdm *pdm);
++void qcom_remove_pdm_subdev(struct rproc *rproc, struct qcom_rproc_pdm *pdm);
++
+ #if IS_ENABLED(CONFIG_QCOM_SYSMON)
+ struct qcom_sysmon *qcom_add_sysmon_subdev(struct rproc *rproc,
+ 					   const char *name,
+diff --git a/drivers/remoteproc/qcom_q6v5_adsp.c b/drivers/remoteproc/qcom_q6v5_adsp.c
+index 1d24c9b656a..572dcb0f055 100644
+--- a/drivers/remoteproc/qcom_q6v5_adsp.c
++++ b/drivers/remoteproc/qcom_q6v5_adsp.c
+@@ -112,6 +112,7 @@ struct qcom_adsp {
+ 	struct dev_pm_domain_list *pd_list;
+ 
+ 	struct qcom_rproc_glink glink_subdev;
++	struct qcom_rproc_pdm pdm_subdev;
+ 	struct qcom_rproc_ssr ssr_subdev;
+ 	struct qcom_sysmon *sysmon;
+ 
+@@ -726,6 +727,7 @@ static int adsp_probe(struct platform_device *pdev)
+ 		goto disable_pm;
+ 
+ 	qcom_add_glink_subdev(rproc, &adsp->glink_subdev, desc->ssr_name);
++	qcom_add_pdm_subdev(rproc, &adsp->pdm_subdev);
+ 	qcom_add_ssr_subdev(rproc, &adsp->ssr_subdev, desc->ssr_name);
+ 	adsp->sysmon = qcom_add_sysmon_subdev(rproc,
+ 					      desc->sysmon_name,
+@@ -755,6 +757,7 @@ static void adsp_remove(struct platform_device *pdev)
+ 
+ 	qcom_q6v5_deinit(&adsp->q6v5);
+ 	qcom_remove_glink_subdev(adsp->rproc, &adsp->glink_subdev);
++	qcom_remove_pdm_subdev(adsp->rproc, &adsp->pdm_subdev);
+ 	qcom_remove_sysmon_subdev(adsp->sysmon);
+ 	qcom_remove_ssr_subdev(adsp->rproc, &adsp->ssr_subdev);
+ 	qcom_rproc_pds_detach(adsp);
+diff --git a/drivers/remoteproc/qcom_q6v5_mss.c b/drivers/remoteproc/qcom_q6v5_mss.c
+index 1779fc890e1..2a42215ce8e 100644
+--- a/drivers/remoteproc/qcom_q6v5_mss.c
++++ b/drivers/remoteproc/qcom_q6v5_mss.c
+@@ -228,6 +228,7 @@ struct q6v5 {
+ 
+ 	struct qcom_rproc_glink glink_subdev;
+ 	struct qcom_rproc_subdev smd_subdev;
++	struct qcom_rproc_pdm pdm_subdev;
+ 	struct qcom_rproc_ssr ssr_subdev;
+ 	struct qcom_sysmon *sysmon;
+ 	struct platform_device *bam_dmux;
+@@ -2102,6 +2103,7 @@ static int q6v5_probe(struct platform_device *pdev)
+ 	qproc->mba_perm = BIT(QCOM_SCM_VMID_HLOS);
+ 	qcom_add_glink_subdev(rproc, &qproc->glink_subdev, "mpss");
+ 	qcom_add_smd_subdev(rproc, &qproc->smd_subdev);
++	qcom_add_pdm_subdev(rproc, &qproc->pdm_subdev);
+ 	qcom_add_ssr_subdev(rproc, &qproc->ssr_subdev, "mpss");
+ 	qproc->sysmon = qcom_add_sysmon_subdev(rproc, "modem", 0x12);
+ 	if (IS_ERR(qproc->sysmon)) {
+@@ -2143,6 +2145,7 @@ static void q6v5_remove(struct platform_device *pdev)
+ 	qcom_q6v5_deinit(&qproc->q6v5);
+ 	qcom_remove_sysmon_subdev(qproc->sysmon);
+ 	qcom_remove_ssr_subdev(rproc, &qproc->ssr_subdev);
++	qcom_remove_pdm_subdev(rproc, &qproc->pdm_subdev);
+ 	qcom_remove_smd_subdev(rproc, &qproc->smd_subdev);
+ 	qcom_remove_glink_subdev(rproc, &qproc->glink_subdev);
+ 
+diff --git a/drivers/remoteproc/qcom_q6v5_pas.c b/drivers/remoteproc/qcom_q6v5_pas.c
+index 54d8005d40a..399c3bc104b 100644
+--- a/drivers/remoteproc/qcom_q6v5_pas.c
++++ b/drivers/remoteproc/qcom_q6v5_pas.c
+@@ -109,6 +109,7 @@ struct qcom_adsp {
+ 
+ 	struct qcom_rproc_glink glink_subdev;
+ 	struct qcom_rproc_subdev smd_subdev;
++	struct qcom_rproc_pdm pdm_subdev;
+ 	struct qcom_rproc_ssr ssr_subdev;
+ 	struct qcom_sysmon *sysmon;
+ 
+@@ -771,6 +772,7 @@ static int adsp_probe(struct platform_device *pdev)
+ 
+ 	qcom_add_glink_subdev(rproc, &adsp->glink_subdev, desc->ssr_name);
+ 	qcom_add_smd_subdev(rproc, &adsp->smd_subdev);
++	qcom_add_pdm_subdev(rproc, &adsp->pdm_subdev);
+ 	adsp->sysmon = qcom_add_sysmon_subdev(rproc,
+ 					      desc->sysmon_name,
+ 					      desc->ssctl_id);
+@@ -805,6 +807,7 @@ static void adsp_remove(struct platform_device *pdev)
+ 	qcom_remove_glink_subdev(adsp->rproc, &adsp->glink_subdev);
+ 	qcom_remove_sysmon_subdev(adsp->sysmon);
+ 	qcom_remove_smd_subdev(adsp->rproc, &adsp->smd_subdev);
++	qcom_remove_pdm_subdev(adsp->rproc, &adsp->pdm_subdev);
+ 	qcom_remove_ssr_subdev(adsp->rproc, &adsp->ssr_subdev);
+ 	adsp_pds_detach(adsp, adsp->proxy_pds, adsp->proxy_pd_count);
+ 	device_init_wakeup(adsp->dev, false);
+diff --git a/drivers/remoteproc/qcom_q6v5_wcss.c b/drivers/remoteproc/qcom_q6v5_wcss.c
+index 94f68c919ee..e913dabae99 100644
+--- a/drivers/remoteproc/qcom_q6v5_wcss.c
++++ b/drivers/remoteproc/qcom_q6v5_wcss.c
+@@ -148,6 +148,7 @@ struct q6v5_wcss {
+ 	bool requires_force_stop;
+ 
+ 	struct qcom_rproc_glink glink_subdev;
++	struct qcom_rproc_pdm pdm_subdev;
+ 	struct qcom_rproc_ssr ssr_subdev;
+ };
+ 
+@@ -1052,6 +1053,7 @@ static int q6v5_wcss_probe(struct platform_device *pdev)
+ 		return ret;
+ 
+ 	qcom_add_glink_subdev(rproc, &wcss->glink_subdev, "q6wcss");
++	qcom_add_pdm_subdev(rproc, &wcss->pdm_subdev);
+ 	qcom_add_ssr_subdev(rproc, &wcss->ssr_subdev, "q6wcss");
+ 
+ 	if (desc->ssctl_id)
+@@ -1074,6 +1076,7 @@ static void q6v5_wcss_remove(struct platform_device *pdev)
+ 	struct q6v5_wcss *wcss = rproc->priv;
+ 
+ 	qcom_q6v5_deinit(&wcss->q6v5);
++	qcom_remove_pdm_subdev(rproc, &wcss->pdm_subdev);
+ 	rproc_del(rproc);
+ }
+ 
+-- 
+2.45.2
+

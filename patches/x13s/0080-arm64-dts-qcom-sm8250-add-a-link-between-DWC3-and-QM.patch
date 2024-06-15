@@ -1,0 +1,63 @@
+From 581f5e59bc58cbd4b43bf4da1d1d3e4594d9daaa Mon Sep 17 00:00:00 2001
+From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Date: Sun, 12 May 2024 01:04:10 +0300
+Subject: [PATCH 80/98] arm64: dts: qcom: sm8250: add a link between DWC3 and
+ QMP PHY
+
+The SuperSpeed signals originate from the DWC3 host controller and then
+are routed through the Combo QMP PHY, where they are multiplexed with
+the DisplayPort signals. Add corresponding OF graph link.
+
+Reported-by: Luca Weiss <luca.weiss@fairphone.com>
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20240512-typec-fix-sm8250-v4-4-ad153c747a97@linaro.org
+---
+ arch/arm64/boot/dts/qcom/sm8250.dtsi | 24 ++++++++++++++++++++++--
+ 1 file changed, 22 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8250.dtsi b/arch/arm64/boot/dts/qcom/sm8250.dtsi
+index 440bbb89bf8..cfc07dd9d0e 100644
+--- a/arch/arm64/boot/dts/qcom/sm8250.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8250.dtsi
+@@ -3917,6 +3917,10 @@ port@0 {
+ 
+ 				port@1 {
+ 					reg = <1>;
++
++					usb_1_qmpphy_usb_ss_in: endpoint {
++						remote-endpoint = <&usb_1_dwc3_ss_out>;
++					};
+ 				};
+ 
+ 				port@2 {
+@@ -4195,8 +4199,24 @@ usb_1_dwc3: usb@a600000 {
+ 				phys = <&usb_1_hsphy>, <&usb_1_qmpphy QMP_USB43DP_USB3_PHY>;
+ 				phy-names = "usb2-phy", "usb3-phy";
+ 
+-				port {
+-					usb_1_dwc3_hs_out: endpoint {};
++				ports {
++					#address-cells = <1>;
++					#size-cells = <0>;
++
++					port@0 {
++						reg = <0>;
++
++						usb_1_dwc3_hs_out: endpoint {
++						};
++					};
++
++					port@1 {
++						reg = <1>;
++
++						usb_1_dwc3_ss_out: endpoint {
++							remote-endpoint = <&usb_1_qmpphy_usb_ss_in>;
++						};
++					};
+ 				};
+ 			};
+ 		};
+-- 
+2.45.2
+

@@ -1,0 +1,40 @@
+From b7859255abc16ca4e0581fc4be84ddeb269c1368 Mon Sep 17 00:00:00 2001
+From: Konrad Dybcio <konrad.dybcio@linaro.org>
+Date: Thu, 7 Mar 2024 21:25:56 +0100
+Subject: [PATCH 69/98] arm64: dts: qcom: sc8280xp: Add PS_HOLD restart
+
+Killing the platform with a single write and no firmware involvement is
+pretty cool, add support for it.
+
+Note that due to restart notifier priority settings, PSCI reset will
+be used instead, unless:
+
+a) PSCI is not exposed by the firmware (e.g. because the fw was replaced)
+or
+b) PSCI restart fails for some reason
+
+Signed-off-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20240307-topic-8280_nodes-v1-3-4eba20e08902@linaro.org
+---
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index 8a9222f0f83..6e0daa959ed 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -4643,6 +4643,11 @@ tsens0: thermal-sensor@c263000 {
+ 			#thermal-sensor-cells = <1>;
+ 		};
+ 
++		restart@c264000 {
++			compatible = "qcom,pshold";
++			reg = <0 0x0c264000 0 0x4>;
++		};
++
+ 		tsens1: thermal-sensor@c265000 {
+ 			compatible = "qcom,sc8280xp-tsens", "qcom,tsens-v2";
+ 			reg = <0 0x0c265000 0 0x1ff>, /* TM */
+-- 
+2.45.2
+

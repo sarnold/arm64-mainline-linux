@@ -1,0 +1,25 @@
+From e593d3a2754956a12aacd4492b475c7c9a425596 Mon Sep 17 00:00:00 2001
+From: Steev Klimaszewski <steev@kali.org>
+Date: Sat, 18 May 2024 17:57:25 -0500
+Subject: [PATCH 89/98] fixup: soc: qcom: add pd-mapper implementation
+
+Add missing include that the ci keeps complaining about
+---
+ drivers/soc/qcom/qcom_pd_mapper.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/soc/qcom/qcom_pd_mapper.c b/drivers/soc/qcom/qcom_pd_mapper.c
+index ecb64f06527..a4c00708066 100644
+--- a/drivers/soc/qcom/qcom_pd_mapper.c
++++ b/drivers/soc/qcom/qcom_pd_mapper.c
+@@ -11,6 +11,7 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/refcount.h>
++#include <linux/slab.h>
+ #include <linux/soc/qcom/qmi.h>
+ 
+ #include "pdr_internal.h"
+-- 
+2.45.2
+

@@ -1,0 +1,62 @@
+From 97eb66f0455b9d2112a9ca1ed7eeeeadf7b0e6c4 Mon Sep 17 00:00:00 2001
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Date: Mon, 27 May 2024 10:42:37 +0200
+Subject: [PATCH 97/98] arm64: dts: qcom-sm8550: allow 4 lanes for DisplayPort
+ and enable QMP PHY mode-switch
+
+Allow up to 4 lanes for the DisplayPort link from the PHY to the Controller
+and allow mode-switch events to the QMP Combo PHY.
+
+Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Link: https://lore.kernel.org/r/20240527-topic-sm8x50-upstream-phy-combo-typec-mux-v2-5-a03e68d7b8fc@linaro.org
+---
+ arch/arm64/boot/dts/qcom/sm8550-hdk.dts | 3 ++-
+ arch/arm64/boot/dts/qcom/sm8550-qrd.dts | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8550-hdk.dts b/arch/arm64/boot/dts/qcom/sm8550-hdk.dts
+index 12d60a0ee09..86d6f993acd 100644
+--- a/arch/arm64/boot/dts/qcom/sm8550-hdk.dts
++++ b/arch/arm64/boot/dts/qcom/sm8550-hdk.dts
+@@ -941,7 +941,7 @@ &mdss_dp0 {
+ 
+ &mdss_dp0_out {
+ 	remote-endpoint = <&usb_dp_qmpphy_dp_in>;
+-	data-lanes = <0 1>;
++	data-lanes = <0 1 2 3>;
+ };
+ 
+ &pcie0 {
+@@ -1284,6 +1284,7 @@ &usb_dp_qmpphy {
+ 	vdda-phy-supply = <&vreg_l3e_1p2>;
+ 	vdda-pll-supply = <&vreg_l3f_0p88>;
+ 
++	mode-switch;
+ 	orientation-switch;
+ 
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/qcom/sm8550-qrd.dts b/arch/arm64/boot/dts/qcom/sm8550-qrd.dts
+index 92f01501741..2f6c76c9a13 100644
+--- a/arch/arm64/boot/dts/qcom/sm8550-qrd.dts
++++ b/arch/arm64/boot/dts/qcom/sm8550-qrd.dts
+@@ -806,7 +806,7 @@ &mdss_dp0 {
+ };
+ 
+ &mdss_dp0_out {
+-	data-lanes = <0 1>;
++	data-lanes = <0 1 2 3>;
+ 	remote-endpoint = <&usb_dp_qmpphy_dp_in>;
+ };
+ 
+@@ -1161,6 +1161,7 @@ &usb_dp_qmpphy {
+ 	vdda-phy-supply = <&vreg_l3e_1p2>;
+ 	vdda-pll-supply = <&vreg_l3f_0p88>;
+ 
++	mode-switch;
+ 	orientation-switch;
+ 
+ 	status = "okay";
+-- 
+2.45.2
+

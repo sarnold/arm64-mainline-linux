@@ -1,0 +1,29 @@
+From b302472ce71fd4c23f5433ac5a18a8ac12b1cb03 Mon Sep 17 00:00:00 2001
+From: Konrad Dybcio <konrad.dybcio@linaro.org>
+Date: Thu, 7 Mar 2024 21:25:54 +0100
+Subject: [PATCH 67/98] dt-bindings: nvmem: Add compatible for SC8280XP
+
+Document the QFPROM block found on SC8280XP.
+
+Signed-off-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Acked-by: Rob Herring <robh@kernel.org>
+Link: https://lore.kernel.org/r/20240307-topic-8280_nodes-v1-1-4eba20e08902@linaro.org
+---
+ Documentation/devicetree/bindings/nvmem/qcom,qfprom.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/nvmem/qcom,qfprom.yaml b/Documentation/devicetree/bindings/nvmem/qcom,qfprom.yaml
+index 8c8f05d9eaf..65df38bfc17 100644
+--- a/Documentation/devicetree/bindings/nvmem/qcom,qfprom.yaml
++++ b/Documentation/devicetree/bindings/nvmem/qcom,qfprom.yaml
+@@ -34,6 +34,7 @@ properties:
+           - qcom,qcs404-qfprom
+           - qcom,sc7180-qfprom
+           - qcom,sc7280-qfprom
++          - qcom,sc8280xp-qfprom
+           - qcom,sdm630-qfprom
+           - qcom,sdm670-qfprom
+           - qcom,sdm845-qfprom
+-- 
+2.45.2
+

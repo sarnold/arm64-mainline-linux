@@ -1,0 +1,44 @@
+From 1ffba7abbea90703b1891f2b4067ba890c8d8e4d Mon Sep 17 00:00:00 2001
+From: Lingbo Kong <quic_lingbok@quicinc.com>
+Date: Sat, 9 Mar 2024 20:11:29 +0800
+Subject: [PATCH 64/98] wifi: ath11k: modify the calculation of the average
+ signal strength in station mode
+
+Currently, the calculation of the average signal strength in station mode
+is incorrect.
+
+This is because before calculating the average signal strength, ath11k need
+to determine whether the hardware and firmware support db2dbm, if the
+hardware and firmware support db2dbm, do not need to add noise floor,
+otherwise, need to add noise floor.
+
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
+
+Signed-off-by: Lingbo Kong <quic_lingbok@quicinc.com>
+Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+Link: https://lore.kernel.org/r/20240309121129.5379-1-quic_lingbok@quicinc.com
+---
+ drivers/net/wireless/ath/ath11k/mac.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 9f4bf41a3d4..bf8a6228584 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -8976,8 +8976,11 @@ static void ath11k_mac_op_sta_statistics(struct ieee80211_hw *hw,
+ 		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
+ 	}
+ 
+-	sinfo->signal_avg = ewma_avg_rssi_read(&arsta->avg_rssi) +
+-		ATH11K_DEFAULT_NOISE_FLOOR;
++	sinfo->signal_avg = ewma_avg_rssi_read(&arsta->avg_rssi);
++
++	if (!db2dbm)
++		sinfo->signal_avg += ATH11K_DEFAULT_NOISE_FLOOR;
++
+ 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL_AVG);
+ }
+ 
+-- 
+2.45.2
+

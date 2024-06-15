@@ -1,0 +1,36 @@
+From 01f118e3c9092f5fc325f8f5a30b535618295992 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Tue, 9 Apr 2024 15:37:05 +0200
+Subject: [PATCH 39/98] arm64: dts: qcom: sc8280xp-crd: use external pull up
+ for touch reset
+
+The touch controller reset line is currently not described by the
+devicetree except in the pin configuration which is used to deassert
+reset.
+
+As the reset line has an external pull up to an always-on rail there is
+no need to drive the pin high so just leave it configured as an input
+and disable the internal pull down.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-crd.dts | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+index 41215567b3a..372b35fb844 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+@@ -977,8 +977,7 @@ int-n-pins {
+ 		reset-n-pins {
+ 			pins = "gpio99";
+ 			function = "gpio";
+-			output-high;
+-			drive-strength = <16>;
++			bias-disable;
+ 		};
+ 	};
+ 
+-- 
+2.45.2
+

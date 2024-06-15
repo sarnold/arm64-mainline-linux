@@ -1,0 +1,29 @@
+From 8fc0eb3256dd26bff0f6213cc172571ef83d79d6 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Sun, 5 May 2024 15:12:48 +0200
+Subject: [PATCH 47/98] mfd: pm8008: drop unused driver data
+
+The i2c client driver data pointer has never been used so drop the
+unnecessary assignment.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/mfd/qcom-pm8008.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/mfd/qcom-pm8008.c b/drivers/mfd/qcom-pm8008.c
+index 617cca6436f..426d2888605 100644
+--- a/drivers/mfd/qcom-pm8008.c
++++ b/drivers/mfd/qcom-pm8008.c
+@@ -167,8 +167,6 @@ static int pm8008_probe(struct i2c_client *client)
+ 	if (IS_ERR(regmap))
+ 		return PTR_ERR(regmap);
+ 
+-	i2c_set_clientdata(client, regmap);
+-
+ 	reset = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
+ 	if (IS_ERR(reset))
+ 		return PTR_ERR(reset);
+-- 
+2.45.2
+

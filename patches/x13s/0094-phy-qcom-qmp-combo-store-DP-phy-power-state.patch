@@ -1,0 +1,47 @@
+From 8b5f2ea82c7cbaa8c17428586e3d48e57b328015 Mon Sep 17 00:00:00 2001
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Date: Mon, 27 May 2024 10:42:34 +0200
+Subject: [PATCH 94/98] phy: qcom: qmp-combo: store DP phy power state
+
+Switching the PHY Mode requires the DisplayPort PHY to be powered off,
+keep track of the DisplayPort phy power state.
+
+Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+Link: https://lore.kernel.org/r/20240527-topic-sm8x50-upstream-phy-combo-typec-mux-v2-2-a03e68d7b8fc@linaro.org
+---
+ drivers/phy/qualcomm/phy-qcom-qmp-combo.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-combo.c b/drivers/phy/qualcomm/phy-qcom-qmp-combo.c
+index e48e87c3cb0..5485b274c83 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp-combo.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp-combo.c
+@@ -1494,6 +1494,7 @@ struct qmp_combo {
+ 	unsigned int dp_aux_cfg;
+ 	struct phy_configure_opts_dp dp_opts;
+ 	unsigned int dp_init_count;
++	bool dp_powered_on;
+ 
+ 	struct clk_fixed_rate pipe_clk_fixed;
+ 	struct clk_hw dp_link_hw;
+@@ -2629,6 +2630,8 @@ static int qmp_combo_dp_power_on(struct phy *phy)
+ 	/* Configure link rate, swing, etc. */
+ 	cfg->configure_dp_phy(qmp);
+ 
++	qmp->dp_powered_on = true;
++
+ 	mutex_unlock(&qmp->phy_mutex);
+ 
+ 	return 0;
+@@ -2643,6 +2646,8 @@ static int qmp_combo_dp_power_off(struct phy *phy)
+ 	/* Assert DP PHY power down */
+ 	writel(DP_PHY_PD_CTL_PSR_PWRDN, qmp->dp_dp_phy + QSERDES_DP_PHY_PD_CTL);
+ 
++	qmp->dp_powered_on = false;
++
+ 	mutex_unlock(&qmp->phy_mutex);
+ 
+ 	return 0;
+-- 
+2.45.2
+

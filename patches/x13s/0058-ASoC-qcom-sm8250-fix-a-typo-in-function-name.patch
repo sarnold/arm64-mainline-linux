@@ -1,0 +1,39 @@
+From 4418f1ffa4fcdc664ff7bbf3a8f5fd74968828c0 Mon Sep 17 00:00:00 2001
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Date: Mon, 22 Apr 2024 14:43:54 +0100
+Subject: [PATCH 58/98] ASoC: qcom: sm8250: fix a typo in function name
+
+Fix a small type in the function name as its confusing to see a SoC name
+that does not exist.
+
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Link: https://lore.kernel.org/r/20240422134354.89291-5-srinivas.kandagatla@linaro.org
+---
+ sound/soc/qcom/sm8250.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/qcom/sm8250.c b/sound/soc/qcom/sm8250.c
+index d70df72c016..9bd159b81d6 100644
+--- a/sound/soc/qcom/sm8250.c
++++ b/sound/soc/qcom/sm8250.c
+@@ -70,7 +70,7 @@ static int sm8250_snd_startup(struct snd_pcm_substream *substream)
+ 	return qcom_snd_sdw_startup(substream);
+ }
+ 
+-static void sm2450_snd_shutdown(struct snd_pcm_substream *substream)
++static void sm8250_snd_shutdown(struct snd_pcm_substream *substream)
+ {
+ 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+ 	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
+@@ -115,7 +115,7 @@ static int sm8250_snd_hw_free(struct snd_pcm_substream *substream)
+ 
+ static const struct snd_soc_ops sm8250_be_ops = {
+ 	.startup = sm8250_snd_startup,
+-	.shutdown = sm2450_snd_shutdown,
++	.shutdown = sm8250_snd_shutdown,
+ 	.hw_params = sm8250_snd_hw_params,
+ 	.hw_free = sm8250_snd_hw_free,
+ 	.prepare = sm8250_snd_prepare,
+-- 
+2.45.2
+

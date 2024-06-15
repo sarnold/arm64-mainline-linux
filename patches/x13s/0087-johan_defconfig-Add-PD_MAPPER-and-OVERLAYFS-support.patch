@@ -1,0 +1,32 @@
+From 4c47e53c6459dd91ad2f25477dae9dfe2649fe53 Mon Sep 17 00:00:00 2001
+From: Steev Klimaszewski <steev@kali.org>
+Date: Thu, 16 May 2024 17:52:13 -0500
+Subject: [PATCH 87/98] johan_defconfig: Add PD_MAPPER and OVERLAYFS support
+
+---
+ arch/arm64/configs/johan_defconfig | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/configs/johan_defconfig b/arch/arm64/configs/johan_defconfig
+index 5dd4a185b19..798a67ca0a8 100644
+--- a/arch/arm64/configs/johan_defconfig
++++ b/arch/arm64/configs/johan_defconfig
+@@ -345,6 +345,7 @@ CONFIG_QCOM_AOSS_QMP=y
+ CONFIG_QCOM_COMMAND_DB=y
+ CONFIG_QCOM_GENI_SE=y
+ CONFIG_QCOM_LLCC=m
++CONFIG_QCOM_PD_MAPPER=m
+ CONFIG_QCOM_PMIC_GLINK=m
+ CONFIG_QCOM_RMTFS_MEM=m
+ CONFIG_QCOM_RPMH=y
+@@ -383,6 +384,7 @@ CONFIG_FANOTIFY=y
+ CONFIG_QUOTA=y
+ CONFIG_AUTOFS_FS=m
+ CONFIG_FUSE_FS=m
++CONFIG_OVERLAY_FS=m
+ CONFIG_VFAT_FS=y
+ CONFIG_NTFS_FS=m
+ CONFIG_TMPFS_POSIX_ACL=y
+-- 
+2.45.2
+

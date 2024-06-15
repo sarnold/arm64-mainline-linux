@@ -1,0 +1,52 @@
+From fa9f2f3ccc217a38284f39ed9c8ab8f3e1475c70 Mon Sep 17 00:00:00 2001
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Date: Mon, 27 May 2024 10:42:33 +0200
+Subject: [PATCH 93/98] dt-bindings: phy: qcom,sc8280xp-qmp-usb43dp: Reference
+ usb-switch.yaml to allow mode-switch
+
+The QMP USB3/DP Combo PHY can work in 3 modes:
+- DisplayPort Only
+- USB3 Only
+- USB3 + DisplayPort Combo mode
+
+In order to switch between those modes, the PHY needs to receive
+Type-C events, allow marking to the phy with the mode-switch
+property in order to allow the PHY to Type-C events.
+
+Reference usb-switch.yaml as a simpler way to allow the mode-switch
+property instead of duplicating the property definition.
+
+Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+Link: https://lore.kernel.org/r/20240527-topic-sm8x50-upstream-phy-combo-typec-mux-v2-1-a03e68d7b8fc@linaro.org
+---
+ .../bindings/phy/qcom,sc8280xp-qmp-usb43dp-phy.yaml        | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-usb43dp-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-usb43dp-phy.yaml
+index 2d0d7e9e643..5358d3a6fde 100644
+--- a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-usb43dp-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-usb43dp-phy.yaml
+@@ -71,10 +71,8 @@ properties:
+     description:
+       See include/dt-bindings/phy/phy-qcom-qmp.h
+ 
+-  orientation-switch:
+-    description:
+-      Flag the PHY as possible handler of USB Type-C orientation switching
+-    type: boolean
++  mode-switch: true
++  orientation-switch: true
+ 
+   ports:
+     $ref: /schemas/graph.yaml#/properties/ports
+@@ -104,6 +102,7 @@ required:
+   - "#phy-cells"
+ 
+ allOf:
++  - $ref: /schemas/usb/usb-switch.yaml#
+   - if:
+       properties:
+         compatible:
+-- 
+2.45.2
+

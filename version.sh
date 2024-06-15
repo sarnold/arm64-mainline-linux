@@ -2,9 +2,9 @@
 #
 ARCH=$(uname -m)
 
-config="defconfig"
+config="johan_defconfig"
 
-build_prefix="-arm64-r"
+build_prefix="-x13s-r"
 branch_prefix="v"
 branch_postfix=".x"
 
@@ -44,10 +44,10 @@ toolchain="gcc_13_aarch64"
 
 #Kernel
 KERNEL_REL=6.9
-KERNEL_TAG=${KERNEL_REL}
+KERNEL_TAG=${KERNEL_REL}.2
 kernel_rt=".X-rtY"
 #Kernel Build
-BUILD=${build_prefix}1
+BUILD=${build_prefix}3
 
 #v6.X-rcX + upto SHA
 #prev_KERNEL_SHA=""

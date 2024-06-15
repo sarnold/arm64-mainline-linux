@@ -1,0 +1,81 @@
+From 6bee518d596e540dec032d8f4943e6adb45640f4 Mon Sep 17 00:00:00 2001
+From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Date: Sun, 12 May 2024 01:04:07 +0300
+Subject: [PATCH 77/98] dt-bindings: clk: qcom,dispcc-sm8x50: describe
+ additional DP clocks
+
+On the affected Qualcomm platforms the display clock controller has
+additional DP input clocks, describe them in DT schema.
+
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Link: https://lore.kernel.org/r/20240512-typec-fix-sm8250-v4-1-ad153c747a97@linaro.org
+---
+ .../bindings/clock/qcom,dispcc-sm8x50.yaml    | 28 +++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/clock/qcom,dispcc-sm8x50.yaml b/Documentation/devicetree/bindings/clock/qcom,dispcc-sm8x50.yaml
+index 59cc88a52f6..5831579b572 100644
+--- a/Documentation/devicetree/bindings/clock/qcom,dispcc-sm8x50.yaml
++++ b/Documentation/devicetree/bindings/clock/qcom,dispcc-sm8x50.yaml
+@@ -27,6 +27,7 @@ properties:
+       - qcom,sm8350-dispcc
+ 
+   clocks:
++    minItems: 7
+     items:
+       - description: Board XO source
+       - description: Byte clock from DSI PHY0
+@@ -35,8 +36,15 @@ properties:
+       - description: Pixel clock from DSI PHY1
+       - description: Link clock from DP PHY
+       - description: VCO DIV clock from DP PHY
++      - description: Link clock from eDP PHY
++      - description: VCO DIV clock from eDP PHY
++      - description: Link clock from DP1 PHY
++      - description: VCO DIV clock from DP1 PHY
++      - description: Link clock from DP2 PHY
++      - description: VCO DIV clock from DP2 PHY
+ 
+   clock-names:
++    minItems: 7
+     items:
+       - const: bi_tcxo
+       - const: dsi0_phy_pll_out_byteclk
+@@ -45,6 +53,12 @@ properties:
+       - const: dsi1_phy_pll_out_dsiclk
+       - const: dp_phy_pll_link_clk
+       - const: dp_phy_pll_vco_div_clk
++      - const: edp_phy_pll_link_clk
++      - const: edp_phy_pll_vco_div_clk
++      - const: dptx1_phy_pll_link_clk
++      - const: dptx1_phy_pll_vco_div_clk
++      - const: dptx2_phy_pll_link_clk
++      - const: dptx2_phy_pll_vco_div_clk
+ 
+   '#clock-cells':
+     const: 1
+@@ -68,6 +82,20 @@ properties:
+       A phandle to an OPP node describing required MMCX performance point.
+     maxItems: 1
+ 
++allOf:
++  - if:
++      not:
++        properties:
++          compatible:
++            contains:
++              const: qcom,sc8180x-dispcc
++    then:
++      properties:
++        clocks:
++          maxItems: 7
++        clock-names:
++          maxItems: 7
++
+ required:
+   - compatible
+   - reg
+-- 
+2.45.2
+

@@ -1,0 +1,57 @@
+From 4ad79d624a0a64db0b59f60b4c2225c8a5b92f96 Mon Sep 17 00:00:00 2001
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Date: Mon, 27 May 2024 10:42:39 +0200
+Subject: [PATCH 98/98] arm64: dts: qcom: sc8280xp-lenovo-thinkpad-x13: allow 4
+ lanes for DisplayPort and enable QMP PHY mode-switch
+
+Allow up to 4 lanes for the DisplayPort link from the PHYs to the Controllers
+and allow mode-switch events to the QMP Combo PHYs.
+
+Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Link: https://lore.kernel.org/r/20240527-topic-sm8x50-upstream-phy-combo-typec-mux-v2-7-a03e68d7b8fc@linaro.org
+---
+ arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index 701d506318c..89d6f730830 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -612,7 +612,7 @@ &mdss0_dp0 {
+ };
+ 
+ &mdss0_dp0_out {
+-	data-lanes = <0 1>;
++	data-lanes = <0 1 2 3>;
+ 	remote-endpoint = <&usb_0_qmpphy_dp_in>;
+ };
+ 
+@@ -621,7 +621,7 @@ &mdss0_dp1 {
+ };
+ 
+ &mdss0_dp1_out {
+-	data-lanes = <0 1>;
++	data-lanes = <0 1 2 3>;
+ 	remote-endpoint = <&usb_1_qmpphy_dp_in>;
+ };
+ 
+@@ -1254,6 +1254,7 @@ &usb_0_qmpphy {
+ 	vdda-phy-supply = <&vreg_l9d>;
+ 	vdda-pll-supply = <&vreg_l4d>;
+ 
++	mode-switch;
+ 	orientation-switch;
+ 
+ 	status = "okay";
+@@ -1291,6 +1292,7 @@ &usb_1_qmpphy {
+ 	vdda-phy-supply = <&vreg_l4b>;
+ 	vdda-pll-supply = <&vreg_l3b>;
+ 
++	mode-switch;
+ 	orientation-switch;
+ 
+ 	status = "okay";
+-- 
+2.45.2
+

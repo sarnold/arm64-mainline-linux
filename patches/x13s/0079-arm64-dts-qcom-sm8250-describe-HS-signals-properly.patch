@@ -1,0 +1,89 @@
+From 866369e7d841c7b11d1700cff92d56de2ba61a62 Mon Sep 17 00:00:00 2001
+From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Date: Sun, 12 May 2024 01:04:09 +0300
+Subject: [PATCH 79/98] arm64: dts: qcom: sm8250: describe HS signals properly
+
+The OF graph should describe physical signals. There is no 'role switch'
+signal between Type-C connector and the DWC3 USB controller. Rename
+endpoints to mention USB HS signal instead (this follows the example
+lead by other plaforms, including QRB2210 RB1, QRB4210 RB2 and all PMIC
+GLINK platforms).
+
+Reviewed-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20240512-typec-fix-sm8250-v4-3-ad153c747a97@linaro.org
+---
+ arch/arm64/boot/dts/qcom/qrb5165-rb5.dts                 | 8 ++++----
+ arch/arm64/boot/dts/qcom/sm8250-xiaomi-elish-common.dtsi | 8 ++++----
+ arch/arm64/boot/dts/qcom/sm8250.dtsi                     | 2 +-
+ 3 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/qrb5165-rb5.dts b/arch/arm64/boot/dts/qcom/qrb5165-rb5.dts
+index cd0db4f31d4..44239d1e57e 100644
+--- a/arch/arm64/boot/dts/qcom/qrb5165-rb5.dts
++++ b/arch/arm64/boot/dts/qcom/qrb5165-rb5.dts
+@@ -1356,8 +1356,8 @@ &usb_1_dwc3 {
+ 	usb-role-switch;
+ };
+ 
+-&usb_1_role_switch_out {
+-	remote-endpoint = <&pm8150b_role_switch_in>;
++&usb_1_dwc3_hs_out {
++	remote-endpoint = <&pm8150b_hs_in>;
+ };
+ 
+ &usb_1_hsphy {
+@@ -1465,8 +1465,8 @@ ports {
+ 
+ 			port@0 {
+ 				reg = <0>;
+-				pm8150b_role_switch_in: endpoint {
+-					remote-endpoint = <&usb_1_role_switch_out>;
++				pm8150b_hs_in: endpoint {
++					remote-endpoint = <&usb_1_dwc3_hs_out>;
+ 				};
+ 			};
+ 
+diff --git a/arch/arm64/boot/dts/qcom/sm8250-xiaomi-elish-common.dtsi b/arch/arm64/boot/dts/qcom/sm8250-xiaomi-elish-common.dtsi
+index 6f54f50a70b..99915a2b97e 100644
+--- a/arch/arm64/boot/dts/qcom/sm8250-xiaomi-elish-common.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8250-xiaomi-elish-common.dtsi
+@@ -652,8 +652,8 @@ ports {
+ 			port@0 {
+ 				reg = <0>;
+ 
+-				pm8150b_role_switch_in: endpoint {
+-					remote-endpoint = <&usb_1_role_switch_out>;
++				pm8150b_hs_in: endpoint {
++					remote-endpoint = <&usb_1_dwc3_hs_out>;
+ 				};
+ 			};
+ 		};
+@@ -716,8 +716,8 @@ &usb_1_hsphy {
+ 	status = "okay";
+ };
+ 
+-&usb_1_role_switch_out {
+-	remote-endpoint = <&pm8150b_role_switch_in>;
++&usb_1_dwc3_hs_out {
++	remote-endpoint = <&pm8150b_hs_in>;
+ };
+ 
+ &ufs_mem_hc {
+diff --git a/arch/arm64/boot/dts/qcom/sm8250.dtsi b/arch/arm64/boot/dts/qcom/sm8250.dtsi
+index 7f2333c9d17..440bbb89bf8 100644
+--- a/arch/arm64/boot/dts/qcom/sm8250.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8250.dtsi
+@@ -4196,7 +4196,7 @@ usb_1_dwc3: usb@a600000 {
+ 				phy-names = "usb2-phy", "usb3-phy";
+ 
+ 				port {
+-					usb_1_role_switch_out: endpoint {};
++					usb_1_dwc3_hs_out: endpoint {};
+ 				};
+ 			};
+ 		};
+-- 
+2.45.2
+

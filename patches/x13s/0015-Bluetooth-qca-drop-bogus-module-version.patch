@@ -1,0 +1,39 @@
+From 3d6fa39fbebe38d0ba0d6ab68198b66b4d6874bd Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Wed, 1 May 2024 10:30:11 +0200
+Subject: [PATCH 15/98] Bluetooth: qca: drop bogus module version
+
+Random module versions serves no purpose, what matters is the kernel
+version.
+
+Drop the bogus module version which has never been updated.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/bluetooth/btqca.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/drivers/bluetooth/btqca.c b/drivers/bluetooth/btqca.c
+index 2ba1f21f032..8980e31e509 100644
+--- a/drivers/bluetooth/btqca.c
++++ b/drivers/bluetooth/btqca.c
+@@ -13,8 +13,6 @@
+ 
+ #include "btqca.h"
+ 
+-#define VERSION "0.1"
+-
+ int qca_read_soc_version(struct hci_dev *hdev, struct qca_btsoc_version *ver,
+ 			 enum qca_btsoc_type soc_type)
+ {
+@@ -941,6 +939,5 @@ EXPORT_SYMBOL_GPL(qca_set_bdaddr);
+ 
+ 
+ MODULE_AUTHOR("Ben Young Tae Kim <ytkim@qca.qualcomm.com>");
+-MODULE_DESCRIPTION("Bluetooth support for Qualcomm Atheros family ver " VERSION);
+-MODULE_VERSION(VERSION);
++MODULE_DESCRIPTION("Bluetooth support for Qualcomm Atheros family");
+ MODULE_LICENSE("GPL");
+-- 
+2.45.2
+

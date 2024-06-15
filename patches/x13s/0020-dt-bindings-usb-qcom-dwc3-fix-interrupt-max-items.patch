@@ -1,0 +1,42 @@
+From 3b50593d58ce99ece1c07d441d70f465b22e730a Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 9 May 2024 10:27:42 +0200
+Subject: [PATCH 20/98] dt-bindings: usb: qcom,dwc3: fix interrupt max items
+
+A recent commit adding the SC8280XP multiport controller to the binding
+failed to update the interrupt maxItems, which results it DT checker
+warnings like:
+
+	arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dtb: usb@a4f8800: interrupts-extended: [[1, 0, 130, 4], [1, 0, 135, 4], [1, 0, 857, 4], [1, 0, 856, 4], [1, 0, 131, 4], [1, 0, 136, 4], [1, 0, 860, 4], [1, 0, 859, 4], [136, 127, 3], [136, 126, 3], [136, 129, 3], [136, 128, 3], [136, 131, 3], [136, 130, 3], [136, 133, 3], [136, 132, 3], [136, 16, 4], [136, 17, 4]] is too long
+
+Fixes: 80adfb54044e ("dt-bindings: usb: qcom,dwc3: Add bindings for SC8280 Multiport")
+Reported-by: "Rob Herring (Arm)" <robh@kernel.org>
+Link: https://lore.kernel.org/r/171502764588.89686.5159158035724685961.robh@kernel.org
+Link: https://lore.kernel.org/lkml/171449016553.3484108.5214033788092698309.robh@kernel.org/
+Cc: Krishna Kurapati <quic_kriskura@quicinc.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ Documentation/devicetree/bindings/usb/qcom,dwc3.yaml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/usb/qcom,dwc3.yaml b/Documentation/devicetree/bindings/usb/qcom,dwc3.yaml
+index f55f601c032..7dfd2d88b90 100644
+--- a/Documentation/devicetree/bindings/usb/qcom,dwc3.yaml
++++ b/Documentation/devicetree/bindings/usb/qcom,dwc3.yaml
+@@ -118,11 +118,11 @@ properties:
+                                exception of SDM670/SDM845/SM6350.
+         - ss_phy_irq: Used for remote wakeup in Super Speed mode of operation.
+     minItems: 2
+-    maxItems: 5
++    maxItems: 18
+ 
+   interrupt-names:
+     minItems: 2
+-    maxItems: 5
++    maxItems: 18
+ 
+   qcom,select-utmi-as-pipe-clk:
+     description:
+-- 
+2.45.2
+

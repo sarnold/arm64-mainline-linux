@@ -1,0 +1,47 @@
+From add55c84ef5d9e867b52498ce9ebdb1310b18027 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Wed, 10 Apr 2024 09:14:58 +0200
+Subject: [PATCH 36/98] dt-bindings: HID: i2c-hid: elan: add
+ 'no-reset-on-power-off' property
+
+When the power supply is shared with other peripherals the reset line
+can be wired in such a way that it can remain deasserted regardless of
+whether the supply is on or not.
+
+This is important as it can be used to avoid holding the controller in
+reset for extended periods of time when it remains powered, something
+which can lead to increased power consumption. Leaving reset deasserted
+also avoids leaking current through the reset circuitry pull-up
+resistors.
+
+Add a new 'no-reset-on-power-off' devicetree property which can be used
+by the OS to determine when reset needs to be asserted on power down.
+
+Note that this property can also be used when the supply cannot be
+turned off by the OS at all.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ Documentation/devicetree/bindings/input/elan,ekth6915.yaml | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/input/elan,ekth6915.yaml b/Documentation/devicetree/bindings/input/elan,ekth6915.yaml
+index be84f7ed0ab..a62916d07a0 100644
+--- a/Documentation/devicetree/bindings/input/elan,ekth6915.yaml
++++ b/Documentation/devicetree/bindings/input/elan,ekth6915.yaml
+@@ -36,6 +36,12 @@ properties:
+   reset-gpios:
+     description: Reset GPIO; not all touchscreens using eKTH6915 hook this up.
+ 
++  no-reset-on-power-off:
++    type: boolean
++    description:
++      Reset line is wired so that it can (and should) be left deasserted when
++      the power supply is off.
++
+   vcc33-supply:
+     description: The 3.3V supply to the touchscreen.
+ 
+-- 
+2.45.2
+

@@ -1,0 +1,28 @@
+From c29b8e37dcc90850b4e88bd1e9d52ea2f87aad3d Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Fri, 26 Apr 2024 08:28:21 +0200
+Subject: [PATCH 40/98] arm64: defconfig: enable Elan i2c-hid driver
+
+Enable the Elan i2c-hid driver which is needed for the touchscreen on
+machines like the Lenovo ThinkPad X13s.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index ac6fb3de1e3..56fb9725d7c 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -1023,6 +1023,7 @@ CONFIG_SND_AUDIO_GRAPH_CARD2=m
+ CONFIG_HID_MULTITOUCH=m
+ CONFIG_I2C_HID_ACPI=m
+ CONFIG_I2C_HID_OF=m
++CONFIG_I2C_HID_OF_ELAN=m
+ CONFIG_USB=y
+ CONFIG_USB_OTG=y
+ CONFIG_USB_XHCI_HCD=y
+-- 
+2.45.2
+

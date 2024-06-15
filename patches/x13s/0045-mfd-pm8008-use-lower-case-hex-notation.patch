@@ -1,0 +1,39 @@
+From a8fe3581348be62bf8aeb1f6c741b4d50eb3426d Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 28 Mar 2024 15:27:54 +0100
+Subject: [PATCH 45/98] mfd: pm8008: use lower case hex notation
+
+Use lower case hex notation for consistency.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/mfd/qcom-pm8008.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/mfd/qcom-pm8008.c b/drivers/mfd/qcom-pm8008.c
+index bff4d9dcf82..673fd268e63 100644
+--- a/drivers/mfd/qcom-pm8008.c
++++ b/drivers/mfd/qcom-pm8008.c
+@@ -38,8 +38,8 @@ enum {
+ 
+ #define PM8008_PERIPH_0_BASE	0x900
+ #define PM8008_PERIPH_1_BASE	0x2400
+-#define PM8008_PERIPH_2_BASE	0xC000
+-#define PM8008_PERIPH_3_BASE	0xC100
++#define PM8008_PERIPH_2_BASE	0xc000
++#define PM8008_PERIPH_3_BASE	0xc100
+ 
+ #define PM8008_TEMP_ALARM_ADDR	PM8008_PERIPH_1_BASE
+ #define PM8008_GPIO1_ADDR	PM8008_PERIPH_2_BASE
+@@ -151,7 +151,7 @@ static const struct regmap_irq_chip pm8008_irq_chip = {
+ static struct regmap_config qcom_mfd_regmap_cfg = {
+ 	.reg_bits	= 16,
+ 	.val_bits	= 8,
+-	.max_register	= 0xFFFF,
++	.max_register	= 0xffff,
+ };
+ 
+ static int pm8008_probe(struct i2c_client *client)
+-- 
+2.45.2
+

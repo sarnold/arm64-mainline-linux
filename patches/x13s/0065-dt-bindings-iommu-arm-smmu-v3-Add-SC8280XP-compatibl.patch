@@ -1,0 +1,39 @@
+From 37d752e6b1f781bcbe24df3fd5243d3c4dbb7eb6 Mon Sep 17 00:00:00 2001
+From: Konrad Dybcio <konrad.dybcio@linaro.org>
+Date: Sat, 9 Mar 2024 14:31:09 +0100
+Subject: [PATCH 65/98] dt-bindings: iommu: arm,smmu-v3: Add SC8280XP
+ compatible
+
+The smmu-v3 binding currently doesn't differentiate the SoCs it's
+implemented on. This is a poor design choice that may bite in the future,
+should any quirks surface.
+
+Add a compatible for the instance found on Qualcomm SC8280XP.
+
+Signed-off-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Link: https://lore.kernel.org/r/20231219-topic-8280_smmuv3-v2-1-c67bd3226687@linaro.org
+---
+ Documentation/devicetree/bindings/iommu/arm,smmu-v3.yaml | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/iommu/arm,smmu-v3.yaml b/Documentation/devicetree/bindings/iommu/arm,smmu-v3.yaml
+index 75fcf4cb52d..f284f7b0c1d 100644
+--- a/Documentation/devicetree/bindings/iommu/arm,smmu-v3.yaml
++++ b/Documentation/devicetree/bindings/iommu/arm,smmu-v3.yaml
+@@ -20,7 +20,11 @@ properties:
+   $nodename:
+     pattern: "^iommu@[0-9a-f]*"
+   compatible:
+-    const: arm,smmu-v3
++    oneOf:
++      - items:
++          - const: qcom,sc8280xp-smmu-v3
++          - const: arm,smmu-v3
++      - const: arm,smmu-v3
+ 
+   reg:
+     maxItems: 1
+-- 
+2.45.2
+

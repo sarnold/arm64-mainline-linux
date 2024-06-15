@@ -1,0 +1,42 @@
+From 28d74c7729b923145b53b6ab849dcc784ddcc834 Mon Sep 17 00:00:00 2001
+From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Date: Sun, 12 May 2024 01:04:15 +0300
+Subject: [PATCH 85/98] arm64: dts: qcom: sm8150-hdk: rename Type-C HS
+ endpoints
+
+Follow other Qualcomm platforms and rename pm8150b_role_switch_in to
+pm8150_hs_in. Corresponding port is described as HS port rather than
+role switching.
+
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Link: https://lore.kernel.org/r/20240512-typec-fix-sm8250-v4-9-ad153c747a97@linaro.org
+---
+ arch/arm64/boot/dts/qcom/sm8150-hdk.dts | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8150-hdk.dts b/arch/arm64/boot/dts/qcom/sm8150-hdk.dts
+index de670b407ef..857ccc5de08 100644
+--- a/arch/arm64/boot/dts/qcom/sm8150-hdk.dts
++++ b/arch/arm64/boot/dts/qcom/sm8150-hdk.dts
+@@ -556,7 +556,7 @@ ports {
+ 
+ 			port@0 {
+ 				reg = <0>;
+-				pm8150b_role_switch_in: endpoint {
++				pm8150b_hs_in: endpoint {
+ 					remote-endpoint = <&usb_1_dwc3_hs>;
+ 				};
+ 			};
+@@ -703,7 +703,7 @@ &usb_1_dwc3 {
+ };
+ 
+ &usb_1_dwc3_hs {
+-	remote-endpoint = <&pm8150b_role_switch_in>;
++	remote-endpoint = <&pm8150b_hs_in>;
+ };
+ 
+ &usb_1_dwc3_ss {
+-- 
+2.45.2
+

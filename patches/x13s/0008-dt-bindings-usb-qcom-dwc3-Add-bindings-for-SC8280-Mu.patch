@@ -1,0 +1,89 @@
+From 9fb3e2309892101361de5bcc7b064049a7c4df99 Mon Sep 17 00:00:00 2001
+From: Krishna Kurapati <quic_kriskura@quicinc.com>
+Date: Sat, 20 Apr 2024 10:18:57 +0530
+Subject: [PATCH 08/98] dt-bindings: usb: qcom,dwc3: Add bindings for SC8280
+ Multiport
+
+Add the compatible string for SC8280 Multiport USB controller from
+Qualcomm.
+
+There are 4 power event interrupts supported by this controller
+(one for each port of multiport controller). Add all the 4 as
+non-optional interrupts for SC8280XP-MP
+
+Also each port of multiport has one DP and one DM IRQ. Add all DP/DM
+IRQs related to 4 ports of SC8280XP Teritiary controller.
+
+Also added SuperSpeed PHY interrupt for both Superspeed ports.
+
+Signed-off-by: Krishna Kurapati <quic_kriskura@quicinc.com>
+Reviewed-by: Bjorn Andersson <quic_bjorande@quicinc.com>
+Reviewed-by: Johan Hovold <johan+linaro@kernel.org>
+Link: https://lore.kernel.org/r/20240420044901.884098-6-quic_kriskura@quicinc.com
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ .../devicetree/bindings/usb/qcom,dwc3.yaml    | 34 +++++++++++++++++++
+ 1 file changed, 34 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/usb/qcom,dwc3.yaml b/Documentation/devicetree/bindings/usb/qcom,dwc3.yaml
+index 38a3404ec71..f55f601c032 100644
+--- a/Documentation/devicetree/bindings/usb/qcom,dwc3.yaml
++++ b/Documentation/devicetree/bindings/usb/qcom,dwc3.yaml
+@@ -30,6 +30,7 @@ properties:
+           - qcom,sc7180-dwc3
+           - qcom,sc7280-dwc3
+           - qcom,sc8280xp-dwc3
++          - qcom,sc8280xp-dwc3-mp
+           - qcom,sdm660-dwc3
+           - qcom,sdm670-dwc3
+           - qcom,sdm845-dwc3
+@@ -282,6 +283,7 @@ allOf:
+           contains:
+             enum:
+               - qcom,sc8280xp-dwc3
++              - qcom,sc8280xp-dwc3-mp
+               - qcom,x1e80100-dwc3
+     then:
+       properties:
+@@ -470,6 +472,38 @@ allOf:
+             - const: dm_hs_phy_irq
+             - const: ss_phy_irq
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,sc8280xp-dwc3-mp
++    then:
++      properties:
++        interrupts:
++          minItems: 18
++          maxItems: 18
++        interrupt-names:
++          items:
++            - const: pwr_event_1
++            - const: pwr_event_2
++            - const: pwr_event_3
++            - const: pwr_event_4
++            - const: hs_phy_1
++            - const: hs_phy_2
++            - const: hs_phy_3
++            - const: hs_phy_4
++            - const: dp_hs_phy_1
++            - const: dm_hs_phy_1
++            - const: dp_hs_phy_2
++            - const: dm_hs_phy_2
++            - const: dp_hs_phy_3
++            - const: dm_hs_phy_3
++            - const: dp_hs_phy_4
++            - const: dm_hs_phy_4
++            - const: ss_phy_1
++            - const: ss_phy_2
++
+ additionalProperties: false
+ 
+ examples:
+-- 
+2.45.2
+

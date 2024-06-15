@@ -1,0 +1,27 @@
+From 2c2d7773f82cca0cda9fb83bcd9587067d7793b4 Mon Sep 17 00:00:00 2001
+From: Johan Hovold <johan+linaro@kernel.org>
+Date: Thu, 11 Apr 2024 09:51:17 +0200
+Subject: [PATCH 03/98] arm64: defconfig: enable ext4 security labels
+
+Enable ext4 security labels so that setcap works as expected.
+
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 2c30d617e18..f997ee163b0 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -1599,6 +1599,7 @@ CONFIG_HTE_TEGRA194=y
+ CONFIG_HTE_TEGRA194_TEST=m
+ CONFIG_EXT4_FS=y
+ CONFIG_EXT4_FS_POSIX_ACL=y
++CONFIG_EXT4_FS_SECURITY=y
+ CONFIG_BTRFS_FS=m
+ CONFIG_BTRFS_FS_POSIX_ACL=y
+ CONFIG_FANOTIFY=y
+-- 
+2.45.2
+
