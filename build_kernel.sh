@@ -41,7 +41,17 @@ copy_defconfig () {
 
 make_menuconfig () {
 	cd "${DIR}/KERNEL" || exit
-	make ARCH=${KERNEL_ARCH} CROSS_COMPILE="${CC}" "${config}"
+        if [ -e "$DIR"/patches/fragments ] ; then
+                for file in "${DIR}/patches/fragments"/*.cfg; do
+                        [ -e "$file" ] || continue
+                        fragments+="$file "
+                done
+                scripts/kconfig/merge_config.sh -m "arch/${KERNEL_ARCH}/configs/${config}" "$fragments"
+                make ARCH=${KERNEL_ARCH} CROSS_COMPILE="${CC}" olddefconfig
+        else
+                make ARCH=${KERNEL_ARCH} CROSS_COMPILE="${CC}" "${config}"
+        fi
+
 	make ARCH=${KERNEL_ARCH} CROSS_COMPILE="${CC}" menuconfig
 	./scripts/config --disable CONFIG_LOCALVERSION_AUTO
 	./scripts/config --disable CONFIG_DEBUG_INFO
