@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash -e
 
 # SPDX-FileCopyrightText: 2009 Robert Nelson <robertcnelson@gmail.com>
 #
@@ -36,22 +36,24 @@ copy_defconfig () {
 		make ARCH=${KERNEL_ARCH} CROSS_COMPILE="${CC}" rcn-ee_defconfig
 	fi
 	make ARCH=${KERNEL_ARCH} CROSS_COMPILE="${CC}" olddefconfig
+	CFG_FRAGMENTS=""
+	if [ -e ../patches/fragments ] ; then
+		readarray -d '' fragments < <(find "${DIR}/patches" -name \*.cfg -print0)
+		size="${#fragments[@]}"
+		if [ "$size" -ne 0 ] ; then
+			./scripts/kconfig/merge_config.sh -m "${DIR}/patches/${config}" "${fragments[@]}"
+			CFG_FRAGMENTS="$size"
+		fi
+		make ARCH=${KERNEL_ARCH} CROSS_COMPILE="${CC}" olddefconfig
+	fi
 	cd "${DIR}/" || exit
 }
 
 make_menuconfig () {
 	cd "${DIR}/KERNEL" || exit
-        if [ -e "$DIR"/patches/fragments ] ; then
-                for file in "${DIR}/patches/fragments"/*.cfg; do
-                        [ -e "$file" ] || continue
-                        fragments+="$file "
-                done
-                scripts/kconfig/merge_config.sh -m "arch/${KERNEL_ARCH}/configs/${config}" "$fragments"
-                make ARCH=${KERNEL_ARCH} CROSS_COMPILE="${CC}" olddefconfig
-        else
-                make ARCH=${KERNEL_ARCH} CROSS_COMPILE="${CC}" "${config}"
-        fi
-
+	if [ ! -n "CFG_FRAGMENTS" ] ; then
+		make ARCH=${KERNEL_ARCH} CROSS_COMPILE="${CC}" "${config}"
+	fi
 	make ARCH=${KERNEL_ARCH} CROSS_COMPILE="${CC}" menuconfig
 	./scripts/config --disable CONFIG_LOCALVERSION_AUTO
 	./scripts/config --disable CONFIG_DEBUG_INFO
